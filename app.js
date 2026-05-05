@@ -18,6 +18,12 @@ const fireworkFormSelect = document.querySelector("#fireworkFormSelect");
 const themeSelect = document.querySelector("#themeSelect");
 const fireworkSpeed = document.querySelector("#fireworkSpeed");
 const fireworkSpeedValue = document.querySelector("#fireworkSpeedValue");
+const handSize = document.querySelector("#handSize");
+const handSizeValue = document.querySelector("#handSizeValue");
+const handCount = document.querySelector("#handCount");
+const handCountValue = document.querySelector("#handCountValue");
+const handGrasp = document.querySelector("#handGrasp");
+const handGraspValue = document.querySelector("#handGraspValue");
 const peakToggle = document.querySelector("#peakToggle");
 const trackCount = document.querySelector("#trackCount");
 const trackList = document.querySelector("#trackList");
@@ -36,6 +42,8 @@ let fireworkFrame = 0;
 let shapeReveal = 0;
 let pacDancers = [];
 let pacFrame = 0;
+let handForms = [];
+let handFrame = 0;
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -102,6 +110,15 @@ const pacBands = [
   { start: 27, end: 48, move: "slide" },
   { start: 49, end: 80, move: "shimmy" },
   { start: 81, end: 112, move: "twirl" },
+];
+
+const handBands = [
+  { start: 1, end: 5, root: 0.08, side: 1 },
+  { start: 6, end: 12, root: 0.23, side: -1 },
+  { start: 13, end: 24, root: 0.39, side: 1 },
+  { start: 25, end: 44, root: 0.56, side: -1 },
+  { start: 45, end: 74, root: 0.72, side: 1 },
+  { start: 75, end: 112, root: 0.9, side: -1 },
 ];
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
@@ -223,6 +240,24 @@ function updateFireworkSpeedLabel() {
   fireworkSpeedValue.textContent = `${fireworkSpeedMultiplier().toFixed(1)}x`;
 }
 
+function handSizeMultiplier() {
+  return Number(handSize.value) || 1;
+}
+
+function handCountValueNumber() {
+  return Number(handCount.value) || 6;
+}
+
+function handGraspAmount() {
+  return Number(handGrasp.value) || 0;
+}
+
+function updateHandControlLabels() {
+  handSizeValue.textContent = `${handSizeMultiplier().toFixed(2)}x`;
+  handCountValue.textContent = String(handCountValueNumber());
+  handGraspValue.textContent = `${Math.round(handGraspAmount() * 100)}%`;
+}
+
 function setFullscreenLabel() {
   fullscreenButton.textContent = document.fullscreenElement ? "X" : "F";
 }
@@ -241,6 +276,8 @@ function restartVisualizer() {
   shapeReveal = 0;
   pacDancers = [];
   pacFrame = 0;
+  handForms = [];
+  handFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -360,7 +397,9 @@ function drawVisualizer() {
 
   const draw = () => {
     try {
-      if (visualizerSelect.value === "pacdance") {
+      if (visualizerSelect.value === "branchhands") {
+        drawBranchHandsFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "pacdance") {
         drawPacDanceFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "fireworks") {
         drawFireworksFrame(canvasContext, buffer);
@@ -914,8 +953,186 @@ function drawPacDanceFrame(canvasContext, buffer) {
   });
 }
 
+function setupHandForms(width, height) {
+  const targetCount = handCountValueNumber();
+
+  if (handForms.length === targetCount) {
+    return;
+  }
+
+  handForms = Array.from({ length: targetCount }, (_, index) => {
+    const band = handBands[index % handBands.length];
+    const progress = targetCount === 1 ? 0.5 : index / (targetCount - 1);
+    const side = index % 2 === 0 ? 1 : -1;
+    return {
+      band,
+      rootX: width * (0.06 + progress * 0.88),
+      rootY: height * (side > 0 ? 0.91 : 0.09),
+      baseAngle: side > 0 ? -Math.PI / 2 : Math.PI / 2,
+      side,
+      phase: Math.random() * Math.PI * 2,
+      growth: 0,
+      fingers: Array.from({ length: 5 }, (_, finger) => ({
+        spread: (finger - 2) * 0.21,
+        length: 0.48 + finger * 0.08 + Math.random() * 0.16,
+        knuckle: 0.28 + Math.random() * 0.24,
+      })),
+      index,
+      count: targetCount,
+    };
+  });
+}
+
+function handHue(index, intensity) {
+  const progress = index / Math.max(1, handCountValueNumber() - 1);
+  const hue = progress < 0.45
+    ? 354 + progress * 2.22 * 44
+    : 52 + (progress - 0.45) * 1.82 * 230;
+  return hue + intensity * 18;
+}
+
+function drawLittleBuoyMan(canvasContext, x, y, size, hue, alpha, wobble) {
+  canvasContext.save();
+  canvasContext.translate(x, y);
+  canvasContext.rotate(Math.sin(wobble) * 0.35);
+  canvasContext.strokeStyle = hsla(hue, 78, 68, alpha);
+  canvasContext.fillStyle = hsla(hue, 82, 58, alpha * 0.9);
+  canvasContext.lineWidth = Math.max(1, size * 0.12);
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 0.55, size * 0.22, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -size * 0.3);
+  canvasContext.lineTo(0, size * 0.28);
+  canvasContext.moveTo(0, -size * 0.1);
+  canvasContext.lineTo(-size * 0.34, size * 0.08);
+  canvasContext.moveTo(0, -size * 0.1);
+  canvasContext.lineTo(size * 0.34, size * 0.08);
+  canvasContext.moveTo(0, size * 0.28);
+  canvasContext.lineTo(-size * 0.25, size * 0.7);
+  canvasContext.moveTo(0, size * 0.28);
+  canvasContext.lineTo(size * 0.25, size * 0.7);
+  canvasContext.stroke();
+  canvasContext.restore();
+}
+
+function drawFinger(canvasContext, hand, finger, intensity, width, height) {
+  const speedMultiplier = fireworkSpeedMultiplier();
+  const sizeMultiplier = handSizeMultiplier();
+  const grasp = handGraspAmount();
+  const hue = handHue(hand.index, intensity);
+  const direction = hand.side;
+  const pulse = Math.sin(handFrame * 0.035 * speedMultiplier + hand.phase + finger.spread * 4);
+  const reach = hand.growth * finger.length * (0.62 + intensity * 0.72 + grasp * 0.28);
+  const baseLength = height * 0.34 * sizeMultiplier;
+  const length = baseLength * reach;
+  const angle = hand.baseAngle + finger.spread + pulse * (0.18 + intensity * 0.32);
+  const curl = Math.sin(handFrame * 0.05 + hand.phase + finger.knuckle * 8) * (0.18 + intensity * 0.4) + grasp * direction * (0.45 + intensity * 0.9);
+  const rootX = hand.rootX + Math.sin(hand.phase + finger.spread) * width * 0.015;
+  const rootY = hand.rootY;
+  const midX = rootX + Math.cos(angle) * length * finger.knuckle;
+  const midY = rootY + Math.sin(angle) * length * finger.knuckle;
+  const tipAngle = angle + curl * direction;
+  const tipX = midX + Math.cos(tipAngle) * length * (1 - finger.knuckle);
+  const tipY = midY + Math.sin(tipAngle) * length * (1 - finger.knuckle);
+  const branchAlpha = 0.22 + intensity * 0.58 + grasp * 0.16;
+
+  canvasContext.strokeStyle = hsla(hue, 76, 38 + intensity * 30, branchAlpha);
+  canvasContext.lineWidth = Math.max(1.5, (5.5 - Math.abs(finger.spread) * 9) * (0.6 + intensity * 0.65 + grasp * 0.28) * Math.sqrt(sizeMultiplier));
+  canvasContext.lineCap = "round";
+  canvasContext.beginPath();
+  canvasContext.moveTo(rootX, rootY);
+  canvasContext.quadraticCurveTo(midX, midY, tipX, tipY);
+  canvasContext.stroke();
+
+  canvasContext.strokeStyle = hsla(hue + 30, 86, 70, 0.18 + intensity * 0.28);
+  canvasContext.lineWidth = 1;
+  for (let branch = 0; branch < 3; branch += 1) {
+    const t = 0.35 + branch * 0.18;
+    const bx = rootX + (tipX - rootX) * t;
+    const by = rootY + (tipY - rootY) * t;
+    const twigAngle = tipAngle + (branch % 2 ? 1 : -1) * (0.65 + intensity * 0.45 + grasp * 0.75);
+    const twigLength = length * (0.08 + branch * 0.025) * (0.5 + intensity + grasp * 0.5);
+    canvasContext.beginPath();
+    canvasContext.moveTo(bx, by);
+    canvasContext.lineTo(bx + Math.cos(twigAngle) * twigLength, by + Math.sin(twigAngle) * twigLength);
+    canvasContext.stroke();
+  }
+
+  const glow = canvasContext.createRadialGradient(tipX, tipY, 0, tipX, tipY, 18 + intensity * 34);
+  glow.addColorStop(0, hsla(hue, 92, 66, 0.26 + intensity * 0.28));
+  glow.addColorStop(1, "rgba(255, 255, 255, 0)");
+  canvasContext.fillStyle = glow;
+  canvasContext.beginPath();
+  canvasContext.arc(tipX, tipY, 18 + intensity * 34, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  if (grasp > 0.08) {
+    const bits = Math.round(1 + grasp * 5 + intensity * 4);
+    canvasContext.fillStyle = hsla(hue + 48, 92, 68, 0.18 + grasp * 0.42);
+    for (let bit = 0; bit < bits; bit += 1) {
+      const amount = Math.random();
+      const bitX = tipX + (rootX - tipX) * amount * grasp + Math.sin(handFrame * 0.12 + bit) * 9 * grasp;
+      const bitY = tipY + (rootY - tipY) * amount * grasp + Math.cos(handFrame * 0.1 + bit) * 9 * grasp;
+      canvasContext.beginPath();
+      canvasContext.arc(bitX, bitY, 1.2 + grasp * 2.4, 0, Math.PI * 2);
+      canvasContext.fill();
+    }
+  }
+
+  if (intensity > 0.13 || finger.spread === 0 || grasp > 0.55) {
+    drawLittleBuoyMan(canvasContext, tipX, tipY, (7 + intensity * 14) * Math.sqrt(sizeMultiplier), hue + 16, 0.22 + intensity * 0.58 + grasp * 0.12, handFrame * 0.05 + finger.spread);
+  }
+}
+
+function drawBranchHandsFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const speedMultiplier = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  handFrame += speedMultiplier;
+  setupHandForms(width, height);
+
+  canvasContext.fillStyle = "rgba(5, 7, 9, 0.16)";
+  canvasContext.fillRect(0, 0, width, height);
+
+  const field = canvasContext.createLinearGradient(0, 0, width, height);
+  field.addColorStop(0, "rgba(70, 10, 24, 0.11)");
+  field.addColorStop(0.52, "rgba(20, 96, 76, 0.08)");
+  field.addColorStop(1, "rgba(74, 34, 128, 0.13)");
+  canvasContext.fillStyle = field;
+  canvasContext.fillRect(0, 0, width, height);
+
+  handForms.forEach((hand) => {
+    const intensity = averageBand(buffer, hand.band.start, hand.band.end);
+    const grasp = handGraspAmount();
+    hand.growth += (intensity * (1 + grasp * 0.42) - hand.growth) * (0.025 + speedMultiplier * 0.025 + grasp * 0.025);
+    const hue = handHue(hand.index, intensity);
+
+    canvasContext.fillStyle = hsla(hue, 78, 34 + intensity * 28, 0.18 + intensity * 0.24);
+    canvasContext.beginPath();
+    canvasContext.ellipse(
+      hand.rootX,
+      hand.rootY,
+      (24 + intensity * 24) * Math.sqrt(handSizeMultiplier()),
+      10 + intensity * 10 + grasp * 10,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    canvasContext.fill();
+
+    hand.fingers.forEach((finger) => {
+      drawFinger(canvasContext, hand, finger, intensity, width, height);
+    });
+  });
+}
+
 function drawIdleVisualizer() {
-  if (visualizerSelect.value === "pacdance") {
+  if (visualizerSelect.value === "branchhands") {
+    drawIdleBranchHands();
+  } else if (visualizerSelect.value === "pacdance") {
     drawIdlePacDance();
   } else if (visualizerSelect.value === "fireworks") {
     drawIdleFireworks();
@@ -923,6 +1140,25 @@ function drawIdleVisualizer() {
     drawIdleEqualizer();
   }
 }
+
+function drawIdleBranchHands() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  canvasContext.clearRect(0, 0, width, height);
+  canvasContext.fillStyle = "#050709";
+  canvasContext.fillRect(0, 0, width, height);
+  setupHandForms(width, height);
+
+  handForms.forEach((hand) => {
+    hand.growth = 0.28;
+    hand.fingers.forEach((finger) => {
+      drawFinger(canvasContext, hand, finger, 0.16 + hand.index * 0.025, width, height);
+    });
+  });
+}
+
 
 function drawIdlePacDance() {
   const canvasContext = visualizer.getContext("2d");
@@ -1006,6 +1242,7 @@ function resizeCanvas() {
   visualizer.width = Math.floor(rect.width * ratio);
   visualizer.height = Math.floor(rect.height * ratio);
   pacDancers = [];
+  handForms = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -1048,6 +1285,7 @@ visualizerSelect.addEventListener("change", () => {
     equalizer: "Graphic equaliser visualisation",
     fireworks: "Frequency fireworks visualisation",
     pacdance: "Pac Dance frequency visualisation",
+    branchhands: "Branch Hands frequency visualisation",
   };
 
   visualizer.setAttribute(
@@ -1059,6 +1297,22 @@ visualizerSelect.addEventListener("change", () => {
 
 fireworkFormSelect.addEventListener("change", () => {
   restartVisualizer();
+});
+
+handSize.addEventListener("input", () => {
+  updateHandControlLabels();
+});
+
+handCount.addEventListener("input", () => {
+  updateHandControlLabels();
+  handForms = [];
+  if (!animationId) {
+    drawIdleVisualizer();
+  }
+});
+
+handGrasp.addEventListener("input", () => {
+  updateHandControlLabels();
 });
 
 trackList.addEventListener("click", (event) => {
@@ -1132,6 +1386,7 @@ document.addEventListener("keydown", (event) => {
 
 resizeCanvas();
 updateFireworkSpeedLabel();
+updateHandControlLabels();
 setFullscreenLabel();
 setControlsEnabled(false);
 setStatus("stopped");
