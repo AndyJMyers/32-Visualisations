@@ -34,6 +34,8 @@ let fireworks = [];
 let fireworkCooldowns = [];
 let fireworkFrame = 0;
 let shapeReveal = 0;
+let pacDancers = [];
+let pacFrame = 0;
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -92,6 +94,15 @@ const fireworkPalettes = {
   ember: [18, 34, 48],
   spectrum: [285, 215, 155, 48, 330],
 };
+
+const pacBands = [
+  { start: 1, end: 5, move: "stomp" },
+  { start: 6, end: 12, move: "sway" },
+  { start: 13, end: 26, move: "spin" },
+  { start: 27, end: 48, move: "slide" },
+  { start: 49, end: 80, move: "shimmy" },
+  { start: 81, end: 112, move: "twirl" },
+];
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -228,6 +239,8 @@ function restartVisualizer() {
   fireworkCooldowns = [];
   fireworkFrame = 0;
   shapeReveal = 0;
+  pacDancers = [];
+  pacFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -347,7 +360,9 @@ function drawVisualizer() {
 
   const draw = () => {
     try {
-      if (visualizerSelect.value === "fireworks") {
+      if (visualizerSelect.value === "pacdance") {
+        drawPacDanceFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "fireworks") {
         drawFireworksFrame(canvasContext, buffer);
       } else {
         drawEqualizerFrame(canvasContext, buffer);
@@ -742,12 +757,186 @@ function drawEmergentForm(canvasContext, width, height) {
   canvasContext.restore();
 }
 
+function frequencyHue(bandIndex, intensity) {
+  const lowHue = 352;
+  const highHue = 272;
+  const progress = bandIndex / Math.max(1, pacBands.length - 1);
+
+  if (progress < 0.5) {
+    return lowHue + progress * 2 * 68;
+  }
+
+  return 60 + (progress - 0.5) * 2 * (highHue - 60) + intensity * 14;
+}
+
+function setupPacDancers(width, height) {
+  if (pacDancers.length) {
+    return;
+  }
+
+  const rows = [
+    height * 0.28,
+    height * 0.5,
+    height * 0.72,
+  ];
+
+  pacDancers = Array.from({ length: 18 }, (_, index) => {
+    const bandIndex = index % pacBands.length;
+    const row = Math.floor(index / pacBands.length);
+    return {
+      bandIndex,
+      x: width * (0.08 + (index % pacBands.length) * 0.165) + (row % 2) * width * 0.045,
+      y: rows[row],
+      homeX: width * (0.08 + (index % pacBands.length) * 0.165) + (row % 2) * width * 0.045,
+      homeY: rows[row],
+      size: 18 + row * 4 + Math.random() * 5,
+      phase: Math.random() * Math.PI * 2,
+      lady: index % 3 === 1,
+      direction: index % 2 ? -1 : 1,
+    };
+  });
+}
+
+function drawPacCharacter(canvasContext, dancer, intensity, width, height) {
+  const speedMultiplier = fireworkSpeedMultiplier();
+  const band = pacBands[dancer.bandIndex];
+  const beat = pacFrame * (0.045 + dancer.bandIndex * 0.006) + dancer.phase;
+  const bounce = Math.sin(beat * 2.2) * intensity * dancer.size * 0.9;
+  const sway = Math.sin(beat) * intensity * width * 0.025;
+  const spin = band.move === "spin" || band.move === "twirl" ? beat * (0.35 + intensity) : Math.sin(beat) * 0.25;
+  const slide = band.move === "slide" ? Math.sin(beat) * intensity * width * 0.06 : 0;
+  const shimmy = band.move === "shimmy" ? Math.sin(beat * 6) * intensity * 9 : 0;
+  const stomp = band.move === "stomp" ? Math.abs(Math.sin(beat * 1.5)) * intensity * 16 : 0;
+  const x = dancer.homeX + sway + slide + shimmy;
+  const y = dancer.homeY - bounce + stomp;
+  const hue = frequencyHue(dancer.bandIndex, intensity);
+  const mouth = 0.18 + Math.abs(Math.sin(beat * (4.8 + intensity * 4))) * (0.42 + intensity * 0.25);
+  const radius = dancer.size * (0.92 + intensity * 0.45);
+
+  dancer.homeX += Math.sin(beat * 0.31) * intensity * speedMultiplier * 0.5;
+  dancer.homeY += Math.cos(beat * 0.27) * intensity * speedMultiplier * 0.26;
+  dancer.homeX += (width * (0.08 + (dancer.bandIndex) * 0.165) - dancer.homeX) * 0.004;
+  dancer.homeY += (height * (0.28 + Math.floor(pacDancers.indexOf(dancer) / pacBands.length) * 0.22) - dancer.homeY) * 0.004;
+
+  canvasContext.save();
+  canvasContext.translate(x, y);
+  canvasContext.rotate(spin * dancer.direction);
+  canvasContext.scale(dancer.direction, 1);
+
+  const glow = canvasContext.createRadialGradient(0, 0, radius * 0.2, 0, 0, radius * 2.1);
+  glow.addColorStop(0, hsla(hue, 92, 58, 0.24 + intensity * 0.22));
+  glow.addColorStop(1, "rgba(255, 255, 255, 0)");
+  canvasContext.fillStyle = glow;
+  canvasContext.beginPath();
+  canvasContext.arc(0, 0, radius * 2.1, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = hsla(hue, 88, 34 + intensity * 34, 0.95);
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, 0);
+  canvasContext.arc(0, 0, radius, mouth, Math.PI * 2 - mouth);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(5, 7, 9, 0.82)";
+  canvasContext.beginPath();
+  canvasContext.arc(radius * 0.25, -radius * 0.45, Math.max(2.2, radius * 0.11), 0, Math.PI * 2);
+  canvasContext.fill();
+
+  if (dancer.lady) {
+    canvasContext.fillStyle = hsla((hue + 34) % 360, 92, 68, 0.9);
+    canvasContext.beginPath();
+    canvasContext.moveTo(-radius * 0.25, -radius * 0.95);
+    canvasContext.lineTo(-radius * 0.02, -radius * 1.38);
+    canvasContext.lineTo(radius * 0.22, -radius * 0.95);
+    canvasContext.closePath();
+    canvasContext.fill();
+    canvasContext.beginPath();
+    canvasContext.arc(-radius * 0.02, -radius * 1.05, radius * 0.14, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  canvasContext.strokeStyle = hsla(hue, 90, 72, 0.65);
+  canvasContext.lineWidth = Math.max(1.4, radius * 0.08);
+  const legSwing = Math.sin(beat * 3.2) * radius * 0.36;
+  canvasContext.beginPath();
+  canvasContext.moveTo(-radius * 0.3, radius * 0.85);
+  canvasContext.lineTo(-radius * 0.58, radius * 1.25 + legSwing);
+  canvasContext.moveTo(radius * 0.05, radius * 0.9);
+  canvasContext.lineTo(radius * 0.38, radius * 1.22 - legSwing);
+  canvasContext.stroke();
+
+  canvasContext.restore();
+}
+
+function drawPacDanceFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const speedMultiplier = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  pacFrame += speedMultiplier;
+
+  canvasContext.fillStyle = "rgba(5, 7, 9, 0.22)";
+  canvasContext.fillRect(0, 0, width, height);
+
+  const gridSpacing = Math.max(42, width / 18);
+  canvasContext.strokeStyle = "rgba(87, 216, 178, 0.05)";
+  canvasContext.lineWidth = 1;
+  for (let x = 0; x < width; x += gridSpacing) {
+    canvasContext.beginPath();
+    canvasContext.moveTo(x, 0);
+    canvasContext.lineTo(x, height);
+    canvasContext.stroke();
+  }
+  for (let y = 0; y < height; y += gridSpacing) {
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, y);
+    canvasContext.lineTo(width, y);
+    canvasContext.stroke();
+  }
+
+  setupPacDancers(width, height);
+
+  const bandIntensities = pacBands.map((band) => averageBand(buffer, band.start, band.end));
+
+  bandIntensities.forEach((intensity, bandIndex) => {
+    const hue = frequencyHue(bandIndex, intensity);
+    const x = width * (0.08 + bandIndex * 0.165);
+    const barHeight = Math.max(4, intensity * height * 0.18);
+    canvasContext.fillStyle = hsla(hue, 86, 48 + intensity * 26, 0.22);
+    canvasContext.fillRect(x - 18, height - barHeight - 8, 36, barHeight);
+  });
+
+  pacDancers.forEach((dancer) => {
+    const intensity = bandIntensities[dancer.bandIndex];
+    drawPacCharacter(canvasContext, dancer, intensity, width, height);
+  });
+}
+
 function drawIdleVisualizer() {
-  if (visualizerSelect.value === "fireworks") {
+  if (visualizerSelect.value === "pacdance") {
+    drawIdlePacDance();
+  } else if (visualizerSelect.value === "fireworks") {
     drawIdleFireworks();
   } else {
     drawIdleEqualizer();
   }
+}
+
+function drawIdlePacDance() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  canvasContext.clearRect(0, 0, width, height);
+  canvasContext.fillStyle = "#050709";
+  canvasContext.fillRect(0, 0, width, height);
+  setupPacDancers(width, height);
+
+  pacDancers.forEach((dancer) => {
+    drawPacCharacter(canvasContext, dancer, 0.12 + dancer.bandIndex * 0.025, width, height);
+  });
 }
 
 function drawIdleEqualizer() {
@@ -816,6 +1005,7 @@ function resizeCanvas() {
   const rect = visualizer.getBoundingClientRect();
   visualizer.width = Math.floor(rect.width * ratio);
   visualizer.height = Math.floor(rect.height * ratio);
+  pacDancers = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -854,11 +1044,15 @@ peakToggle.addEventListener("change", () => {
 });
 
 visualizerSelect.addEventListener("change", () => {
+  const visualizerLabels = {
+    equalizer: "Graphic equaliser visualisation",
+    fireworks: "Frequency fireworks visualisation",
+    pacdance: "Pac Dance frequency visualisation",
+  };
+
   visualizer.setAttribute(
     "aria-label",
-    visualizerSelect.value === "fireworks"
-      ? "Frequency fireworks visualisation"
-      : "Graphic equaliser visualisation",
+    visualizerLabels[visualizerSelect.value] || visualizerLabels.equalizer,
   );
   restartVisualizer();
 });
