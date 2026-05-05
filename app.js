@@ -44,6 +44,8 @@ let pacDancers = [];
 let pacFrame = 0;
 let handForms = [];
 let handFrame = 0;
+let swampBubbles = [];
+let swampFrame = 0;
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -119,6 +121,15 @@ const handBands = [
   { start: 25, end: 44, root: 0.56, side: -1 },
   { start: 45, end: 74, root: 0.72, side: 1 },
   { start: 75, end: 112, root: 0.9, side: -1 },
+];
+
+const swampBands = [
+  { start: 1, end: 5, kind: "leviathan" },
+  { start: 6, end: 12, kind: "balloon" },
+  { start: 13, end: 28, kind: "mutter" },
+  { start: 29, end: 56, kind: "midge" },
+  { start: 57, end: 88, kind: "soap" },
+  { start: 89, end: 112, kind: "tinkle" },
 ];
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
@@ -278,6 +289,10 @@ function restartVisualizer() {
   pacFrame = 0;
   handForms = [];
   handFrame = 0;
+  swampBubbles = [];
+  swampFrame = 0;
+  swampBubbles = [];
+  swampFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -397,7 +412,9 @@ function drawVisualizer() {
 
   const draw = () => {
     try {
-      if (visualizerSelect.value === "branchhands") {
+      if (visualizerSelect.value === "swampbubbles") {
+        drawSwampBubblesFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "branchhands") {
         drawBranchHandsFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "pacdance") {
         drawPacDanceFrame(canvasContext, buffer);
@@ -1129,8 +1146,181 @@ function drawBranchHandsFrame(canvasContext, buffer) {
   });
 }
 
+function swampHue(index, intensity) {
+  const progress = index / Math.max(1, swampBands.length - 1);
+  return progress < 0.45
+    ? 356 + progress * 54
+    : 292 - progress * 18 + intensity * 12;
+}
+
+function spawnSwampBubble(bandIndex, intensity, width, height, bassBoom = 0) {
+  const band = swampBands[bandIndex];
+  const speedMultiplier = fireworkSpeedMultiplier();
+  const isBass = bandIndex < 2;
+  const radius = isBass
+    ? height * (0.09 + intensity * 0.32 + bassBoom * 0.22)
+    : 5 + intensity * 28 + Math.random() * 14;
+  const horizon = height * (0.5 + Math.sin(swampFrame * 0.012 + bandIndex) * 0.035);
+  const x = isBass
+    ? width * (0.18 + Math.random() * 0.64)
+    : width * Math.random();
+  const y = isBass
+    ? horizon + height * (0.08 + Math.random() * 0.22)
+    : height * (0.75 + Math.random() * 0.22);
+
+  swampBubbles.push({
+    x,
+    y,
+    vx: (Math.random() - 0.5) * (0.25 + intensity * 1.1),
+    vy: -(0.22 + intensity * 1.9 + (isBass ? bassBoom * 2.4 : 0)) * speedMultiplier,
+    radius,
+    targetRadius: radius * (0.8 + Math.random() * 0.6),
+    hue: swampHue(bandIndex, intensity),
+    life: 1,
+    decay: isBass ? 0.0024 + intensity * 0.003 : 0.006 + intensity * 0.014,
+    wobble: Math.random() * Math.PI * 2,
+    kind: band.kind,
+    alarm: isBass ? 0 : Math.min(1, bassBoom + intensity * 0.6),
+    bass: isBass,
+  });
+}
+
+function drawSwampCreature(canvasContext, bubble, bassEnergy) {
+  const wobble = Math.sin(swampFrame * 0.035 + bubble.wobble) * bubble.radius * 0.12;
+  const stretch = 1 + Math.sin(swampFrame * 0.023 + bubble.wobble) * 0.08 + bubble.alarm * 0.18;
+  const alpha = Math.max(0, bubble.life);
+  const hue = bubble.hue + Math.sin(swampFrame * 0.01 + bubble.wobble) * 10;
+
+  canvasContext.save();
+  canvasContext.translate(bubble.x + wobble, bubble.y);
+  canvasContext.scale(1 / stretch, stretch);
+
+  const gradient = canvasContext.createRadialGradient(
+    -bubble.radius * 0.25,
+    -bubble.radius * 0.35,
+    bubble.radius * 0.04,
+    0,
+    0,
+    bubble.radius,
+  );
+  gradient.addColorStop(0, hsla(hue + 26, 74, bubble.bass ? 35 : 72, alpha * 0.62));
+  gradient.addColorStop(0.62, hsla(hue, 72, bubble.bass ? 24 : 54, alpha * 0.36));
+  gradient.addColorStop(1, hsla(hue - 18, 78, bubble.bass ? 12 : 34, alpha * 0.12));
+  canvasContext.fillStyle = gradient;
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, bubble.radius * 1.08, bubble.radius * 0.88, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(hue + 42, 88, bubble.bass ? 42 : 76, alpha * (bubble.bass ? 0.36 : 0.62));
+  canvasContext.lineWidth = Math.max(1, bubble.radius * 0.035);
+  canvasContext.stroke();
+
+  const eyeCount = bubble.bass ? 3 : 2;
+  for (let eye = 0; eye < eyeCount; eye += 1) {
+    const eyeX = (eye - (eyeCount - 1) / 2) * bubble.radius * 0.32;
+    const eyeY = -bubble.radius * (0.1 + bubble.alarm * 0.18);
+    canvasContext.fillStyle = hsla(55 + bassEnergy * 32, 90, 76, alpha * 0.8);
+    canvasContext.beginPath();
+    canvasContext.arc(eyeX, eyeY, Math.max(1.4, bubble.radius * (bubble.bass ? 0.045 : 0.085)), 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  if (!bubble.bass) {
+    canvasContext.strokeStyle = hsla(hue + 80, 86, 82, alpha * bubble.alarm * 0.65);
+    canvasContext.lineWidth = 1;
+    for (let jolt = 0; jolt < 3; jolt += 1) {
+      const angle = -Math.PI / 2 + (jolt - 1) * 0.45;
+      canvasContext.beginPath();
+      canvasContext.moveTo(Math.cos(angle) * bubble.radius * 0.65, Math.sin(angle) * bubble.radius * 0.65);
+      canvasContext.lineTo(Math.cos(angle) * bubble.radius * (1 + bubble.alarm), Math.sin(angle) * bubble.radius * (1 + bubble.alarm));
+      canvasContext.stroke();
+    }
+  }
+
+  canvasContext.restore();
+}
+
+function drawSwampBubblesFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const speedMultiplier = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  swampFrame += speedMultiplier;
+
+  const bassEnergy = averageBand(buffer, 1, 7);
+  const trebleEnergy = averageBand(buffer, 62, 112);
+  const midEnergy = averageBand(buffer, 14, 48);
+
+  const sky = canvasContext.createLinearGradient(0, 0, 0, height);
+  sky.addColorStop(0, "rgba(42, 5, 28, 0.38)");
+  sky.addColorStop(0.42, `rgba(75, 18, 70, ${0.2 + midEnergy * 0.2})`);
+  sky.addColorStop(0.54, "rgba(38, 38, 38, 0.42)");
+  sky.addColorStop(1, "rgba(2, 8, 7, 0.72)");
+  canvasContext.fillStyle = sky;
+  canvasContext.fillRect(0, 0, width, height);
+
+  const swamp = canvasContext.createLinearGradient(0, height * 0.52, 0, height);
+  swamp.addColorStop(0, "rgba(22, 23, 18, 0.45)");
+  swamp.addColorStop(0.45, "rgba(5, 24, 18, 0.72)");
+  swamp.addColorStop(1, "rgba(0, 4, 4, 0.92)");
+  canvasContext.fillStyle = swamp;
+  canvasContext.fillRect(0, height * 0.52, width, height * 0.48);
+
+  const horizonY = height * (0.51 + Math.sin(swampFrame * 0.01) * 0.018);
+  canvasContext.strokeStyle = `rgba(173, 78, 126, ${0.12 + bassEnergy * 0.18})`;
+  canvasContext.lineWidth = 2 + bassEnergy * 8;
+  canvasContext.beginPath();
+  for (let x = 0; x <= width; x += width / 32) {
+    const y = horizonY + Math.sin(x * 0.018 + swampFrame * 0.025) * (5 + bassEnergy * 22);
+    if (x === 0) {
+      canvasContext.moveTo(x, y);
+    } else {
+      canvasContext.lineTo(x, y);
+    }
+  }
+  canvasContext.stroke();
+
+  swampBands.forEach((band, bandIndex) => {
+    const intensity = averageBand(buffer, band.start, band.end);
+    const chance = bandIndex < 2
+      ? intensity * 0.08 + bassEnergy * 0.08
+      : intensity * 0.1 + trebleEnergy * 0.06;
+
+    if (Math.random() < chance * speedMultiplier) {
+      spawnSwampBubble(bandIndex, intensity, width, height, bassEnergy);
+    }
+  });
+
+  if (bassEnergy > 0.44 && Math.random() < bassEnergy * 0.18) {
+    spawnSwampBubble(0, bassEnergy, width, height, bassEnergy);
+  }
+
+  swampBubbles = swampBubbles.filter((bubble) => bubble.life > 0 && bubble.y + bubble.radius > -height * 0.2);
+  swampBubbles.forEach((bubble) => {
+    const fright = Math.max(0, bassEnergy - 0.28);
+    bubble.x += bubble.vx * speedMultiplier + (bubble.bass ? 0 : Math.sin(swampFrame * 0.08 + bubble.wobble) * fright * 4);
+    bubble.y += bubble.vy * speedMultiplier;
+    bubble.vx += Math.sin(swampFrame * 0.015 + bubble.wobble) * 0.012;
+    bubble.vy -= bubble.bass ? 0.001 : 0.004 + trebleEnergy * 0.012;
+    bubble.radius += (bubble.targetRadius - bubble.radius) * 0.018 + (bubble.bass ? bassEnergy * 0.18 : trebleEnergy * 0.035);
+    bubble.alarm = Math.max(bubble.alarm * 0.965, fright);
+    bubble.life -= bubble.decay * speedMultiplier * (bubble.bass ? 0.75 : 1.15);
+    drawSwampCreature(canvasContext, bubble, bassEnergy);
+  });
+
+  if (swampBubbles.length > 180) {
+    swampBubbles.splice(0, swampBubbles.length - 180);
+  }
+
+  canvasContext.fillStyle = `rgba(7, 3, 7, ${0.12 + bassEnergy * 0.1})`;
+  canvasContext.fillRect(0, height * 0.84, width, height * 0.16);
+}
+
 function drawIdleVisualizer() {
-  if (visualizerSelect.value === "branchhands") {
+  if (visualizerSelect.value === "swampbubbles") {
+    drawIdleSwampBubbles();
+  } else if (visualizerSelect.value === "branchhands") {
     drawIdleBranchHands();
   } else if (visualizerSelect.value === "pacdance") {
     drawIdlePacDance();
@@ -1140,6 +1330,40 @@ function drawIdleVisualizer() {
     drawIdleEqualizer();
   }
 }
+
+function drawIdleSwampBubbles() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  canvasContext.clearRect(0, 0, width, height);
+  canvasContext.fillStyle = "#050707";
+  canvasContext.fillRect(0, 0, width, height);
+
+  const gradient = canvasContext.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, "rgba(55, 7, 36, 0.56)");
+  gradient.addColorStop(0.5, "rgba(55, 34, 52, 0.34)");
+  gradient.addColorStop(1, "rgba(0, 8, 6, 0.82)");
+  canvasContext.fillStyle = gradient;
+  canvasContext.fillRect(0, 0, width, height);
+
+  for (let index = 0; index < 18; index += 1) {
+    const bandIndex = index % swampBands.length;
+    const radius = bandIndex < 2 ? 28 + Math.random() * 58 : 7 + Math.random() * 24;
+    const bubble = {
+      x: width * Math.random(),
+      y: height * (0.55 + Math.random() * 0.38),
+      radius,
+      hue: swampHue(bandIndex, 0.2),
+      life: 0.32,
+      wobble: Math.random() * Math.PI * 2,
+      alarm: bandIndex > 3 ? 0.5 : 0,
+      bass: bandIndex < 2,
+    };
+    drawSwampCreature(canvasContext, bubble, 0.18);
+  }
+}
+
 
 function drawIdleBranchHands() {
   const canvasContext = visualizer.getContext("2d");
@@ -1243,6 +1467,7 @@ function resizeCanvas() {
   visualizer.height = Math.floor(rect.height * ratio);
   pacDancers = [];
   handForms = [];
+  swampBubbles = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -1286,6 +1511,7 @@ visualizerSelect.addEventListener("change", () => {
     fireworks: "Frequency fireworks visualisation",
     pacdance: "Pac Dance frequency visualisation",
     branchhands: "Branch Hands frequency visualisation",
+    swampbubbles: "Swamp Bubbles frequency visualisation",
   };
 
   visualizer.setAttribute(
