@@ -1,0 +1,16 @@
+Wave Deck 1.0
+
+Snapshot date: 2026-05-05
+
+Included files:
+- index.html
+- styles.css
+- app.js
+
+Notes:
+- Directory-based WAV playback
+- Current-track and playback status display
+- Name/date sorting
+- Sequential and shuffle playback
+- Graphic equaliser visualisation
+- Colour themes and peak-hold option
