@@ -46,6 +46,11 @@ let handForms = [];
 let handFrame = 0;
 let swampBubbles = [];
 let swampFrame = 0;
+let arrows = [];
+let arrowFrame = 0;
+let cephArms = [];
+let cephInkBlooms = [];
+let cephFrame = 0;
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -131,6 +136,41 @@ const swampBands = [
   { start: 57, end: 88, kind: "soap" },
   { start: 89, end: 112, kind: "tinkle" },
 ];
+
+const arrowBands = [
+  { start: 1, end: 5, weight: 1.45 },
+  { start: 6, end: 12, weight: 1.25 },
+  { start: 13, end: 28, weight: 1.05 },
+  { start: 29, end: 52, weight: 0.95 },
+  { start: 53, end: 82, weight: 0.85 },
+  { start: 83, end: 112, weight: 0.78 },
+];
+
+const cephBands = [
+  { start: 1, end: 5 },
+  { start: 6, end: 10 },
+  { start: 11, end: 17 },
+  { start: 18, end: 28 },
+  { start: 29, end: 42 },
+  { start: 43, end: 58 },
+  { start: 59, end: 76 },
+  { start: 77, end: 92 },
+  { start: 93, end: 104 },
+  { start: 105, end: 112 },
+];
+
+const formOptionsByVisualizer = {
+  fireworks: [
+    ["hydra", "Hydra"],
+    ["woman", "Woman"],
+    ["lion", "Lion rampant"],
+  ],
+  arrowstorm: [
+    ["woodland", "Woodland"],
+    ["williamtell", "William Tell"],
+    ["fort", "Wooden fort"],
+  ],
+};
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -269,6 +309,39 @@ function updateHandControlLabels() {
   handGraspValue.textContent = `${Math.round(handGraspAmount() * 100)}%`;
 }
 
+function syncVisualizerControls() {
+  const visualizer = visualizerSelect.value;
+  const formOptions = formOptionsByVisualizer[visualizer] || [];
+  const activeForm = fireworkFormSelect.value;
+  const formLabel = fireworkFormSelect.closest("label");
+  const peakLabel = peakToggle.closest("label");
+  const speedLabel = fireworkSpeed.closest("label");
+  const reachLabel = handSize.closest("label");
+  const armsLabel = handCount.closest("label");
+  const graspLabel = handGrasp.closest("label");
+
+  formLabel.hidden = formOptions.length === 0;
+  if (formOptions.length > 0) {
+    fireworkFormSelect.replaceChildren(...formOptions.map(([value, label]) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      option.selected = value === activeForm;
+      return option;
+    }));
+
+    if (!formOptions.some(([value]) => value === fireworkFormSelect.value)) {
+      fireworkFormSelect.value = formOptions[0][0];
+    }
+  }
+
+  peakLabel.hidden = visualizer !== "equalizer";
+  speedLabel.hidden = visualizer === "equalizer";
+  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles"].includes(visualizer);
+  armsLabel.hidden = !["branchhands", "arrowstorm", "cephalopod"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod"].includes(visualizer);
+}
+
 function setFullscreenLabel() {
   fullscreenButton.textContent = document.fullscreenElement ? "X" : "F";
 }
@@ -291,8 +364,11 @@ function restartVisualizer() {
   handFrame = 0;
   swampBubbles = [];
   swampFrame = 0;
-  swampBubbles = [];
-  swampFrame = 0;
+  arrows = [];
+  arrowFrame = 0;
+  cephArms = [];
+  cephInkBlooms = [];
+  cephFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -412,7 +488,11 @@ function drawVisualizer() {
 
   const draw = () => {
     try {
-      if (visualizerSelect.value === "swampbubbles") {
+      if (visualizerSelect.value === "cephalopod") {
+        drawCephalopodFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "arrowstorm") {
+        drawArrowStormFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "swampbubbles") {
         drawSwampBubblesFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "branchhands") {
         drawBranchHandsFrame(canvasContext, buffer);
@@ -1317,8 +1397,478 @@ function drawSwampBubblesFrame(canvasContext, buffer) {
   canvasContext.fillRect(0, height * 0.84, width, height * 0.16);
 }
 
+function arrowHue(index, intensity) {
+  const progress = index / Math.max(1, arrowBands.length - 1);
+  return progress < 0.45
+    ? 354 + progress * 2.22 * 52
+    : 62 + (progress - 0.45) * 1.82 * 224 + intensity * 18;
+}
+
+function spawnArrow(bandIndex, intensity, width, height, bassEnergy) {
+  const density = handCountValueNumber() / 6;
+  const drama = handGraspAmount();
+  const size = handSizeMultiplier();
+  const speedMultiplier = fireworkSpeedMultiplier();
+  const scene = fireworkFormSelect.value;
+  const wind = Math.sin(arrowFrame * 0.012 + bandIndex) * width * (0.04 + drama * 0.07);
+  const length = (34 + intensity * 54 + bassEnergy * 42) * size * arrowBands[bandIndex].weight;
+  const fire = Math.random() < (drama * 0.42 + intensity * 0.28 + bassEnergy * 0.18);
+  const targetX = scene === "williamtell"
+    ? width * (0.5 + (Math.random() - 0.5) * (0.28 - intensity * 0.12))
+    : scene === "fort"
+      ? width * (0.18 + Math.random() * 0.64)
+      : Math.random() * width;
+  const startSide = Math.random() < drama * 0.38 ? (Math.random() < 0.5 ? -0.16 : 1.16) : Math.random();
+
+  arrows.push({
+    x: startSide * width - wind,
+    y: -height * (0.06 + Math.random() * 0.52),
+    vx: wind * 0.01 + (targetX / width - startSide) * (0.8 + intensity * 2.2),
+    vy: (3.5 + intensity * 7 + bassEnergy * 5) * speedMultiplier,
+    angle: 0,
+    spin: (Math.random() - 0.5) * 0.016 * (1 + drama),
+    length,
+    targetX,
+    targetY: height * (0.52 + Math.random() * 0.42),
+    hue: arrowHue(bandIndex, intensity),
+    alpha: 1,
+    fire,
+    stuck: false,
+    impact: 0,
+    bandIndex,
+    density,
+    agency: 0.16 + drama * 0.55 + intensity * 0.45 + bassEnergy * 0.28,
+    weavePhase: Math.random() * Math.PI * 2,
+    curiosity: Math.random() * 0.7 + 0.3,
+  });
+}
+
+function drawArrowBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const scene = fireworkFormSelect.value;
+  const sky = canvasContext.createLinearGradient(0, 0, 0, height);
+  sky.addColorStop(0, scene === "fort" ? "rgba(55, 12, 16, 0.58)" : "rgba(7, 18, 18, 0.6)");
+  sky.addColorStop(0.52, scene === "williamtell" ? "rgba(30, 54, 42, 0.48)" : "rgba(24, 30, 28, 0.56)");
+  sky.addColorStop(1, "rgba(4, 7, 5, 0.9)");
+  canvasContext.fillStyle = sky;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.fillStyle = scene === "fort" ? "rgba(48, 20, 14, 0.85)" : "rgba(8, 31, 19, 0.82)";
+  canvasContext.fillRect(0, height * 0.66, width, height * 0.34);
+
+  if (scene === "williamtell") {
+    const cx = width * 0.5;
+    const cy = height * 0.58;
+    canvasContext.fillStyle = "rgba(230, 212, 160, 0.18)";
+    canvasContext.beginPath();
+    canvasContext.arc(cx, cy, 42 + bassEnergy * 26, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.strokeStyle = `rgba(244, 230, 190, ${0.36 + trebleEnergy * 0.28})`;
+    canvasContext.lineWidth = 3;
+    for (let ring = 1; ring <= 3; ring += 1) {
+      canvasContext.beginPath();
+      canvasContext.arc(cx, cy, ring * 16 + bassEnergy * 4, 0, Math.PI * 2);
+      canvasContext.stroke();
+    }
+    canvasContext.fillStyle = "rgba(180, 20, 32, 0.78)";
+    canvasContext.beginPath();
+    canvasContext.arc(cx, cy, 7 + bassEnergy * 8, 0, Math.PI * 2);
+    canvasContext.fill();
+  } else if (scene === "fort") {
+    canvasContext.fillStyle = "rgba(72, 35, 22, 0.9)";
+    const baseY = height * 0.6;
+    for (let x = 0; x < width; x += 34) {
+      canvasContext.fillRect(x, baseY - 42 - Math.sin(x * 0.04) * 10, 24, height * 0.35);
+    }
+    canvasContext.fillStyle = `rgba(255, 88, 22, ${0.08 + bassEnergy * 0.18})`;
+    canvasContext.fillRect(0, baseY - 24, width, 40 + bassEnergy * 50);
+  } else {
+    canvasContext.fillStyle = "rgba(10, 42, 24, 0.58)";
+    for (let x = -20; x < width; x += 58) {
+      const treeHeight = height * (0.22 + ((x / 58) % 3) * 0.04);
+      canvasContext.beginPath();
+      canvasContext.moveTo(x, height * 0.68);
+      canvasContext.lineTo(x + 28, height * 0.68 - treeHeight);
+      canvasContext.lineTo(x + 56, height * 0.68);
+      canvasContext.closePath();
+      canvasContext.fill();
+    }
+  }
+}
+
+function drawArrow(canvasContext, arrow, bassEnergy) {
+  canvasContext.save();
+  canvasContext.translate(arrow.x, arrow.y);
+  canvasContext.rotate(arrow.angle);
+
+  if (arrow.fire) {
+    const flame = canvasContext.createLinearGradient(0, -arrow.length * 0.55, 0, arrow.length * 0.8);
+    flame.addColorStop(0, hsla(34 + bassEnergy * 26, 96, 62, 0));
+    flame.addColorStop(0.7, hsla(18, 96, 54, 0.38 * arrow.alpha));
+    flame.addColorStop(1, hsla(4, 92, 42, 0.58 * arrow.alpha));
+    canvasContext.strokeStyle = flame;
+    canvasContext.lineWidth = Math.max(4, arrow.length * 0.12);
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, -arrow.length * 0.68);
+    canvasContext.lineTo(0, -arrow.length * 1.38);
+    canvasContext.stroke();
+  }
+
+  canvasContext.strokeStyle = hsla(arrow.hue, 80, 62, 0.84 * arrow.alpha);
+  canvasContext.lineWidth = Math.max(2, arrow.length * 0.045);
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -arrow.length * 0.5);
+  canvasContext.lineTo(0, arrow.length * 0.5);
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = hsla(arrow.hue + 20, 88, 68, 0.92 * arrow.alpha);
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, arrow.length * 0.58);
+  canvasContext.lineTo(-arrow.length * 0.12, arrow.length * 0.3);
+  canvasContext.lineTo(arrow.length * 0.12, arrow.length * 0.3);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(arrow.hue - 28, 72, 74, 0.62 * arrow.alpha);
+  canvasContext.lineWidth = 1.2;
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -arrow.length * 0.48);
+  canvasContext.lineTo(-arrow.length * 0.14, -arrow.length * 0.66);
+  canvasContext.moveTo(0, -arrow.length * 0.48);
+  canvasContext.lineTo(arrow.length * 0.14, -arrow.length * 0.66);
+  canvasContext.stroke();
+  canvasContext.restore();
+}
+
+function drawArrowStormFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const speedMultiplier = fireworkSpeedMultiplier();
+  const density = handCountValueNumber() / 6;
+  const drama = handGraspAmount();
+
+  analyser.getByteFrequencyData(buffer);
+  arrowFrame += speedMultiplier;
+  const bassEnergy = averageBand(buffer, 1, 8);
+  const trebleEnergy = averageBand(buffer, 58, 112);
+
+  drawArrowBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  arrowBands.forEach((band, bandIndex) => {
+    const intensity = averageBand(buffer, band.start, band.end);
+    const volley = intensity * 0.09 * density + bassEnergy * 0.025 + drama * 0.01;
+    if (Math.random() < volley * speedMultiplier) {
+      const count = 1 + Math.floor((intensity + bassEnergy * 0.7) * density * 3);
+      for (let i = 0; i < count; i += 1) {
+        spawnArrow(bandIndex, intensity, width, height, bassEnergy);
+      }
+    }
+  });
+
+  arrows = arrows.filter((arrow) => arrow.alpha > 0 && arrow.y < height + arrow.length * 1.5);
+  arrows.forEach((arrow) => {
+    if (!arrow.stuck) {
+      const band = arrowBands[arrow.bandIndex] || arrowBands[0];
+      const bandEnergy = averageBand(buffer, band.start, band.end);
+      const targetPull = (0.006 + arrow.agency * 0.018 + bandEnergy * 0.02) * speedMultiplier;
+      const wander = Math.sin(arrowFrame * (0.026 + arrow.curiosity * 0.014) + arrow.weavePhase + arrow.y * 0.01);
+      const lift = Math.cos(arrowFrame * 0.017 + arrow.weavePhase) * trebleEnergy * arrow.curiosity;
+      const dx = arrow.targetX - arrow.x;
+      const dy = arrow.targetY - arrow.y;
+
+      arrow.vx += (dx / width) * targetPull * 24;
+      arrow.vy += (dy / height) * targetPull * 12;
+      arrow.vx += wander * (0.045 + bandEnergy * 0.24 + drama * 0.14) * speedMultiplier;
+      arrow.vy += (0.025 + bassEnergy * 0.13 - lift * 0.08) * speedMultiplier;
+      arrow.vx *= 0.992 - Math.min(0.018, drama * 0.012);
+      arrow.vy *= 0.994;
+
+      const maxSpeed = 14 + bandEnergy * 11 + bassEnergy * 8;
+      const speed = Math.hypot(arrow.vx, arrow.vy);
+      if (speed > maxSpeed) {
+        arrow.vx = (arrow.vx / speed) * maxSpeed;
+        arrow.vy = (arrow.vy / speed) * maxSpeed;
+      }
+
+      arrow.x += arrow.vx * speedMultiplier;
+      arrow.y += arrow.vy * speedMultiplier;
+      const targetAngle = Math.atan2(arrow.vy, arrow.vx) - Math.PI / 2;
+      const angleDelta = Math.atan2(Math.sin(targetAngle - arrow.angle), Math.cos(targetAngle - arrow.angle));
+      arrow.angle += angleDelta * (0.12 + arrow.agency * 0.12) + arrow.spin * speedMultiplier;
+
+      if (Math.hypot(dx, dy) < arrow.length * 0.38 || arrow.y >= arrow.targetY + arrow.length * 0.22) {
+        arrow.stuck = true;
+        arrow.impact = 1;
+        arrow.angle += (Math.random() - 0.5) * 0.18;
+      }
+    } else {
+      arrow.impact *= 0.88;
+      arrow.alpha -= arrow.fire ? 0.0025 : 0.0045;
+    }
+
+    drawArrow(canvasContext, arrow, bassEnergy);
+
+    if (arrow.impact > 0.02) {
+      canvasContext.fillStyle = hsla(arrow.hue + 42, 92, 68, arrow.impact * 0.34);
+      canvasContext.beginPath();
+      canvasContext.arc(arrow.x, arrow.y, arrow.length * (0.12 + arrow.impact * 0.45), 0, Math.PI * 2);
+      canvasContext.fill();
+    }
+  });
+
+  if (arrows.length > 420) {
+    arrows.splice(0, arrows.length - 420);
+  }
+}
+
+function setupCephArms(width, height) {
+  const desiredCount = Math.max(3, Math.min(14, handCountValueNumber()));
+  if (cephArms.length === desiredCount) {
+    return;
+  }
+
+  cephArms = Array.from({ length: desiredCount }, (_, index) => {
+    const progress = desiredCount === 1 ? 0.5 : index / (desiredCount - 1);
+    const baseAngle = Math.PI * (0.92 + progress * 1.16);
+    const longTentacle = index === 0 || index === desiredCount - 1;
+
+    return {
+      index,
+      baseAngle,
+      phase: Math.random() * Math.PI * 2,
+      memory: 0.12 + Math.random() * 0.18,
+      delay: Math.random() * Math.PI * 2,
+      length: (longTentacle ? 0.46 : 0.34) * Math.min(width, height),
+      width: longTentacle ? 17 : 21,
+      nerve: Math.random(),
+    };
+  });
+}
+
+function cephHue(progress, intensity) {
+  const theme = themeSelect.value;
+  if (theme === "ember") {
+    return 8 + progress * 52 + intensity * 18;
+  }
+  if (theme === "ice") {
+    return 186 + progress * 62 + intensity * 24;
+  }
+  if (theme === "spectrum") {
+    return 302 - progress * 260 + intensity * 34;
+  }
+  return 168 + progress * 72 + intensity * 16;
+}
+
+function drawCephBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  canvasContext.clearRect(0, 0, width, height);
+  canvasContext.fillStyle = "#030508";
+  canvasContext.fillRect(0, 0, width, height);
+
+  const water = canvasContext.createLinearGradient(0, 0, 0, height);
+  water.addColorStop(0, `rgba(18, 55, 70, ${0.38 + trebleEnergy * 0.18})`);
+  water.addColorStop(0.48, "rgba(6, 23, 35, 0.82)");
+  water.addColorStop(1, `rgba(8, 2, 18, ${0.92 + bassEnergy * 0.08})`);
+  canvasContext.fillStyle = water;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.fillStyle = `rgba(92, 255, 222, ${0.025 + trebleEnergy * 0.05})`;
+  for (let index = 0; index < 36; index += 1) {
+    const x = ((index * 131 + cephFrame * 0.7) % (width + 120)) - 60;
+    const y = height * (0.08 + ((index * 47) % 80) / 100);
+    canvasContext.beginPath();
+    canvasContext.arc(x, y, 1.2 + ((index * 7) % 4), 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+}
+
+function spawnCephInk(width, height, bassEnergy) {
+  if (bassEnergy < 0.46 || cephInkBlooms.length > 18 || Math.random() > bassEnergy * 0.12) {
+    return;
+  }
+
+  cephInkBlooms.push({
+    x: width * (0.42 + (Math.random() - 0.5) * 0.18),
+    y: height * (0.42 + (Math.random() - 0.5) * 0.18),
+    radius: Math.min(width, height) * (0.08 + bassEnergy * 0.12),
+    life: 1,
+    driftX: (Math.random() - 0.5) * 0.9,
+    driftY: 0.25 + Math.random() * 0.6,
+  });
+}
+
+function drawCephInk(canvasContext) {
+  cephInkBlooms = cephInkBlooms.filter((bloom) => bloom.life > 0.02);
+  cephInkBlooms.forEach((bloom) => {
+    bloom.x += bloom.driftX;
+    bloom.y += bloom.driftY;
+    bloom.radius *= 1.012;
+    bloom.life *= 0.965;
+
+    const gradient = canvasContext.createRadialGradient(
+      bloom.x,
+      bloom.y,
+      0,
+      bloom.x,
+      bloom.y,
+      bloom.radius,
+    );
+    gradient.addColorStop(0, `rgba(7, 0, 18, ${0.48 * bloom.life})`);
+    gradient.addColorStop(0.62, `rgba(27, 0, 38, ${0.28 * bloom.life})`);
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = gradient;
+    canvasContext.beginPath();
+    canvasContext.arc(bloom.x, bloom.y, bloom.radius, 0, Math.PI * 2);
+    canvasContext.fill();
+  });
+}
+
+function drawCephArm(canvasContext, arm, bodyX, bodyY, bodyRadius, intensity, bassEnergy, trebleEnergy) {
+  const speed = fireworkSpeedMultiplier();
+  const reach = handSizeMultiplier();
+  const grasp = handGraspAmount();
+  const progress = arm.index / Math.max(1, cephArms.length - 1);
+  const hue = cephHue(progress, intensity);
+  const armLength = arm.length * reach * (0.72 + intensity * 0.64);
+  const baseX = bodyX + Math.cos(arm.baseAngle) * bodyRadius * 0.58;
+  const baseY = bodyY + Math.sin(arm.baseAngle) * bodyRadius * 0.36;
+  const segments = 18;
+  const points = [];
+
+  arm.memory = arm.memory * (0.9 - grasp * 0.12) + intensity * (0.1 + grasp * 0.12);
+  arm.nerve = (arm.nerve + 0.012 * speed + intensity * 0.018) % 1;
+
+  for (let pointIndex = 0; pointIndex <= segments; pointIndex += 1) {
+    const amount = pointIndex / segments;
+    const curl = Math.sin(cephFrame * 0.035 * speed + arm.phase + amount * (4.2 + grasp * 5.5));
+    const independentThought = Math.sin(cephFrame * 0.021 * speed + arm.delay + amount * 7);
+    const angle = arm.baseAngle + curl * (0.28 + arm.memory * 0.46) + independentThought * grasp * 0.42;
+    const distance = armLength * amount;
+    const drift = Math.sin(amount * Math.PI) * bodyRadius * (0.16 + bassEnergy * 0.12);
+
+    points.push({
+      x: baseX + Math.cos(angle) * distance + Math.cos(angle + Math.PI / 2) * drift,
+      y: baseY + Math.sin(angle) * distance + Math.sin(angle + Math.PI / 2) * drift + amount * amount * bodyRadius * 0.3,
+      amount,
+    });
+  }
+
+  canvasContext.lineCap = "round";
+  canvasContext.lineJoin = "round";
+
+  for (let segment = 0; segment < points.length - 1; segment += 1) {
+    const point = points[segment];
+    const next = points[segment + 1];
+    const taper = 1 - point.amount * 0.82;
+    canvasContext.strokeStyle = hsla(hue + point.amount * 32, 72, 42 + intensity * 22, 0.34 + intensity * 0.42);
+    canvasContext.lineWidth = Math.max(2, arm.width * taper * reach);
+    canvasContext.beginPath();
+    canvasContext.moveTo(point.x, point.y);
+    canvasContext.lineTo(next.x, next.y);
+    canvasContext.stroke();
+  }
+
+  points.forEach((point, pointIndex) => {
+    if (pointIndex % 2 !== 0 || point.amount < 0.18) {
+      return;
+    }
+
+    const side = pointIndex % 4 === 0 ? 1 : -1;
+    const pulseDistance = Math.abs(point.amount - arm.nerve);
+    const pulse = Math.max(0, 1 - pulseDistance * 9);
+    const suckerSize = (2.2 + intensity * 4 + pulse * 5) * (1 - point.amount * 0.45);
+    const offset = 5 + 12 * (1 - point.amount);
+
+    canvasContext.fillStyle = hsla(hue + trebleEnergy * 68, 88, 62 + pulse * 18, 0.28 + pulse * 0.58);
+    canvasContext.beginPath();
+    canvasContext.arc(point.x + side * offset, point.y, suckerSize, 0, Math.PI * 2);
+    canvasContext.fill();
+  });
+}
+
+function drawCephBody(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  const bodyX = width * 0.5;
+  const bodyY = height * 0.42;
+  const bodyRadius = Math.min(width, height) * (0.13 + bassEnergy * 0.055) * handSizeMultiplier();
+  const bodyHue = cephHue(0.42 + trebleEnergy * 0.3, midsEnergy);
+
+  canvasContext.save();
+  canvasContext.translate(bodyX, bodyY);
+  canvasContext.rotate(Math.sin(cephFrame * 0.015) * 0.08);
+
+  const mantle = canvasContext.createRadialGradient(0, -bodyRadius * 0.15, bodyRadius * 0.12, 0, 0, bodyRadius * 1.25);
+  mantle.addColorStop(0, hsla(bodyHue + 24, 86, 68, 0.72));
+  mantle.addColorStop(0.48, hsla(bodyHue, 62, 36 + midsEnergy * 18, 0.78));
+  mantle.addColorStop(1, "rgba(5, 8, 15, 0.2)");
+  canvasContext.fillStyle = mantle;
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, bodyRadius * 0.95, bodyRadius * 1.24, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  for (let spot = 0; spot < 34; spot += 1) {
+    const angle = spot * 2.399;
+    const radius = bodyRadius * Math.sqrt((spot % 17) / 17);
+    const flash = Math.max(0, Math.sin(cephFrame * 0.07 + spot + trebleEnergy * 8));
+    canvasContext.fillStyle = hsla(bodyHue + spot * 7, 86, 54 + flash * 22, (0.08 + trebleEnergy * 0.34) * flash);
+    canvasContext.beginPath();
+    canvasContext.arc(
+      Math.cos(angle) * radius * 0.78,
+      Math.sin(angle) * radius,
+      2.5 + flash * 5.5,
+      0,
+      Math.PI * 2,
+    );
+    canvasContext.fill();
+  }
+
+  canvasContext.fillStyle = "rgba(230, 255, 245, 0.82)";
+  [-1, 1].forEach((side) => {
+    canvasContext.beginPath();
+    canvasContext.ellipse(side * bodyRadius * 0.27, -bodyRadius * 0.05, bodyRadius * 0.09, bodyRadius * 0.13, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.fillStyle = "rgba(4, 9, 13, 0.86)";
+    canvasContext.beginPath();
+    canvasContext.arc(side * bodyRadius * 0.28, -bodyRadius * 0.04, bodyRadius * (0.035 + trebleEnergy * 0.026), 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.fillStyle = "rgba(230, 255, 245, 0.82)";
+  });
+
+  canvasContext.restore();
+
+  return { bodyX, bodyY, bodyRadius };
+}
+
+function drawCephalopodFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const speedMultiplier = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  updateMood(buffer);
+  cephFrame += speedMultiplier;
+  setupCephArms(width, height);
+
+  const bassEnergy = averageBand(buffer, 1, 8);
+  const midsEnergy = averageBand(buffer, 12, 52);
+  const trebleEnergy = averageBand(buffer, 58, 112);
+
+  drawCephBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+  spawnCephInk(width, height, bassEnergy);
+  drawCephInk(canvasContext);
+
+  const body = drawCephBody(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+  cephArms.forEach((arm, index) => {
+    const band = cephBands[index % cephBands.length];
+    const intensity = averageBand(buffer, band.start, band.end);
+    drawCephArm(canvasContext, arm, body.bodyX, body.bodyY, body.bodyRadius, intensity, bassEnergy, trebleEnergy);
+  });
+  drawCephBody(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+}
+
 function drawIdleVisualizer() {
-  if (visualizerSelect.value === "swampbubbles") {
+  if (visualizerSelect.value === "cephalopod") {
+    drawIdleCephalopod();
+  } else if (visualizerSelect.value === "arrowstorm") {
+    drawIdleArrowStorm();
+  } else if (visualizerSelect.value === "swampbubbles") {
     drawIdleSwampBubbles();
   } else if (visualizerSelect.value === "branchhands") {
     drawIdleBranchHands();
@@ -1329,6 +1879,53 @@ function drawIdleVisualizer() {
   } else {
     drawIdleEqualizer();
   }
+}
+
+function drawIdleArrowStorm() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  drawArrowBackground(canvasContext, width, height, 0.22, 0.18);
+  for (let index = 0; index < 26; index += 1) {
+    const bandIndex = index % arrowBands.length;
+    const arrow = {
+      x: width * Math.random(),
+      y: height * (0.12 + Math.random() * 0.78),
+      angle: Math.PI / 2 + (Math.random() - 0.5) * 0.45,
+      length: (34 + bandIndex * 9) * handSizeMultiplier(),
+      hue: arrowHue(bandIndex, 0.24),
+      alpha: 0.52,
+      fire: index % 5 === 0,
+    };
+    drawArrow(canvasContext, arrow, 0.22);
+  }
+}
+
+function drawIdleCephalopod() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  cephFrame += 1;
+  setupCephArms(width, height);
+  drawCephBackground(canvasContext, width, height, 0.16, 0.24);
+  drawCephInk(canvasContext);
+
+  const body = drawCephBody(canvasContext, width, height, 0.2, 0.22, 0.26);
+  cephArms.forEach((arm, index) => {
+    drawCephArm(
+      canvasContext,
+      arm,
+      body.bodyX,
+      body.bodyY,
+      body.bodyRadius,
+      0.12 + (index % 5) * 0.025,
+      0.18,
+      0.24,
+    );
+  });
+  drawCephBody(canvasContext, width, height, 0.2, 0.22, 0.26);
 }
 
 function drawIdleSwampBubbles() {
@@ -1468,6 +2065,9 @@ function resizeCanvas() {
   pacDancers = [];
   handForms = [];
   swampBubbles = [];
+  arrows = [];
+  cephArms = [];
+  cephInkBlooms = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -1512,12 +2112,15 @@ visualizerSelect.addEventListener("change", () => {
     pacdance: "Pac Dance frequency visualisation",
     branchhands: "Branch Hands frequency visualisation",
     swampbubbles: "Swamp Bubbles frequency visualisation",
+    arrowstorm: "Arrow Storm frequency visualisation",
+    cephalopod: "Cephalopod Mind frequency visualisation",
   };
 
   visualizer.setAttribute(
     "aria-label",
     visualizerLabels[visualizerSelect.value] || visualizerLabels.equalizer,
   );
+  syncVisualizerControls();
   restartVisualizer();
 });
 
@@ -1532,6 +2135,7 @@ handSize.addEventListener("input", () => {
 handCount.addEventListener("input", () => {
   updateHandControlLabels();
   handForms = [];
+  cephArms = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
@@ -1613,6 +2217,7 @@ document.addEventListener("keydown", (event) => {
 resizeCanvas();
 updateFireworkSpeedLabel();
 updateHandControlLabels();
+syncVisualizerControls();
 setFullscreenLabel();
 setControlsEnabled(false);
 setStatus("stopped");
