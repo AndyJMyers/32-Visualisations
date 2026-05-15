@@ -66,6 +66,8 @@ let loucheLizards = [];
 let lizardFrame = 0;
 let goddessKisses = [];
 let goddessFrame = 0;
+let gardenVines = [];
+let gardenFrame = 0;
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -239,6 +241,16 @@ const goddessBands = [
   { start: 29, end: 48 },
   { start: 49, end: 78 },
   { start: 79, end: 112 },
+];
+
+const gardenBands = [
+  { start: 1, end: 5, root: "floor" },
+  { start: 6, end: 12, root: "floor" },
+  { start: 13, end: 24, root: "left" },
+  { start: 25, end: 42, root: "right" },
+  { start: 43, end: 66, root: "floor" },
+  { start: 67, end: 90, root: "left" },
+  { start: 91, end: 112, root: "right" },
 ];
 
 const formOptionsByVisualizer = {
@@ -444,22 +456,22 @@ function syncVisualizerControls() {
 
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer);
-  armsLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer);
+  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden"].includes(visualizer);
+  armsLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden"].includes(visualizer);
 
   setControlLabel(
     fireworkSpeed,
-    visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
+    visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
   );
-  setControlLabel(handSize, ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(handSize, visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
   setControlLabel(
     handCount,
-    visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : "Arms",
+    visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
   );
   setControlLabel(
     handGrasp,
-    visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
+    visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
   );
 }
 
@@ -505,6 +517,8 @@ function restartVisualizer() {
   lizardFrame = 0;
   goddessKisses = [];
   goddessFrame = 0;
+  gardenVines = [];
+  gardenFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -628,7 +642,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "goddesskisses") {
+      if (visualizerSelect.value === "climbinggarden") {
+        drawClimbingGardenFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "goddesskisses") {
         drawGoddessKissesFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "lizardlouche") {
         drawLizardLoucheFrame(canvasContext, buffer);
@@ -2329,6 +2345,195 @@ function drawGoddessKissesFrame(canvasContext, buffer) {
   if (goddessKisses.length > maxKisses) goddessKisses.splice(0, goddessKisses.length - maxKisses);
 }
 
+function plantHue(index, intensity) {
+  const theme = themeSelect.value;
+  const progress = index / Math.max(1, gardenBands.length - 1);
+  if (theme === "ice") return 172 + progress * 74 + intensity * 34;
+  if (theme === "ember") return 18 + progress * 42 + intensity * 30;
+  if (theme === "pressure") return 318 - progress * 220 + intensity * 70;
+  if (theme === "spectrum") return 138 + progress * 250 + intensity * 52;
+  return 118 + progress * 82 + intensity * 32;
+}
+
+function setupGardenVines(width, height) {
+  const targetCount = handCountValueNumber();
+  if (gardenVines.length === targetCount) return;
+
+  gardenVines = Array.from({ length: targetCount }, (_, index) => {
+    const bandIndex = index % gardenBands.length;
+    const band = gardenBands[bandIndex];
+    const spread = targetCount === 1 ? 0.5 : index / (targetCount - 1);
+    const rootX = band.root === "left" ? width * 0.02 : band.root === "right" ? width * 0.98 : width * (0.08 + spread * 0.84);
+    const rootY = band.root === "floor" ? height * (0.96 - Math.random() * 0.05) : height * (0.18 + (spread * 0.68) % 0.68);
+    const angle = band.root === "left" ? -0.12 : band.root === "right" ? Math.PI + 0.12 : -Math.PI / 2 + (spread - 0.5) * 0.55;
+
+    return {
+      bandIndex,
+      rootX,
+      rootY,
+      baseAngle: angle,
+      phase: Math.random() * Math.PI * 2,
+      growth: 0.24 + Math.random() * 0.26,
+      curl: (Math.random() - 0.5) * 1.2,
+      leafSeed: Math.random() * 100,
+      bloom: 0,
+    };
+  });
+}
+
+function drawGardenBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const deep = canvasContext.createLinearGradient(0, 0, width, height);
+  deep.addColorStop(0, "rgba(4, 8, 8, 0.34)");
+  deep.addColorStop(0.52, hsla(152 + trebleEnergy * 45, 76, 13 + trebleEnergy * 7, 0.34));
+  deep.addColorStop(1, hsla(90 + bassEnergy * 36, 80, 7 + bassEnergy * 8, 0.52));
+  canvasContext.fillStyle = deep;
+  canvasContext.fillRect(0, 0, width, height);
+
+  const glow = canvasContext.createRadialGradient(width * 0.5, height * 0.78, 0, width * 0.5, height * 0.78, width * 0.72);
+  glow.addColorStop(0, hsla(plantHue(2, bassEnergy), 84, 28, 0.12 + bassEnergy * 0.12));
+  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = glow;
+  canvasContext.fillRect(0, 0, width, height);
+}
+
+function drawGardenFlower(canvasContext, x, y, radius, hue, open, spin) {
+  canvasContext.save();
+  canvasContext.translate(x, y);
+  canvasContext.rotate(spin);
+  canvasContext.globalAlpha = Math.max(0, Math.min(1, open));
+
+  for (let petal = 0; petal < 7; petal += 1) {
+    const angle = (petal / 7) * Math.PI * 2;
+    canvasContext.save();
+    canvasContext.rotate(angle);
+    canvasContext.fillStyle = hsla(hue + petal * 12, 92, 56 + open * 20, 0.72);
+    canvasContext.beginPath();
+    canvasContext.ellipse(radius * (0.3 + open * 0.62), 0, radius * (0.22 + open * 0.24), radius * 0.12, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.restore();
+  }
+
+  canvasContext.fillStyle = hsla(hue + 70, 94, 68, 0.82);
+  canvasContext.beginPath();
+  canvasContext.arc(0, 0, radius * (0.16 + open * 0.1), 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+}
+
+function drawGardenVine(canvasContext, vine, intensity, bassEnergy, trebleEnergy, width, height) {
+  const range = handSizeMultiplier();
+  const bloomControl = handGraspAmount();
+  const hue = plantHue(vine.bandIndex, intensity);
+  const maxLength = Math.min(width, height) * (0.55 + range * 0.82);
+  const beat = gardenFrame * (0.026 + vine.bandIndex * 0.004) + vine.phase;
+  const length = maxLength * vine.growth;
+  const segments = 11;
+  const points = [];
+
+  for (let index = 0; index <= segments; index += 1) {
+    const t = index / segments;
+    const curl = Math.sin(beat + t * 5.4 + vine.curl) * (0.18 + intensity * 0.28 + bloomControl * 0.16);
+    const climb = length * t;
+    const angle = vine.baseAngle + curl + (t - 0.5) * vine.curl * 0.22;
+    const lateral = Math.sin(beat * 0.7 + t * 8) * length * 0.09 * (0.35 + trebleEnergy);
+    points.push({
+      x: vine.rootX + Math.cos(angle) * climb + Math.cos(angle + Math.PI / 2) * lateral,
+      y: vine.rootY + Math.sin(angle) * climb + Math.sin(angle + Math.PI / 2) * lateral,
+      t,
+    });
+  }
+
+  canvasContext.save();
+  canvasContext.lineCap = "round";
+  canvasContext.lineJoin = "round";
+  canvasContext.strokeStyle = hsla(hue, 70, 26 + intensity * 28, 0.8);
+  canvasContext.lineWidth = Math.max(2, Math.min(width, height) * 0.008 * range * (0.8 + intensity));
+  canvasContext.beginPath();
+  points.forEach((point, index) => {
+    if (index === 0) canvasContext.moveTo(point.x, point.y);
+    else {
+      const previous = points[index - 1];
+      canvasContext.quadraticCurveTo(previous.x, previous.y, (previous.x + point.x) / 2, (previous.y + point.y) / 2);
+    }
+  });
+  canvasContext.stroke();
+
+  points.slice(2).forEach((point, index) => {
+    if (index % 2 !== 0) return;
+    const side = index % 4 === 0 ? 1 : -1;
+    const leafAngle = vine.baseAngle + side * (0.9 + Math.sin(beat + index) * 0.35);
+    const leafSize = Math.min(width, height) * (0.018 + intensity * 0.02) * range * (0.6 + point.t);
+    canvasContext.save();
+    canvasContext.translate(point.x, point.y);
+    canvasContext.rotate(leafAngle);
+    canvasContext.fillStyle = hsla(hue + 18 + point.t * 40, 74, 34 + intensity * 26, 0.62 + point.t * 0.24);
+    canvasContext.beginPath();
+    canvasContext.ellipse(leafSize * 0.75, 0, leafSize, leafSize * 0.36, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.restore();
+  });
+
+  const tip = points[points.length - 1];
+  const flowerOpen = Math.max(0, Math.min(1, vine.bloom * (0.5 + bloomControl * 1.5)));
+  if (flowerOpen > 0.04) {
+    drawGardenFlower(
+      canvasContext,
+      tip.x,
+      tip.y,
+      Math.min(width, height) * (0.018 + intensity * 0.034) * range,
+      hue + 90 + trebleEnergy * 80,
+      flowerOpen,
+      beat * 0.35,
+    );
+  }
+
+  canvasContext.strokeStyle = hsla(hue + 60, 84, 58, 0.22 + trebleEnergy * 0.34);
+  canvasContext.lineWidth = Math.max(1, Math.min(width, height) * 0.0025);
+  for (let tendril = 0; tendril < 2; tendril += 1) {
+    const anchor = points[Math.max(2, Math.min(points.length - 2, 4 + tendril * 3))];
+    const twist = beat + tendril * 2.4;
+    canvasContext.beginPath();
+    canvasContext.moveTo(anchor.x, anchor.y);
+    canvasContext.bezierCurveTo(
+      anchor.x + Math.cos(twist) * length * 0.05,
+      anchor.y + Math.sin(twist) * length * 0.05,
+      anchor.x + Math.cos(twist + 1.7) * length * 0.09,
+      anchor.y + Math.sin(twist + 1.7) * length * 0.09,
+      anchor.x + Math.cos(twist + 3.0) * length * 0.12,
+      anchor.y + Math.sin(twist + 3.0) * length * 0.12,
+    );
+    canvasContext.stroke();
+  }
+
+  canvasContext.restore();
+}
+
+function drawClimbingGardenFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const tempo = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  gardenFrame += tempo;
+  setupGardenVines(width, height);
+
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.42);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.48);
+  const bandIntensities = gardenBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.44));
+
+  drawGardenBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  gardenVines.forEach((vine) => {
+    const intensity = bandIntensities[vine.bandIndex];
+    const breathing = 0.5 + Math.sin(gardenFrame * 0.018 + vine.phase) * 0.5;
+    const targetGrowth = Math.max(0.12, Math.min(1.08, 0.2 + intensity * 0.78 + bassEnergy * 0.14 + breathing * 0.16));
+    const retreatRate = targetGrowth < vine.growth ? 0.035 + tempo * 0.006 : 0.02 + tempo * 0.005;
+    vine.growth += (targetGrowth - vine.growth) * retreatRate;
+    vine.bloom += (Math.max(0, intensity - 0.18) - vine.bloom) * (0.05 + handGraspAmount() * 0.05);
+    drawGardenVine(canvasContext, vine, intensity, bassEnergy, trebleEnergy, width, height);
+  });
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -3607,7 +3812,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "goddesskisses") {
+  if (visualizerSelect.value === "climbinggarden") {
+    drawIdleClimbingGarden();
+  } else if (visualizerSelect.value === "goddesskisses") {
     drawIdleGoddessKisses();
   } else if (visualizerSelect.value === "lizardlouche") {
     drawIdleLizardLouche();
@@ -3911,6 +4118,32 @@ function drawIdleGoddessKisses() {
   }
 }
 
+function drawIdleClimbingGarden() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  gardenFrame += fireworkSpeedMultiplier();
+  setupGardenVines(width, height);
+  drawGardenBackground(canvasContext, width, height, 0.18, 0.22);
+
+  gardenVines.forEach((vine) => {
+    const pulse = 0.5 + Math.sin(gardenFrame * 0.025 + vine.phase) * 0.5;
+    vine.growth += (0.34 + pulse * 0.26 - vine.growth) * 0.035;
+    vine.bloom += (0.22 + pulse * 0.18 - vine.bloom) * 0.035;
+    drawGardenVine(canvasContext, vine, 0.16 + pulse * 0.18, 0.18, 0.22 + pulse * 0.12, width, height);
+  });
+
+  if (visualizerSelect.value === "climbinggarden" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleEqualizer() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -3991,6 +4224,7 @@ function resizeCanvas() {
   occlusionOctopi = [];
   loucheLizards = [];
   goddessKisses = [];
+  gardenVines = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -4044,6 +4278,7 @@ visualizerSelect.addEventListener("change", () => {
     octopusocclusion: "Octopus Occlusion frequency visualisation",
     lizardlouche: "Lizard Louche frequency visualisation",
     goddesskisses: "Goddess Kisses frequency visualisation",
+    climbinggarden: "Climbing Garden frequency visualisation",
   };
 
   visualizer.setAttribute(
@@ -4074,6 +4309,7 @@ handCount.addEventListener("input", () => {
   occlusionOctopi = [];
   loucheLizards = [];
   goddessKisses = [];
+  gardenVines = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
