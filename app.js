@@ -57,6 +57,11 @@ let glitterParticles = [];
 let glitterFrame = 0;
 let butterflies = [];
 let butterflyFrame = 0;
+let knifeTargets = [];
+let thrownKnives = [];
+let knifeFrame = 0;
+let occlusionOctopi = [];
+let octopusFrame = 0;
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -204,6 +209,15 @@ const butterflyBands = [
   { start: 83, end: 112 },
 ];
 
+const knifeBands = [
+  { start: 1, end: 5, kind: "log" },
+  { start: 6, end: 12, kind: "drum" },
+  { start: 13, end: 26, kind: "wheel" },
+  { start: 27, end: 46, kind: "board" },
+  { start: 47, end: 76, kind: "tin" },
+  { start: 77, end: 112, kind: "bell" },
+];
+
 const formOptionsByVisualizer = {
   fireworks: [
     ["hydra", "Hydra"],
@@ -220,6 +234,11 @@ const formOptionsByVisualizer = {
     ["hail", "Hail"],
     ["snow", "Snow"],
     ["confetti", "Confetti"],
+  ],
+  knifethunk: [
+    ["timber", "Timber wall"],
+    ["carnival", "Carnival wheels"],
+    ["foundry", "Tin foundry"],
   ],
 };
 
@@ -397,22 +416,22 @@ function syncVisualizerControls() {
 
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost"].includes(visualizer);
-  armsLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost"].includes(visualizer);
+  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion"].includes(visualizer);
+  armsLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion"].includes(visualizer);
 
   setControlLabel(
     fireworkSpeed,
-    visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost"].includes(visualizer) ? "Tempo" : visualizer === "glitterfall" ? "Fall rate" : "Speed",
+    visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion"].includes(visualizer) ? "Tempo" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
   );
-  setControlLabel(handSize, ["swampbubbles", "discojive", "glitterfall", "butterflyhost"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(handSize, ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion"].includes(visualizer) ? "Scale" : "Reach");
   setControlLabel(
     handCount,
-    visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : "Arms",
+    visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : "Arms",
   );
   setControlLabel(
     handGrasp,
-    visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : "Grasp",
+    visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "octopusocclusion" ? "Mood" : "Grasp",
   );
 }
 
@@ -449,6 +468,11 @@ function restartVisualizer() {
   glitterFrame = 0;
   butterflies = [];
   butterflyFrame = 0;
+  knifeTargets = [];
+  thrownKnives = [];
+  knifeFrame = 0;
+  occlusionOctopi = [];
+  octopusFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -568,7 +592,11 @@ function drawVisualizer() {
 
   const draw = () => {
     try {
-      if (visualizerSelect.value === "butterflyhost") {
+      if (visualizerSelect.value === "octopusocclusion") {
+        drawOctopusOcclusionFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "knifethunk") {
+        drawKnifeThunkFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "butterflyhost") {
         drawButterflyHostFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "glitterfall") {
         drawGlitterFallFrame(canvasContext, buffer);
@@ -1678,6 +1706,472 @@ function drawButterflyHostFrame(canvasContext, buffer) {
   });
 }
 
+function knifeHue(bandIndex, intensity) {
+  const theme = themeSelect.value;
+  const progress = bandIndex / Math.max(1, knifeBands.length - 1);
+  if (theme === "ice") return 192 + progress * 62 + intensity * 28;
+  if (theme === "ember") return 10 + progress * 44 + intensity * 22;
+  if (theme === "pressure") return 338 - progress * 220 + intensity * 58;
+  if (theme === "spectrum") return 300 - progress * 250 + intensity * 34;
+  return 150 + progress * 82 + intensity * 18;
+}
+
+function setupKnifeTargets(width, height) {
+  const targetCount = handCountValueNumber();
+  if (knifeTargets.length === targetCount) {
+    return;
+  }
+
+  const columns = Math.ceil(Math.sqrt(targetCount * 1.5));
+  const rows = Math.ceil(targetCount / columns);
+  knifeTargets = Array.from({ length: targetCount }, (_, index) => {
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+    const bandIndex = index % knifeBands.length;
+    const kind = knifeBands[bandIndex].kind;
+    return {
+      bandIndex,
+      kind,
+      x: width * ((col + 0.62) / (columns + 0.2)),
+      y: height * (0.22 + ((row + 0.55) / Math.max(1, rows)) * 0.62),
+      radius: Math.min(width, height) * (kind === "log" || kind === "drum" ? 0.088 : kind === "tin" || kind === "bell" ? 0.054 : 0.07),
+      phase: Math.random() * Math.PI * 2,
+      ring: 0,
+      wobble: 0,
+      embedded: [],
+    };
+  });
+}
+
+function drawKnifeBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const scene = fireworkFormSelect.value;
+  canvasContext.fillStyle = scene === "foundry" ? "rgba(8, 7, 8, 0.36)" : "rgba(6, 9, 8, 0.34)";
+  canvasContext.fillRect(0, 0, width, height);
+
+  const wall = canvasContext.createLinearGradient(0, 0, 0, height);
+  wall.addColorStop(0, scene === "foundry" ? "rgba(34, 31, 34, 0.74)" : "rgba(24, 18, 12, 0.72)");
+  wall.addColorStop(0.55, scene === "carnival" ? "rgba(48, 22, 34, 0.5)" : "rgba(20, 15, 12, 0.62)");
+  wall.addColorStop(1, "rgba(4, 4, 5, 0.88)");
+  canvasContext.fillStyle = wall;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.strokeStyle = scene === "foundry" ? "rgba(190, 202, 210, 0.06)" : "rgba(160, 100, 54, 0.08)";
+  canvasContext.lineWidth = 2;
+  for (let y = height * 0.16; y < height; y += height * 0.14) {
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, y + Math.sin(knifeFrame * 0.01 + y) * bassEnergy * 8);
+    canvasContext.lineTo(width, y);
+    canvasContext.stroke();
+  }
+
+  for (let light = 0; light < 4; light += 1) {
+    const hue = knifeHue(light + 2, trebleEnergy);
+    const x = width * (0.16 + light * 0.24 + Math.sin(knifeFrame * 0.012 + light) * 0.03);
+    const glow = canvasContext.createRadialGradient(x, height * 0.12, 0, x, height * 0.12, width * 0.22);
+    glow.addColorStop(0, hsla(hue, 92, 62, 0.08 + trebleEnergy * 0.14));
+    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = glow;
+    canvasContext.fillRect(0, 0, width, height);
+  }
+}
+
+function drawKnifeTarget(canvasContext, target, intensity, bassEnergy, trebleEnergy) {
+  const scale = handSizeMultiplier();
+  const hue = knifeHue(target.bandIndex, intensity);
+  const radius = target.radius * scale * (1 + target.wobble * 0.18 + intensity * 0.08);
+  const shakeX = Math.sin(knifeFrame * 0.35 + target.phase) * target.wobble * radius * 0.18;
+  const shakeY = Math.cos(knifeFrame * 0.31 + target.phase) * target.wobble * radius * 0.12;
+
+  target.ring *= 0.93;
+  target.wobble *= 0.88;
+
+  canvasContext.save();
+  canvasContext.translate(target.x + shakeX, target.y + shakeY);
+
+  if (target.kind === "tin" || target.kind === "bell") {
+    const metal = canvasContext.createRadialGradient(-radius * 0.3, -radius * 0.38, radius * 0.08, 0, 0, radius);
+    metal.addColorStop(0, hsla(hue + 30, 34, 86, 0.9));
+    metal.addColorStop(0.55, hsla(hue, 38, 46 + trebleEnergy * 22, 0.82));
+    metal.addColorStop(1, hsla(hue - 40, 34, 22, 0.72));
+    canvasContext.fillStyle = metal;
+    canvasContext.beginPath();
+    canvasContext.arc(0, 0, radius, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.strokeStyle = hsla(hue + 70, 84, 78, 0.35 + target.ring * 0.48);
+    canvasContext.lineWidth = 2 + target.ring * 5;
+    canvasContext.stroke();
+  } else {
+    const wood = canvasContext.createRadialGradient(0, 0, radius * 0.15, 0, 0, radius);
+    wood.addColorStop(0, hsla(hue + 22, 62, 44 + intensity * 18, 0.92));
+    wood.addColorStop(0.72, hsla(hue - 18, 52, 24, 0.86));
+    wood.addColorStop(1, "rgba(22, 10, 6, 0.78)");
+    canvasContext.fillStyle = wood;
+    canvasContext.beginPath();
+    canvasContext.arc(0, 0, radius, 0, Math.PI * 2);
+    canvasContext.fill();
+
+    canvasContext.strokeStyle = hsla(hue + 34, 76, 68, 0.22 + target.ring * 0.42);
+    for (let ring = 0.34; ring <= 1; ring += 0.22) {
+      canvasContext.lineWidth = 1.5 + target.ring * 2.2;
+      canvasContext.beginPath();
+      canvasContext.arc(0, 0, radius * ring * (1 + target.ring * 0.18), 0, Math.PI * 2);
+      canvasContext.stroke();
+    }
+  }
+
+  target.embedded = target.embedded.filter((knife) => knife.life > 0.02);
+  target.embedded.forEach((knife) => {
+    knife.life *= 0.992;
+    drawKnife(canvasContext, {
+      x: Math.cos(knife.angle) * radius * knife.distance,
+      y: Math.sin(knife.angle) * radius * knife.distance,
+      angle: knife.angle + Math.PI / 2,
+      length: knife.length,
+      hue: knife.hue,
+      alpha: knife.life,
+      embedded: true,
+    });
+  });
+
+  if (target.ring > 0.02) {
+    canvasContext.strokeStyle = hsla(hue + 100, 92, 72, target.ring * 0.36);
+    canvasContext.lineWidth = 1 + target.ring * 4;
+    canvasContext.beginPath();
+    canvasContext.arc(0, 0, radius * (1.08 + (1 - target.ring) * 0.95), 0, Math.PI * 2);
+    canvasContext.stroke();
+  }
+
+  canvasContext.restore();
+}
+
+function drawKnife(canvasContext, knife) {
+  canvasContext.save();
+  canvasContext.translate(knife.x, knife.y);
+  canvasContext.rotate(knife.angle);
+  canvasContext.globalAlpha = knife.alpha ?? 1;
+
+  const length = knife.length;
+  const blade = canvasContext.createLinearGradient(0, -length * 0.52, 0, length * 0.18);
+  blade.addColorStop(0, "rgba(250, 252, 246, 0.95)");
+  blade.addColorStop(0.55, hsla(knife.hue, 30, 70, 0.86));
+  blade.addColorStop(1, "rgba(78, 83, 88, 0.86)");
+  canvasContext.fillStyle = blade;
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -length * 0.58);
+  canvasContext.lineTo(length * 0.13, length * 0.06);
+  canvasContext.lineTo(0, length * 0.28);
+  canvasContext.lineTo(-length * 0.13, length * 0.06);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(18, 12, 8, 0.94)";
+  canvasContext.fillRect(-length * 0.08, length * 0.22, length * 0.16, length * 0.42);
+  canvasContext.strokeStyle = hsla(knife.hue + 36, 82, 70, 0.42);
+  canvasContext.lineWidth = Math.max(1, length * 0.025);
+  canvasContext.strokeRect(-length * 0.08, length * 0.22, length * 0.16, length * 0.42);
+
+  canvasContext.restore();
+}
+
+function spawnKnife(bandIndex, intensity, width, height) {
+  if (!knifeTargets.length) return;
+  const force = handGraspAmount();
+  const scale = handSizeMultiplier();
+  const targetPool = knifeTargets.filter((target) => target.bandIndex === bandIndex);
+  const target = targetPool.length ? targetPool[Math.floor(Math.random() * targetPool.length)] : knifeTargets[Math.floor(Math.random() * knifeTargets.length)];
+  const fromLeft = Math.random() < 0.5;
+  const startY = height * (0.12 + Math.random() * 0.74);
+
+  thrownKnives.push({
+    x: fromLeft ? -width * 0.08 : width * 1.08,
+    y: startY,
+    vx: (target.x - (fromLeft ? -width * 0.08 : width * 1.08)) * (0.018 + intensity * 0.018 + force * 0.012),
+    vy: (target.y - startY) * (0.018 + intensity * 0.015),
+    target,
+    angle: fromLeft ? Math.PI / 2 : -Math.PI / 2,
+    spin: (fromLeft ? 1 : -1) * (0.24 + intensity * 0.52 + force * 0.24),
+    length: Math.min(width, height) * (0.055 + intensity * 0.035) * scale,
+    hue: knifeHue(bandIndex, intensity),
+    alpha: 1,
+    bandIndex,
+  });
+}
+
+function drawKnifeThunkFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const throwRate = fireworkSpeedMultiplier();
+  const force = handGraspAmount();
+
+  analyser.getByteFrequencyData(buffer);
+  knifeFrame += throwRate;
+  setupKnifeTargets(width, height);
+
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.36);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.42);
+  drawKnifeBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  const bandIntensities = knifeBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.42));
+  knifeTargets.forEach((target) => {
+    drawKnifeTarget(canvasContext, target, bandIntensities[target.bandIndex], bassEnergy, trebleEnergy);
+  });
+
+  bandIntensities.forEach((intensity, bandIndex) => {
+    const chance = (0.018 + intensity * 0.12 + bassEnergy * 0.018 + force * 0.018) * throwRate;
+    if (Math.random() < chance) {
+      spawnKnife(bandIndex, intensity, width, height);
+    }
+  });
+
+  thrownKnives = thrownKnives.filter((knife) => knife.alpha > 0.02 && knife.x > -width * 0.25 && knife.x < width * 1.25 && knife.y > -height * 0.3 && knife.y < height * 1.3);
+  thrownKnives.forEach((knife) => {
+    const dx = knife.target.x - knife.x;
+    const dy = knife.target.y - knife.y;
+    knife.vx += dx * (0.0008 + force * 0.0005);
+    knife.vy += dy * (0.0008 + force * 0.0004);
+    knife.x += knife.vx * throwRate;
+    knife.y += knife.vy * throwRate;
+    knife.angle += knife.spin * throwRate;
+    knife.alpha *= 0.998;
+    drawKnife(canvasContext, knife);
+
+    if (Math.hypot(dx, dy) < knife.target.radius * handSizeMultiplier() * 0.62) {
+      knife.target.ring = Math.min(1, 0.42 + bandIntensities[knife.bandIndex] * 0.8 + force * 0.35);
+      knife.target.wobble = Math.min(1, 0.38 + bandIntensities[knife.bandIndex] * 0.7 + force * 0.35);
+      knife.target.embedded.push({
+        angle: Math.atan2(knife.y - knife.target.y, knife.x - knife.target.x),
+        distance: Math.min(0.82, Math.random() * 0.4 + 0.28),
+        length: knife.length,
+        hue: knife.hue,
+        life: 1,
+      });
+      knife.alpha = 0;
+    }
+  });
+
+  if (thrownKnives.length > 160) {
+    thrownKnives.splice(0, thrownKnives.length - 160);
+  }
+}
+
+function setupOcclusionOctopi(width, height) {
+  const targetCount = handCountValueNumber();
+  if (occlusionOctopi.length === targetCount) {
+    return;
+  }
+
+  occlusionOctopi = Array.from({ length: targetCount }, (_, index) => ({
+    index,
+    x: width * (0.14 + Math.random() * 0.72),
+    y: height * (0.2 + Math.random() * 0.62),
+    vx: (Math.random() - 0.5) * 0.7,
+    vy: (Math.random() - 0.5) * 0.7,
+    baseSize: Math.min(width, height) * (0.07 + Math.random() * 0.035),
+    phase: Math.random() * Math.PI * 2,
+    mood: Math.floor(Math.random() * 5),
+    energy: 0,
+    hueOffset: Math.random() * 36,
+  }));
+}
+
+function octopusBand(index, count, bufferLength) {
+  const usableStart = 1;
+  const usableEnd = Math.min(112, bufferLength - 1);
+  const usableBins = Math.max(1, usableEnd - usableStart + 1);
+  const slice = Math.max(1, Math.floor(usableBins / count));
+  const start = usableStart + index * slice;
+  const end = index === count - 1 ? usableEnd : Math.min(usableEnd, start + slice - 1);
+  return { start, end };
+}
+
+function octopusHue(index, count, intensity) {
+  const theme = themeSelect.value;
+  const progress = index / Math.max(1, count - 1);
+  if (theme === "ice") return 184 + progress * 74 + intensity * 34;
+  if (theme === "ember") return 8 + progress * 48 + intensity * 28;
+  if (theme === "pressure") return 332 - progress * 230 + intensity * 64;
+  if (theme === "spectrum") return 304 - progress * 274 + intensity * 42;
+  return 156 + progress * 90 + intensity * 30;
+}
+
+function drawOctopusBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  canvasContext.fillStyle = "rgba(3, 6, 10, 0.32)";
+  canvasContext.fillRect(0, 0, width, height);
+
+  const water = canvasContext.createLinearGradient(0, 0, 0, height);
+  water.addColorStop(0, hsla(octopusHue(5, 8, trebleEnergy), 66, 18 + trebleEnergy * 14, 0.3));
+  water.addColorStop(0.55, "rgba(6, 14, 18, 0.34)");
+  water.addColorStop(1, hsla(octopusHue(1, 8, bassEnergy), 66, 10 + bassEnergy * 14, 0.42));
+  canvasContext.fillStyle = water;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.strokeStyle = `rgba(126, 230, 218, ${0.035 + trebleEnergy * 0.045})`;
+  canvasContext.lineWidth = 1;
+  for (let line = 0; line < 9; line += 1) {
+    const y = height * (0.16 + line * 0.09);
+    canvasContext.beginPath();
+    for (let x = 0; x <= width; x += width / 32) {
+      const waveY = y + Math.sin(x * 0.013 + octopusFrame * 0.018 + line) * (4 + bassEnergy * 18);
+      if (x === 0) {
+        canvasContext.moveTo(x, waveY);
+      } else {
+        canvasContext.lineTo(x, waveY);
+      }
+    }
+    canvasContext.stroke();
+  }
+}
+
+function drawAmusingOctopusFace(canvasContext, size, energy, mood, hue) {
+  const eyeY = -size * 0.12;
+  const blink = Math.max(0, Math.sin(octopusFrame * 0.05 + mood));
+  const eyeHeight = size * (0.14 - blink * 0.09);
+
+  canvasContext.fillStyle = "rgba(248, 249, 235, 0.92)";
+  [-1, 1].forEach((side) => {
+    canvasContext.beginPath();
+    canvasContext.ellipse(side * size * 0.28, eyeY, size * 0.15, Math.max(size * 0.035, eyeHeight), 0, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.fillStyle = "rgba(5, 7, 9, 0.9)";
+    canvasContext.beginPath();
+    canvasContext.arc(side * size * (0.28 + Math.sin(octopusFrame * 0.03 + mood) * 0.035), eyeY, size * 0.055, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.fillStyle = "rgba(248, 249, 235, 0.92)";
+  });
+
+  canvasContext.strokeStyle = "rgba(5, 7, 9, 0.82)";
+  canvasContext.lineWidth = Math.max(1, size * 0.07);
+  canvasContext.beginPath();
+  if (mood % 5 === 0) {
+    canvasContext.arc(0, size * 0.18, size * (0.16 + energy * 0.1), 0.1 * Math.PI, 0.9 * Math.PI);
+  } else if (mood % 5 === 1) {
+    canvasContext.moveTo(-size * 0.18, size * 0.25);
+    canvasContext.quadraticCurveTo(0, size * (0.34 + energy * 0.2), size * 0.22, size * 0.22);
+  } else if (mood % 5 === 2) {
+    canvasContext.moveTo(-size * 0.2, size * 0.24);
+    canvasContext.lineTo(size * 0.2, size * 0.24);
+  } else if (mood % 5 === 3) {
+    canvasContext.arc(0, size * 0.25, size * (0.09 + energy * 0.16), 0, Math.PI * 2);
+  } else {
+    canvasContext.moveTo(-size * 0.22, size * 0.23);
+    canvasContext.quadraticCurveTo(-size * 0.02, size * 0.08, size * 0.2, size * 0.22);
+  }
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = hsla(hue + 80, 90, 74, 0.36 + energy * 0.32);
+  canvasContext.beginPath();
+  canvasContext.arc(-size * 0.46, size * 0.08, size * (0.08 + energy * 0.05), 0, Math.PI * 2);
+  canvasContext.arc(size * 0.46, size * 0.08, size * (0.08 + energy * 0.05), 0, Math.PI * 2);
+  canvasContext.fill();
+}
+
+function drawOcclusionOctopus(canvasContext, octopus, count, intensity, band) {
+  const scale = handSizeMultiplier();
+  const moodControl = handGraspAmount();
+  const hue = octopusHue(octopus.index, count, intensity) + octopus.hueOffset;
+  const size = octopus.baseSize * scale * (0.72 + intensity * 0.85);
+  const squash = 1 + Math.sin(octopusFrame * (0.04 + intensity * 0.08) + octopus.phase) * (0.08 + moodControl * 0.12);
+  const alpha = 0.58 + intensity * 0.34;
+
+  canvasContext.save();
+  canvasContext.translate(octopus.x, octopus.y);
+  canvasContext.scale(1 / squash, squash);
+  canvasContext.globalAlpha = alpha;
+
+  const glow = canvasContext.createRadialGradient(0, 0, size * 0.2, 0, 0, size * 2.7);
+  glow.addColorStop(0, hsla(hue, 92, 58, 0.14 + intensity * 0.2));
+  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = glow;
+  canvasContext.beginPath();
+  canvasContext.arc(0, size * 0.1, size * 2.7, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  for (let arm = 0; arm < 8; arm += 1) {
+    const side = arm < 4 ? -1 : 1;
+    const lane = arm % 4;
+    const rootX = side * size * (0.18 + lane * 0.075);
+    const rootY = size * (0.42 + lane * 0.06);
+    const curl = Math.sin(octopusFrame * (0.045 + intensity * 0.08) + octopus.phase + arm) * (0.32 + moodControl * 0.35 + intensity * 0.24);
+    const reach = size * (0.65 + lane * 0.18 + intensity * 0.42);
+
+    canvasContext.strokeStyle = hsla(hue + arm * 7, 78, 38 + intensity * 26, 0.56);
+    canvasContext.lineWidth = Math.max(2, size * (0.15 - lane * 0.018));
+    canvasContext.beginPath();
+    canvasContext.moveTo(rootX, rootY);
+    canvasContext.quadraticCurveTo(rootX + side * reach * 0.32, rootY + size * (0.24 + curl), rootX + side * reach * (0.72 + moodControl * 0.25), rootY + size * (0.5 + curl * 0.35));
+    canvasContext.stroke();
+  }
+
+  const body = canvasContext.createRadialGradient(-size * 0.24, -size * 0.32, size * 0.14, 0, 0, size * 1.12);
+  body.addColorStop(0, hsla(hue + 34, 88, 66 + intensity * 12, 0.95));
+  body.addColorStop(0.58, hsla(hue, 72, 38 + intensity * 22, 0.92));
+  body.addColorStop(1, hsla(hue - 40, 74, 22, 0.72));
+  canvasContext.fillStyle = body;
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, -size * 0.08, size * (0.82 + intensity * 0.18), size * (0.98 + intensity * 0.24), 0, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  for (let spot = 0; spot < 9; spot += 1) {
+    const angle = spot * 2.33 + octopus.phase;
+    const radius = size * (0.18 + (spot % 4) * 0.12);
+    canvasContext.fillStyle = hsla(hue + 80 + spot * 10, 88, 68, (0.12 + intensity * 0.28) * (spot % 3 === 0 ? 1.4 : 1));
+    canvasContext.beginPath();
+    canvasContext.arc(Math.cos(angle) * radius * 0.75, Math.sin(angle) * radius * 0.82 - size * 0.08, size * (0.035 + intensity * 0.055), 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  drawAmusingOctopusFace(canvasContext, size, intensity, octopus.mood, hue);
+
+  canvasContext.globalAlpha = 0.78;
+  canvasContext.fillStyle = "rgba(235, 247, 248, 0.75)";
+  canvasContext.font = `${Math.max(8, size * 0.22)}px Segoe UI, sans-serif`;
+  canvasContext.textAlign = "center";
+  canvasContext.fillText(`${band.start}-${band.end}`, 0, size * 1.35);
+  canvasContext.restore();
+}
+
+function drawOctopusOcclusionFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const tempo = fireworkSpeedMultiplier();
+  const moodControl = handGraspAmount();
+
+  analyser.getByteFrequencyData(buffer);
+  octopusFrame += tempo;
+  setupOcclusionOctopi(width, height);
+
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.34);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.42);
+  drawOctopusBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  const count = Math.max(1, occlusionOctopi.length);
+  occlusionOctopi.forEach((octopus) => {
+    const band = octopusBand(octopus.index, count, buffer.length);
+    const intensity = pressureResponse(averageBand(buffer, band.start, band.end), 1.55);
+    octopus.energy = octopus.energy * 0.84 + intensity * 0.16;
+
+    const swirl = Math.sin(octopusFrame * 0.018 + octopus.phase) * (0.04 + moodControl * 0.13 + octopus.energy * 0.08);
+    octopus.vx += Math.cos(octopus.phase + octopusFrame * 0.012) * (0.02 + octopus.energy * 0.18) + swirl;
+    octopus.vy += Math.sin(octopus.phase + octopusFrame * 0.015) * (0.018 + octopus.energy * 0.14) - trebleEnergy * 0.02;
+    octopus.vx *= 0.9;
+    octopus.vy *= 0.9;
+    octopus.x += octopus.vx * tempo;
+    octopus.y += octopus.vy * tempo;
+
+    if (octopus.x < -60) octopus.x = width + 60;
+    if (octopus.x > width + 60) octopus.x = -60;
+    if (octopus.y < -60) octopus.y = height + 60;
+    if (octopus.y > height + 60) octopus.y = -60;
+  });
+
+  [...occlusionOctopi]
+    .sort((a, b) => a.y - b.y)
+    .forEach((octopus) => {
+      const band = octopusBand(octopus.index, count, buffer.length);
+      drawOcclusionOctopus(canvasContext, octopus, count, octopus.energy, band);
+    });
+}
+
 function setupHandForms(width, height) {
   const targetCount = handCountValueNumber();
 
@@ -2531,7 +3025,11 @@ function drawCephalopodFrame(canvasContext, buffer) {
 }
 
 function drawIdleVisualizer() {
-  if (visualizerSelect.value === "butterflyhost") {
+  if (visualizerSelect.value === "octopusocclusion") {
+    drawIdleOctopusOcclusion();
+  } else if (visualizerSelect.value === "knifethunk") {
+    drawIdleKnifeThunk();
+  } else if (visualizerSelect.value === "butterflyhost") {
     drawIdleButterflyHost();
   } else if (visualizerSelect.value === "glitterfall") {
     drawIdleGlitterFall();
@@ -2727,6 +3225,56 @@ function drawIdleButterflyHost() {
   });
 }
 
+function drawIdleKnifeThunk() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  knifeFrame += 1;
+  setupKnifeTargets(width, height);
+  drawKnifeBackground(canvasContext, width, height, 0.18, 0.2);
+
+  knifeTargets.forEach((target, index) => {
+    target.ring = Math.max(target.ring, index % 3 === 0 ? 0.18 : 0);
+    drawKnifeTarget(canvasContext, target, 0.14 + target.bandIndex * 0.025, 0.18, 0.2);
+  });
+
+  if (thrownKnives.length < 8) {
+    spawnKnife(thrownKnives.length % knifeBands.length, 0.18, width, height);
+  }
+
+  thrownKnives.forEach((knife) => {
+    knife.x += knife.vx * 0.45;
+    knife.y += knife.vy * 0.45;
+    knife.angle += knife.spin * 0.45;
+    knife.alpha *= 0.992;
+    drawKnife(canvasContext, knife);
+  });
+}
+
+function drawIdleOctopusOcclusion() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  octopusFrame += 1;
+  setupOcclusionOctopi(width, height);
+  drawOctopusBackground(canvasContext, width, height, 0.16, 0.2);
+
+  const count = Math.max(1, occlusionOctopi.length);
+  occlusionOctopi.forEach((octopus) => {
+    octopus.x += Math.sin(octopusFrame * 0.014 + octopus.phase) * 0.18;
+    octopus.y += Math.cos(octopusFrame * 0.013 + octopus.phase) * 0.14;
+  });
+
+  [...occlusionOctopi]
+    .sort((a, b) => a.y - b.y)
+    .forEach((octopus) => {
+      const band = octopusBand(octopus.index, count, 128);
+      drawOcclusionOctopus(canvasContext, octopus, count, 0.14 + (octopus.index % 4) * 0.035, band);
+    });
+}
+
 function drawIdleEqualizer() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -2802,6 +3350,9 @@ function resizeCanvas() {
   discoCouples = [];
   glitterParticles = [];
   butterflies = [];
+  knifeTargets = [];
+  thrownKnives = [];
+  occlusionOctopi = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -2851,6 +3402,8 @@ visualizerSelect.addEventListener("change", () => {
     discojive: "Disco Jive frequency visualisation",
     glitterfall: "Glitter Fall frequency visualisation",
     butterflyhost: "Butterfly Host frequency visualisation",
+    knifethunk: "Knife Thunk frequency visualisation",
+    octopusocclusion: "Octopus Occlusion frequency visualisation",
   };
 
   visualizer.setAttribute(
@@ -2876,6 +3429,9 @@ handCount.addEventListener("input", () => {
   discoCouples = [];
   glitterParticles = [];
   butterflies = [];
+  knifeTargets = [];
+  thrownKnives = [];
+  occlusionOctopi = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
