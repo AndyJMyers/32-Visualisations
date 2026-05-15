@@ -51,6 +51,12 @@ let arrowFrame = 0;
 let cephArms = [];
 let cephInkBlooms = [];
 let cephFrame = 0;
+let discoCouples = [];
+let discoFrame = 0;
+let glitterParticles = [];
+let glitterFrame = 0;
+let butterflies = [];
+let butterflyFrame = 0;
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -101,6 +107,16 @@ const visualizerThemes = {
       return `hsl(${hue} 78% ${lightness}%)`;
     },
   },
+  pressure: {
+    idle: "rgba(255, 58, 112, 0.18)",
+    peak: "rgba(255, 244, 255, 0.9)",
+    color(index, count, value) {
+      const progress = index / Math.max(1, count - 1);
+      const hue = 330 - progress * 260 + value * 36;
+      const lightness = 42 + value * 28;
+      return `hsl(${hue} 94% ${lightness}%)`;
+    },
+  },
 };
 
 const fireworkPalettes = {
@@ -108,6 +124,7 @@ const fireworkPalettes = {
   ice: [196, 212, 226],
   ember: [18, 34, 48],
   spectrum: [285, 215, 155, 48, 330],
+  pressure: [336, 304, 262, 212, 166, 46],
 };
 
 const pacBands = [
@@ -159,6 +176,34 @@ const cephBands = [
   { start: 105, end: 112 },
 ];
 
+const discoBands = [
+  { start: 1, end: 5, move: "bass-step" },
+  { start: 6, end: 12, move: "hip-sway" },
+  { start: 13, end: 26, move: "twist" },
+  { start: 27, end: 48, move: "hand-jive" },
+  { start: 49, end: 78, move: "spin" },
+  { start: 79, end: 112, move: "finger-point" },
+];
+
+const glitterBands = [
+  { start: 1, end: 5, weight: 1.35 },
+  { start: 6, end: 12, weight: 1.18 },
+  { start: 13, end: 28, weight: 1 },
+  { start: 29, end: 52, weight: 0.9 },
+  { start: 53, end: 82, weight: 0.76 },
+  { start: 83, end: 112, weight: 0.62 },
+];
+
+const butterflyBands = [
+  { start: 1, end: 5 },
+  { start: 6, end: 12 },
+  { start: 13, end: 24 },
+  { start: 25, end: 40 },
+  { start: 41, end: 60 },
+  { start: 61, end: 82 },
+  { start: 83, end: 112 },
+];
+
 const formOptionsByVisualizer = {
   fireworks: [
     ["hydra", "Hydra"],
@@ -169,6 +214,12 @@ const formOptionsByVisualizer = {
     ["woodland", "Woodland"],
     ["williamtell", "William Tell"],
     ["fort", "Wooden fort"],
+  ],
+  glitterfall: [
+    ["rain", "Rain"],
+    ["hail", "Hail"],
+    ["snow", "Snow"],
+    ["confetti", "Confetti"],
   ],
 };
 
@@ -309,6 +360,15 @@ function updateHandControlLabels() {
   handGraspValue.textContent = `${Math.round(handGraspAmount() * 100)}%`;
 }
 
+function setControlLabel(control, text) {
+  const label = control.closest("label");
+  const textNode = Array.from(label.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+
+  if (textNode) {
+    textNode.textContent = `\n            ${text}\n            `;
+  }
+}
+
 function syncVisualizerControls() {
   const visualizer = visualizerSelect.value;
   const formOptions = formOptionsByVisualizer[visualizer] || [];
@@ -337,9 +397,23 @@ function syncVisualizerControls() {
 
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles"].includes(visualizer);
-  armsLabel.hidden = !["branchhands", "arrowstorm", "cephalopod"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod"].includes(visualizer);
+  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost"].includes(visualizer);
+  armsLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost"].includes(visualizer);
+
+  setControlLabel(
+    fireworkSpeed,
+    visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost"].includes(visualizer) ? "Tempo" : visualizer === "glitterfall" ? "Fall rate" : "Speed",
+  );
+  setControlLabel(handSize, ["swampbubbles", "discojive", "glitterfall", "butterflyhost"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(
+    handCount,
+    visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : "Arms",
+  );
+  setControlLabel(
+    handGrasp,
+    visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : "Grasp",
+  );
 }
 
 function setFullscreenLabel() {
@@ -369,6 +443,12 @@ function restartVisualizer() {
   cephArms = [];
   cephInkBlooms = [];
   cephFrame = 0;
+  discoCouples = [];
+  discoFrame = 0;
+  glitterParticles = [];
+  glitterFrame = 0;
+  butterflies = [];
+  butterflyFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -382,7 +462,7 @@ function setupAudioGraph() {
     audioContext = new AudioContext();
     analyser = audioContext.createAnalyser();
     analyser.fftSize = 256;
-    analyser.smoothingTimeConstant = 0.78;
+    analyser.smoothingTimeConstant = 0.64;
     sourceNode = audioContext.createMediaElementSource(audio);
     sourceNode.connect(analyser);
     analyser.connect(audioContext.destination);
@@ -488,7 +568,13 @@ function drawVisualizer() {
 
   const draw = () => {
     try {
-      if (visualizerSelect.value === "cephalopod") {
+      if (visualizerSelect.value === "butterflyhost") {
+        drawButterflyHostFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "glitterfall") {
+        drawGlitterFallFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "discojive") {
+        drawDiscoJiveFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "cephalopod") {
         drawCephalopodFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "arrowstorm") {
         drawArrowStormFrame(canvasContext, buffer);
@@ -594,6 +680,10 @@ function fireworkHue(bandIndex, intensity) {
 
 function hsla(hue, saturation, lightness, alpha) {
   return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
+}
+
+function pressureResponse(value, boost = 1.35) {
+  return Math.min(1, Math.pow(Math.max(0, value), 0.58) * boost);
 }
 
 function pointOnLine(x1, y1, x2, y2) {
@@ -1050,6 +1140,544 @@ function drawPacDanceFrame(canvasContext, buffer) {
   });
 }
 
+function setupDiscoCouples(width, height) {
+  const targetCount = handCountValueNumber();
+  if (discoCouples.length === targetCount) {
+    return;
+  }
+
+  const columns = Math.ceil(Math.sqrt(targetCount * 1.8));
+  discoCouples = Array.from({ length: targetCount }, (_, index) => {
+    const bandIndex = index % discoBands.length;
+    const row = Math.floor(index / columns);
+    const col = index % columns;
+    const rowCount = Math.ceil(targetCount / columns);
+
+    return {
+      bandIndex,
+      homeX: width * ((col + 0.55) / Math.max(1, columns)),
+      homeY: height * (0.28 + ((row + 0.5) / Math.max(1, rowCount)) * 0.54),
+      phase: Math.random() * Math.PI * 2,
+      size: Math.min(width, height) * (0.048 + Math.random() * 0.012),
+      direction: index % 2 === 0 ? 1 : -1,
+    };
+  });
+}
+
+function drawDiscoBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const floorHue = frequencyHue(4, trebleEnergy);
+  const room = canvasContext.createLinearGradient(0, 0, 0, height);
+  room.addColorStop(0, "rgba(5, 5, 10, 0.34)");
+  room.addColorStop(0.48, hsla(floorHue, 72, 20 + trebleEnergy * 12, 0.34));
+  room.addColorStop(1, "rgba(4, 2, 8, 0.52)");
+  canvasContext.fillStyle = room;
+  canvasContext.fillRect(0, 0, width, height);
+
+  const tileSize = Math.max(26, width / 22);
+  for (let x = -tileSize; x < width + tileSize; x += tileSize) {
+    for (let y = height * 0.58; y < height + tileSize; y += tileSize) {
+      const pulse = Math.sin(discoFrame * 0.04 + x * 0.02 + y * 0.03) * 0.5 + 0.5;
+      canvasContext.fillStyle = hsla(300 - pulse * 190, 82, 28 + pulse * 22, 0.1 + bassEnergy * 0.12);
+      canvasContext.fillRect(x, y, tileSize - 2, tileSize - 2);
+    }
+  }
+
+  for (let beam = 0; beam < 5; beam += 1) {
+    const hue = frequencyHue(beam, trebleEnergy);
+    const x = width * (0.14 + beam * 0.18 + Math.sin(discoFrame * 0.012 + beam) * 0.04);
+    const gradient = canvasContext.createRadialGradient(x, height * 0.18, 0, x, height * 0.18, width * 0.22);
+    gradient.addColorStop(0, hsla(hue, 92, 62, 0.12 + trebleEnergy * 0.16));
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = gradient;
+    canvasContext.fillRect(0, 0, width, height);
+  }
+}
+
+function drawTinyJiver(canvasContext, dancer, role, intensity, x, y, size, hue, beat, direction) {
+  const flair = handGraspAmount();
+  const isUma = role === "uma";
+  const twist = Math.sin(beat * 2.2) * (0.18 + intensity * 0.58 + flair * 0.2);
+  const shoulder = Math.sin(beat * 3.4) * size * (0.22 + intensity * 0.34);
+  const legKick = Math.sin(beat * 2.8 + (isUma ? Math.PI : 0)) * size * (0.55 + intensity * 0.8 + flair * 0.35);
+  const handLift = Math.max(0, Math.sin(beat * 1.7 + (isUma ? 0.8 : 0))) * size * (1.1 + intensity * 0.9);
+  const headBob = Math.abs(Math.sin(beat * 2.1)) * size * intensity * 0.42;
+
+  canvasContext.save();
+  canvasContext.translate(x, y - headBob);
+  canvasContext.scale(direction, 1);
+  canvasContext.rotate(twist * (isUma ? -1 : 1));
+  canvasContext.lineCap = "round";
+  canvasContext.lineJoin = "round";
+
+  const glow = canvasContext.createRadialGradient(0, 0, size * 0.4, 0, 0, size * 3.2);
+  glow.addColorStop(0, hsla(hue, 94, 58, 0.12 + intensity * 0.22));
+  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = glow;
+  canvasContext.beginPath();
+  canvasContext.arc(0, size * 0.45, size * 3.2, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = isUma ? "rgba(245, 239, 226, 0.92)" : "rgba(12, 13, 16, 0.96)";
+  canvasContext.lineWidth = Math.max(2, size * 0.2);
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, 0);
+  canvasContext.lineTo(0, size * 1.18);
+  canvasContext.stroke();
+
+  canvasContext.strokeStyle = isUma ? hsla(hue + 36, 82, 72, 0.9) : "rgba(235, 238, 232, 0.88)";
+  canvasContext.lineWidth = Math.max(1.4, size * 0.12);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.3, size * 0.34);
+  canvasContext.lineTo(-size * (0.95 + intensity * 0.35), size * 0.05 - handLift * 0.28 + shoulder);
+  canvasContext.moveTo(size * 0.28, size * 0.36);
+  canvasContext.lineTo(size * (0.9 + flair * 0.42), size * 0.18 - handLift - shoulder);
+  canvasContext.stroke();
+
+  canvasContext.strokeStyle = hsla(hue, 78, isUma ? 66 : 46, 0.9);
+  canvasContext.lineWidth = Math.max(1.5, size * 0.14);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.16, size * 1.12);
+  canvasContext.lineTo(-size * 0.48, size * 1.9 + legKick * 0.16);
+  canvasContext.moveTo(size * 0.14, size * 1.12);
+  canvasContext.lineTo(size * 0.58, size * 1.82 - legKick * 0.2);
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = "rgba(238, 198, 154, 0.96)";
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 0.42, size * 0.42, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = isUma ? "rgba(10, 8, 9, 0.96)" : "rgba(28, 22, 18, 0.92)";
+  canvasContext.beginPath();
+  if (isUma) {
+    canvasContext.rect(-size * 0.52, -size * 0.82, size * 1.04, size * 0.34);
+    canvasContext.rect(-size * 0.58, -size * 0.55, size * 0.22, size * 0.58);
+    canvasContext.rect(size * 0.36, -size * 0.55, size * 0.22, size * 0.58);
+  } else {
+    canvasContext.arc(0, -size * 0.72, size * 0.43, Math.PI, Math.PI * 2);
+  }
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(5, 7, 9, 0.82)";
+  canvasContext.beginPath();
+  canvasContext.arc(size * 0.16, -size * 0.46, Math.max(1, size * 0.055), 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.restore();
+}
+
+function drawDiscoCouple(canvasContext, couple, intensity, width, height) {
+  const speedMultiplier = fireworkSpeedMultiplier();
+  const flair = handGraspAmount();
+  const scale = handSizeMultiplier();
+  const band = discoBands[couple.bandIndex];
+  const beat = discoFrame * (0.052 + couple.bandIndex * 0.008) + couple.phase;
+  const hue = frequencyHue(couple.bandIndex, intensity);
+  const bassStep = band.move === "bass-step" ? Math.abs(Math.sin(beat * 1.5)) * intensity * height * 0.025 : 0;
+  const twistSlide = band.move === "twist" ? Math.sin(beat * 2.4) * intensity * width * 0.018 : 0;
+  const spin = band.move === "spin" ? Math.sin(beat) * intensity * 0.55 : 0;
+  const point = band.move === "finger-point" ? Math.max(0, Math.sin(beat * 2.2)) * intensity : 0;
+  const distance = couple.size * scale * (1.5 + Math.sin(beat) * 0.24 + flair * 0.42 + point * 0.65);
+  const size = couple.size * scale * (0.86 + intensity * 0.34);
+  const centerX = couple.homeX + Math.sin(beat * 0.5) * intensity * width * 0.018 + twistSlide;
+  const centerY = couple.homeY + bassStep + Math.cos(beat * 0.44) * intensity * height * 0.01;
+
+  couple.homeX += Math.sin(beat * 0.21) * intensity * speedMultiplier * 0.55;
+  couple.homeY += Math.cos(beat * 0.18) * intensity * speedMultiplier * 0.22;
+  couple.homeX += (Math.min(width * 0.92, Math.max(width * 0.08, couple.homeX)) - couple.homeX) * 0.02;
+  couple.homeY += (Math.min(height * 0.84, Math.max(height * 0.18, couple.homeY)) - couple.homeY) * 0.02;
+
+  canvasContext.save();
+  canvasContext.translate(centerX, centerY);
+  canvasContext.rotate(spin * couple.direction);
+
+  canvasContext.strokeStyle = hsla(hue + 18, 88, 72, 0.26 + intensity * 0.34);
+  canvasContext.lineWidth = Math.max(1, size * 0.08);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-distance * 0.7, size * 0.22);
+  canvasContext.lineTo(distance * 0.7, size * 0.16);
+  canvasContext.stroke();
+
+  drawTinyJiver(canvasContext, couple, "john", intensity, -distance, 0, size, hue, beat, 1);
+  drawTinyJiver(canvasContext, couple, "uma", intensity, distance, Math.sin(beat * 2) * size * intensity * 0.35, size * 0.96, hue + 32, beat + Math.PI * 0.18, -1);
+  canvasContext.restore();
+}
+
+function drawDiscoJiveFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const speedMultiplier = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  discoFrame += speedMultiplier;
+  setupDiscoCouples(width, height);
+
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.35);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.45);
+  canvasContext.fillStyle = "rgba(3, 3, 7, 0.28)";
+  canvasContext.fillRect(0, 0, width, height);
+  drawDiscoBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  const bandIntensities = discoBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.46));
+  bandIntensities.forEach((intensity, bandIndex) => {
+    const hue = frequencyHue(bandIndex, intensity);
+    const x = width * ((bandIndex + 0.5) / discoBands.length);
+    canvasContext.fillStyle = hsla(hue, 88, 58, 0.12 + intensity * 0.22);
+    canvasContext.fillRect(x - width * 0.055, height * (0.88 - intensity * 0.22), width * 0.11, height * 0.22);
+  });
+
+  discoCouples.forEach((couple) => {
+    drawDiscoCouple(canvasContext, couple, bandIntensities[couple.bandIndex], width, height);
+  });
+}
+
+function glitterHue(bandIndex, intensity) {
+  const theme = themeSelect.value;
+  const progress = bandIndex / Math.max(1, glitterBands.length - 1);
+  if (theme === "ice") {
+    return 190 + progress * 76 + intensity * 24;
+  }
+  if (theme === "ember") {
+    return 12 + progress * 42 + intensity * 18;
+  }
+  if (theme === "pressure") {
+    return 330 - progress * 230 + intensity * 58;
+  }
+  if (theme === "spectrum") {
+    return 298 - progress * 258 + intensity * 32;
+  }
+  return 150 + progress * 78 + intensity * 18;
+}
+
+function spawnGlitterParticle(bandIndex, intensity, width, height) {
+  const form = fireworkFormSelect.value;
+  const scale = handSizeMultiplier();
+  const fallRate = fireworkSpeedMultiplier();
+  const gust = handGraspAmount();
+  const density = handCountValueNumber() / 6;
+  const isHail = form === "hail";
+  const isSnow = form === "snow";
+  const isRain = form === "rain";
+  const baseSize = isHail ? 4.8 : isSnow ? 3.4 : isRain ? 2.1 : 3.2;
+  const length = isRain ? 14 + intensity * 34 : baseSize * (1.8 + intensity * 2.6);
+
+  glitterParticles.push({
+    x: Math.random() * width,
+    y: -height * (0.04 + Math.random() * 0.2),
+    vx: (Math.random() - 0.5) * (0.35 + gust * 2.6 + intensity * 1.4),
+    vy: (isSnow ? 0.55 : isHail ? 3.4 : isRain ? 4.4 : 1.8) * (0.65 + intensity * 1.2) * fallRate,
+    size: baseSize * scale * glitterBands[bandIndex].weight * (0.7 + intensity * 1.35 + Math.random() * 0.4),
+    length: length * scale,
+    hue: glitterHue(bandIndex, intensity),
+    alpha: 0.72 + Math.random() * 0.28,
+    spin: (Math.random() - 0.5) * (0.05 + intensity * 0.18 + gust * 0.14),
+    angle: Math.random() * Math.PI * 2,
+    life: 1,
+    bandIndex,
+    form,
+    twinkle: Math.random() * Math.PI * 2,
+    density,
+  });
+}
+
+function drawGlitterBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  canvasContext.fillStyle = "rgba(3, 5, 9, 0.34)";
+  canvasContext.fillRect(0, 0, width, height);
+
+  const hue = glitterHue(4, trebleEnergy);
+  const glow = canvasContext.createLinearGradient(0, 0, width, height);
+  glow.addColorStop(0, hsla(hue, 72, 18 + trebleEnergy * 16, 0.22));
+  glow.addColorStop(0.55, "rgba(5, 8, 13, 0.18)");
+  glow.addColorStop(1, hsla(hue - 70, 82, 12 + bassEnergy * 14, 0.26));
+  canvasContext.fillStyle = glow;
+  canvasContext.fillRect(0, 0, width, height);
+}
+
+function drawGlitterParticle(canvasContext, particle, bassEnergy, trebleEnergy) {
+  const sparkle = Math.sin(glitterFrame * 0.12 + particle.twinkle) * 0.5 + 0.5;
+  const alpha = particle.alpha * particle.life * (0.52 + sparkle * 0.62);
+  const hue = particle.hue + sparkle * 28 + trebleEnergy * 42;
+
+  canvasContext.save();
+  canvasContext.translate(particle.x, particle.y);
+  canvasContext.rotate(particle.angle);
+
+  if (particle.form === "rain") {
+    canvasContext.strokeStyle = hsla(hue, 92, 68, alpha);
+    canvasContext.lineWidth = Math.max(1, particle.size * 0.44);
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, -particle.length * 0.55);
+    canvasContext.lineTo(0, particle.length * 0.55);
+    canvasContext.stroke();
+  } else if (particle.form === "hail") {
+    const gradient = canvasContext.createRadialGradient(0, 0, particle.size * 0.1, 0, 0, particle.size * 1.45);
+    gradient.addColorStop(0, hsla(hue + 30, 88, 86, alpha));
+    gradient.addColorStop(0.68, hsla(hue, 82, 58, alpha * 0.64));
+    gradient.addColorStop(1, hsla(hue - 40, 74, 32, alpha * 0.08));
+    canvasContext.fillStyle = gradient;
+    canvasContext.beginPath();
+    canvasContext.arc(0, 0, particle.size * (1 + bassEnergy * 0.3), 0, Math.PI * 2);
+    canvasContext.fill();
+  } else if (particle.form === "snow") {
+    canvasContext.strokeStyle = hsla(hue, 82, 82, alpha);
+    canvasContext.lineWidth = Math.max(1, particle.size * 0.18);
+    for (let arm = 0; arm < 6; arm += 1) {
+      const angle = (Math.PI * 2 * arm) / 6;
+      canvasContext.beginPath();
+      canvasContext.moveTo(Math.cos(angle) * particle.size * 0.2, Math.sin(angle) * particle.size * 0.2);
+      canvasContext.lineTo(Math.cos(angle) * particle.size * 1.6, Math.sin(angle) * particle.size * 1.6);
+      canvasContext.stroke();
+    }
+  } else {
+    canvasContext.fillStyle = hsla(hue, 94, 62 + sparkle * 24, alpha);
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, -particle.size * 1.6);
+    canvasContext.lineTo(particle.size * 0.5, -particle.size * 0.3);
+    canvasContext.lineTo(particle.size * 1.7, 0);
+    canvasContext.lineTo(particle.size * 0.5, particle.size * 0.35);
+    canvasContext.lineTo(0, particle.size * 1.7);
+    canvasContext.lineTo(-particle.size * 0.5, particle.size * 0.35);
+    canvasContext.lineTo(-particle.size * 1.7, 0);
+    canvasContext.lineTo(-particle.size * 0.5, -particle.size * 0.3);
+    canvasContext.closePath();
+    canvasContext.fill();
+  }
+
+  canvasContext.restore();
+}
+
+function drawGlitterFallFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const fallRate = fireworkSpeedMultiplier();
+  const density = handCountValueNumber() / 6;
+  const gust = handGraspAmount();
+
+  analyser.getByteFrequencyData(buffer);
+  glitterFrame += fallRate;
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.34);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.48);
+
+  drawGlitterBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  glitterBands.forEach((band, bandIndex) => {
+    const intensity = pressureResponse(averageBand(buffer, band.start, band.end), 1.42);
+    const chance = (0.025 + intensity * 0.16 + trebleEnergy * 0.025 + bassEnergy * 0.018) * density * fallRate;
+    if (Math.random() < chance) {
+      const count = 1 + Math.floor((density - 0.35) * (intensity + 0.2) * 2.4);
+      for (let index = 0; index < count; index += 1) {
+        spawnGlitterParticle(bandIndex, intensity, width, height);
+      }
+    }
+  });
+
+  glitterParticles = glitterParticles.filter((particle) => particle.life > 0.02 && particle.y < height + particle.length + 30);
+  glitterParticles.forEach((particle) => {
+    const band = glitterBands[particle.bandIndex] || glitterBands[0];
+    const bandEnergy = pressureResponse(averageBand(buffer, band.start, band.end), 1.34);
+    const flutter = Math.sin(glitterFrame * (0.03 + bandEnergy * 0.04) + particle.twinkle);
+    particle.x += (particle.vx + flutter * (0.3 + gust * 2.4)) * fallRate;
+    particle.y += particle.vy * (0.58 + fallRate * 0.48 + bandEnergy * 0.24);
+    particle.vx += Math.sin(glitterFrame * 0.011 + particle.twinkle) * gust * 0.045;
+    particle.angle += particle.spin * (0.6 + fallRate + bandEnergy);
+    particle.life -= particle.form === "snow" ? 0.0015 : 0.0025 + bandEnergy * 0.0018;
+    drawGlitterParticle(canvasContext, particle, bassEnergy, trebleEnergy);
+  });
+
+  const maxParticles = Math.round(120 + density * 120);
+  if (glitterParticles.length > maxParticles) {
+    glitterParticles.splice(0, glitterParticles.length - maxParticles);
+  }
+}
+
+function butterflyHue(bandIndex, intensity) {
+  const theme = themeSelect.value;
+  const progress = bandIndex / Math.max(1, butterflyBands.length - 1);
+  if (theme === "ice") {
+    return 188 + progress * 78 + intensity * 32;
+  }
+  if (theme === "ember") {
+    return 12 + progress * 46 + intensity * 24;
+  }
+  if (theme === "pressure") {
+    return 330 - progress * 245 + intensity * 62;
+  }
+  if (theme === "spectrum") {
+    return 302 - progress * 272 + intensity * 38;
+  }
+  return 144 + progress * 96 + intensity * 26;
+}
+
+function setupButterflies(width, height) {
+  const targetCount = Math.max(12, handCountValueNumber() * 8);
+  if (butterflies.length === targetCount) {
+    return;
+  }
+
+  butterflies = Array.from({ length: targetCount }, (_, index) => {
+    const bandIndex = index % butterflyBands.length;
+    const scale = 0.7 + Math.random() * 0.8;
+    return {
+      bandIndex,
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: (Math.random() - 0.5) * 0.8,
+      size: Math.min(width, height) * (0.012 + Math.random() * 0.014) * scale,
+      phase: Math.random() * Math.PI * 2,
+      turn: Math.random() * Math.PI * 2,
+      energy: 0,
+      direction: Math.random() < 0.5 ? -1 : 1,
+    };
+  });
+}
+
+function drawButterflyBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  canvasContext.fillStyle = "rgba(4, 7, 9, 0.24)";
+  canvasContext.fillRect(0, 0, width, height);
+
+  const sky = canvasContext.createLinearGradient(0, 0, 0, height);
+  sky.addColorStop(0, hsla(butterflyHue(5, trebleEnergy), 72, 18 + trebleEnergy * 16, 0.22));
+  sky.addColorStop(0.55, "rgba(6, 18, 16, 0.18)");
+  sky.addColorStop(1, hsla(butterflyHue(1, bassEnergy), 68, 12 + bassEnergy * 18, 0.34));
+  canvasContext.fillStyle = sky;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.strokeStyle = `rgba(103, 220, 178, ${0.035 + trebleEnergy * 0.045})`;
+  canvasContext.lineWidth = 1;
+  for (let stem = 0; stem < 18; stem += 1) {
+    const x = width * ((stem + 0.5) / 18);
+    const sway = Math.sin(butterflyFrame * 0.012 + stem) * (8 + bassEnergy * 16);
+    canvasContext.beginPath();
+    canvasContext.moveTo(x, height);
+    canvasContext.quadraticCurveTo(x + sway, height * 0.78, x + sway * 0.4, height * (0.58 + (stem % 4) * 0.04));
+    canvasContext.stroke();
+  }
+}
+
+function drawButterfly(canvasContext, butterfly, intensity, bassEnergy, trebleEnergy) {
+  const scale = handSizeMultiplier();
+  const flutter = handGraspAmount();
+  const hue = butterflyHue(butterfly.bandIndex, intensity);
+  const wingBeat = butterflyFrame * (0.12 + intensity * 0.32 + flutter * 0.12) + butterfly.phase;
+  const wingOpen = Math.abs(Math.sin(wingBeat));
+  const size = butterfly.size * scale * (0.88 + intensity * 0.7);
+  const angle = Math.atan2(butterfly.vy, butterfly.vx || 0.001) + Math.PI / 2;
+  const alpha = 0.62 + intensity * 0.34;
+
+  canvasContext.save();
+  canvasContext.translate(butterfly.x, butterfly.y);
+  canvasContext.rotate(angle);
+
+  const glow = canvasContext.createRadialGradient(0, 0, size * 0.2, 0, 0, size * 4.2);
+  glow.addColorStop(0, hsla(hue, 90, 62, 0.08 + intensity * 0.18));
+  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = glow;
+  canvasContext.beginPath();
+  canvasContext.arc(0, 0, size * 4.2, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  [-1, 1].forEach((side) => {
+    canvasContext.save();
+    canvasContext.scale(side, 1);
+    canvasContext.rotate(side * (0.18 + wingOpen * 0.65));
+
+    const upperWing = canvasContext.createRadialGradient(size * 0.9, -size * 0.9, 0, size * 0.9, -size * 0.9, size * 2.4);
+    upperWing.addColorStop(0, hsla(hue + trebleEnergy * 80, 96, 70, alpha));
+    upperWing.addColorStop(0.62, hsla(hue, 86, 42 + intensity * 30, alpha * 0.82));
+    upperWing.addColorStop(1, hsla(hue - 36, 86, 22, alpha * 0.28));
+    canvasContext.fillStyle = upperWing;
+    canvasContext.beginPath();
+    canvasContext.ellipse(size * 0.8, -size * 0.58, size * (1.25 + wingOpen * 0.6), size * 0.78, -0.34, 0, Math.PI * 2);
+    canvasContext.fill();
+
+    canvasContext.fillStyle = hsla(hue + 38, 88, 52 + intensity * 28, alpha * 0.72);
+    canvasContext.beginPath();
+    canvasContext.ellipse(size * 0.62, size * 0.52, size * (0.86 + wingOpen * 0.36), size * 0.58, 0.42, 0, Math.PI * 2);
+    canvasContext.fill();
+
+    canvasContext.strokeStyle = hsla(hue + 12, 92, 82, alpha * (0.18 + wingOpen * 0.36));
+    canvasContext.lineWidth = Math.max(0.8, size * 0.08);
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, 0);
+    canvasContext.lineTo(size * (1.45 + wingOpen * 0.42), -size * 0.72);
+    canvasContext.moveTo(0, 0);
+    canvasContext.lineTo(size * (1.08 + wingOpen * 0.26), size * 0.55);
+    canvasContext.stroke();
+    canvasContext.restore();
+  });
+
+  canvasContext.strokeStyle = `rgba(9, 10, 13, ${0.76 + bassEnergy * 0.18})`;
+  canvasContext.lineWidth = Math.max(1, size * 0.16);
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -size * 0.9);
+  canvasContext.lineTo(0, size * 1.1);
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = "rgba(8, 8, 10, 0.86)";
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 1.08, size * 0.22, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(hue + 80, 92, 78, alpha * 0.58);
+  canvasContext.lineWidth = Math.max(0.7, size * 0.055);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.08, -size * 1.18);
+  canvasContext.quadraticCurveTo(-size * 0.5, -size * 1.62, -size * 0.75, -size * (1.4 + trebleEnergy * 0.5));
+  canvasContext.moveTo(size * 0.08, -size * 1.18);
+  canvasContext.quadraticCurveTo(size * 0.5, -size * 1.62, size * 0.75, -size * (1.4 + trebleEnergy * 0.5));
+  canvasContext.stroke();
+
+  canvasContext.restore();
+}
+
+function drawButterflyHostFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const tempo = fireworkSpeedMultiplier();
+  const flutter = handGraspAmount();
+
+  analyser.getByteFrequencyData(buffer);
+  butterflyFrame += tempo;
+  setupButterflies(width, height);
+
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.34);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.46);
+  const bandIntensities = butterflyBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.44));
+
+  drawButterflyBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  butterflies.forEach((butterfly) => {
+    const intensity = bandIntensities[butterfly.bandIndex];
+    butterfly.energy = butterfly.energy * 0.82 + intensity * 0.18;
+    const drift = Math.sin(butterflyFrame * 0.018 + butterfly.turn) * (0.12 + flutter * 0.32);
+    const lift = Math.cos(butterflyFrame * 0.014 + butterfly.phase) * (0.08 + trebleEnergy * 0.38);
+
+    butterfly.vx += Math.cos(butterfly.turn) * (0.025 + butterfly.energy * 0.16 + flutter * 0.05) + drift;
+    butterfly.vy += Math.sin(butterfly.turn) * (0.018 + butterfly.energy * 0.12) - lift - bassEnergy * 0.025;
+    butterfly.turn += (Math.random() - 0.48) * (0.06 + flutter * 0.12 + butterfly.energy * 0.1);
+    butterfly.vx *= 0.92;
+    butterfly.vy *= 0.92;
+
+    const maxSpeed = 1.5 + butterfly.energy * 4.2 + tempo * 0.8 + flutter * 1.8;
+    const speed = Math.hypot(butterfly.vx, butterfly.vy);
+    if (speed > maxSpeed) {
+      butterfly.vx = (butterfly.vx / speed) * maxSpeed;
+      butterfly.vy = (butterfly.vy / speed) * maxSpeed;
+    }
+
+    butterfly.x += butterfly.vx * tempo;
+    butterfly.y += butterfly.vy * tempo;
+
+    if (butterfly.x < -30) butterfly.x = width + 30;
+    if (butterfly.x > width + 30) butterfly.x = -30;
+    if (butterfly.y < -30) butterfly.y = height + 30;
+    if (butterfly.y > height + 30) butterfly.y = -30;
+
+    drawButterfly(canvasContext, butterfly, butterfly.energy, bassEnergy, trebleEnergy);
+  });
+}
+
 function setupHandForms(width, height) {
   const targetCount = handCountValueNumber();
 
@@ -1228,6 +1856,19 @@ function drawBranchHandsFrame(canvasContext, buffer) {
 
 function swampHue(index, intensity) {
   const progress = index / Math.max(1, swampBands.length - 1);
+  const theme = themeSelect.value;
+  if (theme === "ice") {
+    return 188 + progress * 66 + intensity * 26;
+  }
+  if (theme === "ember") {
+    return 6 + progress * 42 + intensity * 18;
+  }
+  if (theme === "spectrum") {
+    return 294 - progress * 236 + intensity * 32;
+  }
+  if (theme === "pressure") {
+    return 338 - progress * 188 + intensity * 48;
+  }
   return progress < 0.45
     ? 356 + progress * 54
     : 292 - progress * 18 + intensity * 12;
@@ -1236,11 +1877,13 @@ function swampHue(index, intensity) {
 function spawnSwampBubble(bandIndex, intensity, width, height, bassBoom = 0) {
   const band = swampBands[bandIndex];
   const speedMultiplier = fireworkSpeedMultiplier();
+  const scale = handSizeMultiplier();
+  const pressure = handGraspAmount();
   const isBass = bandIndex < 2;
   const radius = isBass
-    ? height * (0.09 + intensity * 0.32 + bassBoom * 0.22)
-    : 5 + intensity * 28 + Math.random() * 14;
-  const horizon = height * (0.5 + Math.sin(swampFrame * 0.012 + bandIndex) * 0.035);
+    ? height * (0.07 + intensity * 0.36 + bassBoom * (0.18 + pressure * 0.22)) * scale
+    : (5 + intensity * 34 + Math.random() * 16) * Math.sqrt(scale);
+  const horizon = height * (0.5 + Math.sin(swampFrame * 0.012 + bandIndex) * (0.03 + pressure * 0.04));
   const x = isBass
     ? width * (0.18 + Math.random() * 0.64)
     : width * Math.random();
@@ -1251,25 +1894,26 @@ function spawnSwampBubble(bandIndex, intensity, width, height, bassBoom = 0) {
   swampBubbles.push({
     x,
     y,
-    vx: (Math.random() - 0.5) * (0.25 + intensity * 1.1),
-    vy: -(0.22 + intensity * 1.9 + (isBass ? bassBoom * 2.4 : 0)) * speedMultiplier,
+    vx: (Math.random() - 0.5) * (0.25 + intensity * 1.3 + pressure * 1.2),
+    vy: -(0.22 + intensity * 2.2 + pressure * 0.45 + (isBass ? bassBoom * (2.2 + pressure * 2) : 0)) * speedMultiplier,
     radius,
-    targetRadius: radius * (0.8 + Math.random() * 0.6),
+    targetRadius: radius * (0.75 + Math.random() * (0.62 + pressure * 0.7)),
     hue: swampHue(bandIndex, intensity),
     life: 1,
-    decay: isBass ? 0.0024 + intensity * 0.003 : 0.006 + intensity * 0.014,
+    decay: isBass ? 0.0018 + intensity * 0.0025 : 0.0045 + intensity * 0.012,
     wobble: Math.random() * Math.PI * 2,
     kind: band.kind,
-    alarm: isBass ? 0 : Math.min(1, bassBoom + intensity * 0.6),
+    alarm: isBass ? pressure * 0.25 : Math.min(1, bassBoom + intensity * 0.8 + pressure * 0.45),
     bass: isBass,
   });
 }
 
 function drawSwampCreature(canvasContext, bubble, bassEnergy) {
-  const wobble = Math.sin(swampFrame * 0.035 + bubble.wobble) * bubble.radius * 0.12;
-  const stretch = 1 + Math.sin(swampFrame * 0.023 + bubble.wobble) * 0.08 + bubble.alarm * 0.18;
+  const pressure = handGraspAmount();
+  const wobble = Math.sin(swampFrame * (0.035 + pressure * 0.03) + bubble.wobble) * bubble.radius * (0.12 + pressure * 0.1);
+  const stretch = 1 + Math.sin(swampFrame * 0.023 + bubble.wobble) * (0.08 + pressure * 0.07) + bubble.alarm * 0.24;
   const alpha = Math.max(0, bubble.life);
-  const hue = bubble.hue + Math.sin(swampFrame * 0.01 + bubble.wobble) * 10;
+  const hue = bubble.hue + Math.sin(swampFrame * 0.012 + bubble.wobble) * (10 + pressure * 20);
 
   canvasContext.save();
   canvasContext.translate(bubble.x + wobble, bubble.y);
@@ -1324,17 +1968,20 @@ function drawSwampBubblesFrame(canvasContext, buffer) {
   const width = visualizer.width;
   const height = visualizer.height;
   const speedMultiplier = fireworkSpeedMultiplier();
+  const population = handCountValueNumber() / 6;
+  const pressure = handGraspAmount();
+  const scale = handSizeMultiplier();
 
   analyser.getByteFrequencyData(buffer);
   swampFrame += speedMultiplier;
 
-  const bassEnergy = averageBand(buffer, 1, 7);
-  const trebleEnergy = averageBand(buffer, 62, 112);
-  const midEnergy = averageBand(buffer, 14, 48);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 7), 1.42);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 62, 112), 1.48);
+  const midEnergy = pressureResponse(averageBand(buffer, 14, 48), 1.34);
 
   const sky = canvasContext.createLinearGradient(0, 0, 0, height);
-  sky.addColorStop(0, "rgba(42, 5, 28, 0.38)");
-  sky.addColorStop(0.42, `rgba(75, 18, 70, ${0.2 + midEnergy * 0.2})`);
+  sky.addColorStop(0, `rgba(42, 5, 28, ${0.34 + pressure * 0.2})`);
+  sky.addColorStop(0.42, `rgba(75, 18, 70, ${0.18 + midEnergy * 0.28 + pressure * 0.12})`);
   sky.addColorStop(0.54, "rgba(38, 38, 38, 0.42)");
   sky.addColorStop(1, "rgba(2, 8, 7, 0.72)");
   canvasContext.fillStyle = sky;
@@ -1347,12 +1994,12 @@ function drawSwampBubblesFrame(canvasContext, buffer) {
   canvasContext.fillStyle = swamp;
   canvasContext.fillRect(0, height * 0.52, width, height * 0.48);
 
-  const horizonY = height * (0.51 + Math.sin(swampFrame * 0.01) * 0.018);
-  canvasContext.strokeStyle = `rgba(173, 78, 126, ${0.12 + bassEnergy * 0.18})`;
-  canvasContext.lineWidth = 2 + bassEnergy * 8;
+  const horizonY = height * (0.51 + Math.sin(swampFrame * (0.01 + pressure * 0.012)) * (0.014 + pressure * 0.035));
+  canvasContext.strokeStyle = `rgba(173, 78, 126, ${0.12 + bassEnergy * 0.22 + pressure * 0.14})`;
+  canvasContext.lineWidth = 2 + bassEnergy * 10 + pressure * 5;
   canvasContext.beginPath();
   for (let x = 0; x <= width; x += width / 32) {
-    const y = horizonY + Math.sin(x * 0.018 + swampFrame * 0.025) * (5 + bassEnergy * 22);
+    const y = horizonY + Math.sin(x * 0.018 + swampFrame * (0.025 + pressure * 0.022)) * (5 + bassEnergy * 28 + pressure * 22);
     if (x === 0) {
       canvasContext.moveTo(x, y);
     } else {
@@ -1362,35 +2009,39 @@ function drawSwampBubblesFrame(canvasContext, buffer) {
   canvasContext.stroke();
 
   swampBands.forEach((band, bandIndex) => {
-    const intensity = averageBand(buffer, band.start, band.end);
+    const intensity = pressureResponse(averageBand(buffer, band.start, band.end), 1.36);
     const chance = bandIndex < 2
-      ? intensity * 0.08 + bassEnergy * 0.08
-      : intensity * 0.1 + trebleEnergy * 0.06;
+      ? intensity * 0.1 + bassEnergy * (0.08 + pressure * 0.08)
+      : intensity * 0.12 + trebleEnergy * 0.07 + pressure * 0.018;
 
-    if (Math.random() < chance * speedMultiplier) {
-      spawnSwampBubble(bandIndex, intensity, width, height, bassEnergy);
+    if (Math.random() < chance * speedMultiplier * population) {
+      const spawnCount = 1 + Math.floor((population - 0.5) * intensity * 2.2);
+      for (let index = 0; index < spawnCount; index += 1) {
+        spawnSwampBubble(bandIndex, intensity, width, height, bassEnergy);
+      }
     }
   });
 
-  if (bassEnergy > 0.44 && Math.random() < bassEnergy * 0.18) {
+  if (bassEnergy > 0.32 - pressure * 0.12 && Math.random() < bassEnergy * (0.16 + pressure * 0.22) * population) {
     spawnSwampBubble(0, bassEnergy, width, height, bassEnergy);
   }
 
   swampBubbles = swampBubbles.filter((bubble) => bubble.life > 0 && bubble.y + bubble.radius > -height * 0.2);
   swampBubbles.forEach((bubble) => {
-    const fright = Math.max(0, bassEnergy - 0.28);
-    bubble.x += bubble.vx * speedMultiplier + (bubble.bass ? 0 : Math.sin(swampFrame * 0.08 + bubble.wobble) * fright * 4);
+    const fright = Math.max(0, bassEnergy - (0.25 - pressure * 0.12));
+    bubble.x += bubble.vx * speedMultiplier + (bubble.bass ? 0 : Math.sin(swampFrame * 0.08 + bubble.wobble) * fright * (5 + pressure * 9));
     bubble.y += bubble.vy * speedMultiplier;
-    bubble.vx += Math.sin(swampFrame * 0.015 + bubble.wobble) * 0.012;
-    bubble.vy -= bubble.bass ? 0.001 : 0.004 + trebleEnergy * 0.012;
-    bubble.radius += (bubble.targetRadius - bubble.radius) * 0.018 + (bubble.bass ? bassEnergy * 0.18 : trebleEnergy * 0.035);
-    bubble.alarm = Math.max(bubble.alarm * 0.965, fright);
-    bubble.life -= bubble.decay * speedMultiplier * (bubble.bass ? 0.75 : 1.15);
+    bubble.vx += Math.sin(swampFrame * (0.015 + pressure * 0.018) + bubble.wobble) * (0.012 + pressure * 0.03);
+    bubble.vy -= bubble.bass ? 0.001 + pressure * 0.002 : 0.004 + trebleEnergy * (0.014 + pressure * 0.018);
+    bubble.radius += (bubble.targetRadius - bubble.radius) * (0.018 + pressure * 0.012) + (bubble.bass ? bassEnergy * (0.22 + pressure * 0.3) : trebleEnergy * 0.05 * Math.sqrt(scale));
+    bubble.alarm = Math.max(bubble.alarm * (0.955 - pressure * 0.035), fright + pressure * 0.12);
+    bubble.life -= bubble.decay * speedMultiplier * (bubble.bass ? 0.68 : 1.05);
     drawSwampCreature(canvasContext, bubble, bassEnergy);
   });
 
-  if (swampBubbles.length > 180) {
-    swampBubbles.splice(0, swampBubbles.length - 180);
+  const maxBubbles = Math.round(110 + population * 90);
+  if (swampBubbles.length > maxBubbles) {
+    swampBubbles.splice(0, swampBubbles.length - maxBubbles);
   }
 
   canvasContext.fillStyle = `rgba(7, 3, 7, ${0.12 + bassEnergy * 0.1})`;
@@ -1399,6 +2050,19 @@ function drawSwampBubblesFrame(canvasContext, buffer) {
 
 function arrowHue(index, intensity) {
   const progress = index / Math.max(1, arrowBands.length - 1);
+  const theme = themeSelect.value;
+  if (theme === "ice") {
+    return 194 + progress * 74 + intensity * 28;
+  }
+  if (theme === "ember") {
+    return 4 + progress * 54 + intensity * 22;
+  }
+  if (theme === "spectrum") {
+    return 300 - progress * 260 + intensity * 34;
+  }
+  if (theme === "pressure") {
+    return 342 - progress * 248 + intensity * 62;
+  }
   return progress < 0.45
     ? 354 + progress * 2.22 * 52
     : 62 + (progress - 0.45) * 1.82 * 224 + intensity * 18;
@@ -1548,13 +2212,13 @@ function drawArrowStormFrame(canvasContext, buffer) {
 
   analyser.getByteFrequencyData(buffer);
   arrowFrame += speedMultiplier;
-  const bassEnergy = averageBand(buffer, 1, 8);
-  const trebleEnergy = averageBand(buffer, 58, 112);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.36);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.42);
 
   drawArrowBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
 
   arrowBands.forEach((band, bandIndex) => {
-    const intensity = averageBand(buffer, band.start, band.end);
+    const intensity = pressureResponse(averageBand(buffer, band.start, band.end), 1.34);
     const volley = intensity * 0.09 * density + bassEnergy * 0.025 + drama * 0.01;
     if (Math.random() < volley * speedMultiplier) {
       const count = 1 + Math.floor((intensity + bassEnergy * 0.7) * density * 3);
@@ -1568,7 +2232,7 @@ function drawArrowStormFrame(canvasContext, buffer) {
   arrows.forEach((arrow) => {
     if (!arrow.stuck) {
       const band = arrowBands[arrow.bandIndex] || arrowBands[0];
-      const bandEnergy = averageBand(buffer, band.start, band.end);
+      const bandEnergy = pressureResponse(averageBand(buffer, band.start, band.end), 1.32);
       const targetPull = (0.006 + arrow.agency * 0.018 + bandEnergy * 0.02) * speedMultiplier;
       const wander = Math.sin(arrowFrame * (0.026 + arrow.curiosity * 0.014) + arrow.weavePhase + arrow.y * 0.01);
       const lift = Math.cos(arrowFrame * 0.017 + arrow.weavePhase) * trebleEnergy * arrow.curiosity;
@@ -1646,6 +2310,9 @@ function setupCephArms(width, height) {
 
 function cephHue(progress, intensity) {
   const theme = themeSelect.value;
+  if (theme === "pressure") {
+    return 334 - progress * 220 + intensity * 64;
+  }
   if (theme === "ember") {
     return 8 + progress * 52 + intensity * 18;
   }
@@ -1681,14 +2348,14 @@ function drawCephBackground(canvasContext, width, height, bassEnergy, trebleEner
 }
 
 function spawnCephInk(width, height, bassEnergy) {
-  if (bassEnergy < 0.46 || cephInkBlooms.length > 18 || Math.random() > bassEnergy * 0.12) {
+  if (bassEnergy < 0.24 || cephInkBlooms.length > 22 || Math.random() > bassEnergy * 0.22) {
     return;
   }
 
   cephInkBlooms.push({
     x: width * (0.42 + (Math.random() - 0.5) * 0.18),
     y: height * (0.42 + (Math.random() - 0.5) * 0.18),
-    radius: Math.min(width, height) * (0.08 + bassEnergy * 0.12),
+    radius: Math.min(width, height) * (0.07 + bassEnergy * 0.18),
     life: 1,
     driftX: (Math.random() - 0.5) * 0.9,
     driftY: 0.25 + Math.random() * 0.6,
@@ -1727,20 +2394,20 @@ function drawCephArm(canvasContext, arm, bodyX, bodyY, bodyRadius, intensity, ba
   const grasp = handGraspAmount();
   const progress = arm.index / Math.max(1, cephArms.length - 1);
   const hue = cephHue(progress, intensity);
-  const armLength = arm.length * reach * (0.72 + intensity * 0.64);
+  const armLength = arm.length * reach * (0.66 + intensity * 0.98);
   const baseX = bodyX + Math.cos(arm.baseAngle) * bodyRadius * 0.58;
   const baseY = bodyY + Math.sin(arm.baseAngle) * bodyRadius * 0.36;
   const segments = 18;
   const points = [];
 
-  arm.memory = arm.memory * (0.9 - grasp * 0.12) + intensity * (0.1 + grasp * 0.12);
-  arm.nerve = (arm.nerve + 0.012 * speed + intensity * 0.018) % 1;
+  arm.memory = arm.memory * (0.82 - grasp * 0.08) + intensity * (0.18 + grasp * 0.16);
+  arm.nerve = (arm.nerve + 0.016 * speed + intensity * 0.035) % 1;
 
   for (let pointIndex = 0; pointIndex <= segments; pointIndex += 1) {
     const amount = pointIndex / segments;
-    const curl = Math.sin(cephFrame * 0.035 * speed + arm.phase + amount * (4.2 + grasp * 5.5));
-    const independentThought = Math.sin(cephFrame * 0.021 * speed + arm.delay + amount * 7);
-    const angle = arm.baseAngle + curl * (0.28 + arm.memory * 0.46) + independentThought * grasp * 0.42;
+    const curl = Math.sin(cephFrame * 0.045 * speed + arm.phase + amount * (4.2 + grasp * 6.8));
+    const independentThought = Math.sin(cephFrame * 0.028 * speed + arm.delay + amount * 8.5);
+    const angle = arm.baseAngle + curl * (0.3 + arm.memory * 0.72) + independentThought * (grasp * 0.54 + intensity * 0.22);
     const distance = armLength * amount;
     const drift = Math.sin(amount * Math.PI) * bodyRadius * (0.16 + bassEnergy * 0.12);
 
@@ -1758,8 +2425,8 @@ function drawCephArm(canvasContext, arm, bodyX, bodyY, bodyRadius, intensity, ba
     const point = points[segment];
     const next = points[segment + 1];
     const taper = 1 - point.amount * 0.82;
-    canvasContext.strokeStyle = hsla(hue + point.amount * 32, 72, 42 + intensity * 22, 0.34 + intensity * 0.42);
-    canvasContext.lineWidth = Math.max(2, arm.width * taper * reach);
+    canvasContext.strokeStyle = hsla(hue + point.amount * 42, 78, 38 + intensity * 34, 0.38 + intensity * 0.5);
+    canvasContext.lineWidth = Math.max(2, arm.width * taper * reach * (0.82 + intensity * 0.42));
     canvasContext.beginPath();
     canvasContext.moveTo(point.x, point.y);
     canvasContext.lineTo(next.x, next.y);
@@ -1774,10 +2441,10 @@ function drawCephArm(canvasContext, arm, bodyX, bodyY, bodyRadius, intensity, ba
     const side = pointIndex % 4 === 0 ? 1 : -1;
     const pulseDistance = Math.abs(point.amount - arm.nerve);
     const pulse = Math.max(0, 1 - pulseDistance * 9);
-    const suckerSize = (2.2 + intensity * 4 + pulse * 5) * (1 - point.amount * 0.45);
+    const suckerSize = (2.2 + intensity * 7 + pulse * 7) * (1 - point.amount * 0.45);
     const offset = 5 + 12 * (1 - point.amount);
 
-    canvasContext.fillStyle = hsla(hue + trebleEnergy * 68, 88, 62 + pulse * 18, 0.28 + pulse * 0.58);
+    canvasContext.fillStyle = hsla(hue + trebleEnergy * 96, 92, 58 + pulse * 24, 0.3 + pulse * 0.66);
     canvasContext.beginPath();
     canvasContext.arc(point.x + side * offset, point.y, suckerSize, 0, Math.PI * 2);
     canvasContext.fill();
@@ -1787,7 +2454,7 @@ function drawCephArm(canvasContext, arm, bodyX, bodyY, bodyRadius, intensity, ba
 function drawCephBody(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
   const bodyX = width * 0.5;
   const bodyY = height * 0.42;
-  const bodyRadius = Math.min(width, height) * (0.13 + bassEnergy * 0.055) * handSizeMultiplier();
+  const bodyRadius = Math.min(width, height) * (0.12 + bassEnergy * 0.105 + midsEnergy * 0.035) * handSizeMultiplier();
   const bodyHue = cephHue(0.42 + trebleEnergy * 0.3, midsEnergy);
 
   canvasContext.save();
@@ -1795,8 +2462,8 @@ function drawCephBody(canvasContext, width, height, bassEnergy, midsEnergy, treb
   canvasContext.rotate(Math.sin(cephFrame * 0.015) * 0.08);
 
   const mantle = canvasContext.createRadialGradient(0, -bodyRadius * 0.15, bodyRadius * 0.12, 0, 0, bodyRadius * 1.25);
-  mantle.addColorStop(0, hsla(bodyHue + 24, 86, 68, 0.72));
-  mantle.addColorStop(0.48, hsla(bodyHue, 62, 36 + midsEnergy * 18, 0.78));
+  mantle.addColorStop(0, hsla(bodyHue + 28, 92, 62 + trebleEnergy * 18, 0.78));
+  mantle.addColorStop(0.48, hsla(bodyHue, 72, 30 + midsEnergy * 30, 0.84));
   mantle.addColorStop(1, "rgba(5, 8, 15, 0.2)");
   canvasContext.fillStyle = mantle;
   canvasContext.beginPath();
@@ -1806,13 +2473,13 @@ function drawCephBody(canvasContext, width, height, bassEnergy, midsEnergy, treb
   for (let spot = 0; spot < 34; spot += 1) {
     const angle = spot * 2.399;
     const radius = bodyRadius * Math.sqrt((spot % 17) / 17);
-    const flash = Math.max(0, Math.sin(cephFrame * 0.07 + spot + trebleEnergy * 8));
-    canvasContext.fillStyle = hsla(bodyHue + spot * 7, 86, 54 + flash * 22, (0.08 + trebleEnergy * 0.34) * flash);
+    const flash = Math.max(0, Math.sin(cephFrame * 0.085 + spot + trebleEnergy * 12));
+    canvasContext.fillStyle = hsla(bodyHue + spot * 9, 92, 48 + flash * 32, (0.1 + trebleEnergy * 0.58) * flash);
     canvasContext.beginPath();
     canvasContext.arc(
       Math.cos(angle) * radius * 0.78,
       Math.sin(angle) * radius,
-      2.5 + flash * 5.5,
+      2.5 + flash * (6.5 + trebleEnergy * 7),
       0,
       Math.PI * 2,
     );
@@ -1846,9 +2513,9 @@ function drawCephalopodFrame(canvasContext, buffer) {
   cephFrame += speedMultiplier;
   setupCephArms(width, height);
 
-  const bassEnergy = averageBand(buffer, 1, 8);
-  const midsEnergy = averageBand(buffer, 12, 52);
-  const trebleEnergy = averageBand(buffer, 58, 112);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.52);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 52), 1.42);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.55);
 
   drawCephBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
   spawnCephInk(width, height, bassEnergy);
@@ -1857,14 +2524,20 @@ function drawCephalopodFrame(canvasContext, buffer) {
   const body = drawCephBody(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
   cephArms.forEach((arm, index) => {
     const band = cephBands[index % cephBands.length];
-    const intensity = averageBand(buffer, band.start, band.end);
+    const intensity = pressureResponse(averageBand(buffer, band.start, band.end), 1.48);
     drawCephArm(canvasContext, arm, body.bodyX, body.bodyY, body.bodyRadius, intensity, bassEnergy, trebleEnergy);
   });
   drawCephBody(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
 }
 
 function drawIdleVisualizer() {
-  if (visualizerSelect.value === "cephalopod") {
+  if (visualizerSelect.value === "butterflyhost") {
+    drawIdleButterflyHost();
+  } else if (visualizerSelect.value === "glitterfall") {
+    drawIdleGlitterFall();
+  } else if (visualizerSelect.value === "discojive") {
+    drawIdleDiscoJive();
+  } else if (visualizerSelect.value === "cephalopod") {
     drawIdleCephalopod();
   } else if (visualizerSelect.value === "arrowstorm") {
     drawIdleArrowStorm();
@@ -1996,6 +2669,64 @@ function drawIdlePacDance() {
   });
 }
 
+function drawIdleDiscoJive() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  discoFrame += 1;
+  discoCouples = [];
+  setupDiscoCouples(width, height);
+  canvasContext.clearRect(0, 0, width, height);
+  drawDiscoBackground(canvasContext, width, height, 0.18, 0.22);
+
+  discoCouples.forEach((couple) => {
+    drawDiscoCouple(canvasContext, couple, 0.14 + couple.bandIndex * 0.026, width, height);
+  });
+}
+
+function drawIdleGlitterFall() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  glitterFrame += 1;
+  drawGlitterBackground(canvasContext, width, height, 0.18, 0.24);
+
+  if (glitterParticles.length < 64) {
+    for (let index = 0; index < 12; index += 1) {
+      spawnGlitterParticle(index % glitterBands.length, 0.16 + (index % 4) * 0.04, width, height);
+      glitterParticles[glitterParticles.length - 1].y = Math.random() * height;
+    }
+  }
+
+  glitterParticles = glitterParticles.filter((particle) => particle.life > 0.02 && particle.y < height + particle.length + 30);
+  glitterParticles.forEach((particle) => {
+    particle.x += particle.vx + Math.sin(glitterFrame * 0.026 + particle.twinkle) * (0.4 + handGraspAmount() * 1.7);
+    particle.y += particle.vy * 0.55;
+    particle.angle += particle.spin;
+    particle.life -= 0.001;
+    drawGlitterParticle(canvasContext, particle, 0.16, 0.22);
+  });
+}
+
+function drawIdleButterflyHost() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  butterflyFrame += 1;
+  setupButterflies(width, height);
+  drawButterflyBackground(canvasContext, width, height, 0.16, 0.22);
+
+  butterflies.forEach((butterfly) => {
+    const idleEnergy = 0.12 + (butterfly.bandIndex % 4) * 0.035;
+    butterfly.x += Math.sin(butterflyFrame * 0.018 + butterfly.phase) * 0.28;
+    butterfly.y += Math.cos(butterflyFrame * 0.014 + butterfly.turn) * 0.2;
+    drawButterfly(canvasContext, butterfly, idleEnergy, 0.16, 0.22);
+  });
+}
+
 function drawIdleEqualizer() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -2068,6 +2799,9 @@ function resizeCanvas() {
   arrows = [];
   cephArms = [];
   cephInkBlooms = [];
+  discoCouples = [];
+  glitterParticles = [];
+  butterflies = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -2114,6 +2848,9 @@ visualizerSelect.addEventListener("change", () => {
     swampbubbles: "Swamp Bubbles frequency visualisation",
     arrowstorm: "Arrow Storm frequency visualisation",
     cephalopod: "Cephalopod Mind frequency visualisation",
+    discojive: "Disco Jive frequency visualisation",
+    glitterfall: "Glitter Fall frequency visualisation",
+    butterflyhost: "Butterfly Host frequency visualisation",
   };
 
   visualizer.setAttribute(
@@ -2136,6 +2873,9 @@ handCount.addEventListener("input", () => {
   updateHandControlLabels();
   handForms = [];
   cephArms = [];
+  discoCouples = [];
+  glitterParticles = [];
+  butterflies = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
