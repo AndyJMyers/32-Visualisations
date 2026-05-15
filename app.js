@@ -62,6 +62,10 @@ let thrownKnives = [];
 let knifeFrame = 0;
 let occlusionOctopi = [];
 let octopusFrame = 0;
+let loucheLizards = [];
+let lizardFrame = 0;
+let goddessKisses = [];
+let goddessFrame = 0;
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -218,6 +222,25 @@ const knifeBands = [
   { start: 77, end: 112, kind: "bell" },
 ];
 
+const lizardBands = [
+  { start: 1, end: 5, move: "tail-pop" },
+  { start: 6, end: 12, move: "hip-roll" },
+  { start: 13, end: 24, move: "lapel-snap" },
+  { start: 25, end: 42, move: "side-glide" },
+  { start: 43, end: 66, move: "shoulder-shimmy" },
+  { start: 67, end: 90, move: "hat-tip" },
+  { start: 91, end: 112, move: "tongue-flick" },
+];
+
+const goddessBands = [
+  { start: 1, end: 6 },
+  { start: 7, end: 14 },
+  { start: 15, end: 28 },
+  { start: 29, end: 48 },
+  { start: 49, end: 78 },
+  { start: 79, end: 112 },
+];
+
 const formOptionsByVisualizer = {
   fireworks: [
     ["hydra", "Hydra"],
@@ -239,6 +262,11 @@ const formOptionsByVisualizer = {
     ["timber", "Timber wall"],
     ["carnival", "Carnival wheels"],
     ["foundry", "Tin foundry"],
+  ],
+  goddesskisses: [
+    ["seduction", "Seduction"],
+    ["haka", "Haka"],
+    ["bloodruby", "Blood ruby"],
   ],
 };
 
@@ -416,22 +444,22 @@ function syncVisualizerControls() {
 
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion"].includes(visualizer);
-  armsLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion"].includes(visualizer);
+  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer);
+  armsLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer);
 
   setControlLabel(
     fireworkSpeed,
-    visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion"].includes(visualizer) ? "Tempo" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
+    visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
   );
-  setControlLabel(handSize, ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(handSize, ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
   setControlLabel(
     handCount,
-    visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : "Arms",
+    visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : "Arms",
   );
   setControlLabel(
     handGrasp,
-    visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "octopusocclusion" ? "Mood" : "Grasp",
+    visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
   );
 }
 
@@ -473,6 +501,10 @@ function restartVisualizer() {
   knifeFrame = 0;
   occlusionOctopi = [];
   octopusFrame = 0;
+  loucheLizards = [];
+  lizardFrame = 0;
+  goddessKisses = [];
+  goddessFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -585,6 +617,7 @@ function previousIndex() {
 function drawVisualizer() {
   if (animationId) {
     cancelAnimationFrame(animationId);
+    animationId = 0;
   }
 
   const canvasContext = visualizer.getContext("2d");
@@ -592,7 +625,14 @@ function drawVisualizer() {
 
   const draw = () => {
     try {
-      if (visualizerSelect.value === "octopusocclusion") {
+      canvasContext.setTransform(1, 0, 0, 1, 0, 0);
+      canvasContext.globalAlpha = 1;
+      canvasContext.globalCompositeOperation = "source-over";
+      if (visualizerSelect.value === "goddesskisses") {
+        drawGoddessKissesFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "lizardlouche") {
+        drawLizardLoucheFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "octopusocclusion") {
         drawOctopusOcclusionFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "knifethunk") {
         drawKnifeThunkFrame(canvasContext, buffer);
@@ -1954,6 +1994,543 @@ function drawKnifeThunkFrame(canvasContext, buffer) {
   }
 }
 
+function goddessHue(index, intensity) {
+  const theme = themeSelect.value;
+  const progress = index / Math.max(1, goddessBands.length - 1);
+  if (theme === "ice") return 188 + progress * 66 + intensity * 28;
+  if (theme === "ember") return 8 + progress * 48 + intensity * 28;
+  if (theme === "pressure") return 330 - progress * 230 + intensity * 64;
+  if (theme === "spectrum") return 304 - progress * 272 + intensity * 44;
+  return 154 + progress * 112 + intensity * 28;
+}
+
+function drawGoddessChamber(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const mode = fireworkFormSelect.value;
+  canvasContext.fillStyle = "rgba(5, 3, 10, 0.3)";
+  canvasContext.fillRect(0, 0, width, height);
+
+  const aura = canvasContext.createRadialGradient(width * 0.5, height * 0.34, 0, width * 0.5, height * 0.34, width * 0.54);
+  aura.addColorStop(0, hsla(goddessHue(4, trebleEnergy), 96, 54, 0.22 + trebleEnergy * 0.18));
+  aura.addColorStop(0.45, hsla(goddessHue(2, bassEnergy), 86, 26, 0.2));
+  aura.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = aura;
+  canvasContext.fillRect(0, 0, width, height);
+
+  const veil = canvasContext.createLinearGradient(0, 0, width, height);
+  veil.addColorStop(0, "rgba(12, 6, 22, 0.34)");
+  veil.addColorStop(0.5, "rgba(36, 10, 42, 0.18)");
+  veil.addColorStop(1, "rgba(4, 3, 9, 0.42)");
+  canvasContext.fillStyle = veil;
+  canvasContext.fillRect(0, 0, width, height);
+
+  if (mode === "haka") {
+    canvasContext.strokeStyle = `rgba(90, 255, 214, ${0.14 + bassEnergy * 0.24})`;
+    canvasContext.lineWidth = Math.max(2, height * 0.008);
+    for (let ring = 0; ring < 4; ring += 1) {
+      const spread = (ring + 1) * (0.12 + bassEnergy * 0.08);
+      canvasContext.beginPath();
+      canvasContext.ellipse(width * 0.5, height * (0.72 + ring * 0.02), width * spread, height * 0.035, 0, 0, Math.PI * 2);
+      canvasContext.stroke();
+    }
+  }
+
+  if (mode === "seduction") {
+    const shimmer = canvasContext.createLinearGradient(0, height * 0.12, width, height * 0.8);
+    shimmer.addColorStop(0, hsla(goddessHue(5, trebleEnergy), 100, 72, 0));
+    shimmer.addColorStop(0.52, hsla(goddessHue(3, trebleEnergy), 100, 68, 0.08 + trebleEnergy * 0.16));
+    shimmer.addColorStop(1, hsla(goddessHue(1, bassEnergy), 96, 34, 0));
+    canvasContext.fillStyle = shimmer;
+    canvasContext.fillRect(0, 0, width, height);
+  }
+
+  if (mode === "bloodruby") {
+    canvasContext.fillStyle = `rgba(130, 0, 32, ${0.06 + bassEnergy * 0.16})`;
+    canvasContext.fillRect(0, 0, width, height);
+    canvasContext.strokeStyle = `rgba(255, 31, 84, ${0.12 + bassEnergy * 0.26})`;
+    canvasContext.lineWidth = Math.max(2, width * 0.003);
+    for (let pulse = 0; pulse < 5; pulse += 1) {
+      const x = width * (0.12 + pulse * 0.19);
+      canvasContext.beginPath();
+      canvasContext.moveTo(x, height * 0.16);
+      canvasContext.bezierCurveTo(
+        x + Math.sin(goddessFrame * 0.02 + pulse) * width * 0.04,
+        height * 0.35,
+        x - Math.cos(goddessFrame * 0.015 + pulse) * width * 0.05,
+        height * 0.58,
+        x + Math.sin(goddessFrame * 0.03 + pulse) * width * 0.03,
+        height * 0.92,
+      );
+      canvasContext.stroke();
+    }
+  }
+}
+
+function drawGoddessFigure(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  const scale = handSizeMultiplier();
+  const mode = fireworkFormSelect.value;
+  const hue = goddessHue(3, midsEnergy);
+  const cx = width * 0.5;
+  const cy = height * 0.46;
+  const size = Math.min(width, height) * 0.22 * scale * (0.85 + bassEnergy * 0.18);
+  const sway = Math.sin(goddessFrame * 0.025) * size * 0.08;
+  const stomp = mode === "haka" ? Math.abs(Math.sin(goddessFrame * 0.12)) * bassEnergy : 0;
+  const seduce = mode === "seduction" ? Math.sin(goddessFrame * 0.04) * (0.18 + midsEnergy * 0.3) : 0;
+  const ruby = mode === "bloodruby" ? 1 : 0.45;
+
+  canvasContext.save();
+  canvasContext.translate(cx + sway, cy + stomp * size * 0.18);
+
+  const halo = canvasContext.createRadialGradient(0, -size * 0.52, size * 0.1, 0, -size * 0.52, size * 1.45);
+  halo.addColorStop(0, hsla(hue + 50, 100, 72, 0.28 + trebleEnergy * 0.22));
+  halo.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = halo;
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 0.45, size * 1.45, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  if (mode === "bloodruby" || bassEnergy > 0.38) {
+    canvasContext.strokeStyle = `rgba(190, 0, 34, ${0.18 + bassEnergy * 0.38})`;
+    canvasContext.lineWidth = Math.max(2, size * 0.035);
+    for (let mark = 0; mark < 7; mark += 1) {
+      const angle = -Math.PI * 0.88 + mark * 0.29;
+      canvasContext.beginPath();
+      canvasContext.moveTo(Math.cos(angle) * size * 1.05, Math.sin(angle) * size * 0.8);
+      canvasContext.quadraticCurveTo(
+        Math.cos(angle) * size * (1.25 + bassEnergy * 0.4),
+        Math.sin(angle) * size * (1.0 + bassEnergy * 0.4),
+        Math.cos(angle) * size * (1.62 + bassEnergy * 0.65),
+        Math.sin(angle) * size * (1.28 + bassEnergy * 0.45),
+      );
+      canvasContext.stroke();
+    }
+  }
+
+  canvasContext.save();
+  canvasContext.translate(-size * 0.42, size * 0.02);
+  canvasContext.rotate(-0.08 + seduce * 0.18);
+  const gown = canvasContext.createLinearGradient(0, -size * 0.25, 0, size * 1.25);
+  gown.addColorStop(0, hsla(hue + 18, 96, 60 + trebleEnergy * 12, 0.86));
+  gown.addColorStop(0.55, hsla(hue - ruby * 36, 88, 34 + midsEnergy * 20, 0.78));
+  gown.addColorStop(1, hsla(hue - 90, 92, 18, 0.62));
+  canvasContext.fillStyle = gown;
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.28, -size * 0.08);
+  canvasContext.bezierCurveTo(-size * 0.72, size * 0.32, -size * 0.86, size * 0.92, -size * 0.52, size * 1.22);
+  canvasContext.lineTo(size * 0.52, size * 1.22);
+  canvasContext.bezierCurveTo(size * 0.86, size * 0.92, size * 0.72, size * 0.32, size * 0.28, -size * 0.08);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(hue + 70, 100, 76, 0.52 + trebleEnergy * 0.24);
+  canvasContext.lineWidth = Math.max(2, size * 0.055);
+  const armLift = Math.sin(goddessFrame * 0.045) * size * 0.08 + trebleEnergy * size * 0.2;
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.2, size * 0.02);
+  canvasContext.quadraticCurveTo(-size * 0.75, size * 0.12, -size * 0.95, -size * 0.15 - armLift);
+  canvasContext.moveTo(size * 0.2, size * 0.02);
+  canvasContext.quadraticCurveTo(size * 0.72, -size * 0.05, size * 0.86, -size * 0.38 - armLift);
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = "rgba(238, 193, 162, 0.96)";
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 0.45, size * 0.28, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = hsla(hue - 40, 82, 22, 0.92);
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 0.58, size * 0.34, Math.PI * 0.92, Math.PI * 2.08);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = hsla(336 + trebleEnergy * 30, 96, 62, 0.9);
+  canvasContext.beginPath();
+  canvasContext.ellipse(size * 0.08, -size * 0.34, size * 0.11, size * 0.045, -0.08, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+
+  canvasContext.save();
+  canvasContext.translate(size * 0.44, size * 0.06 + stomp * size * 0.12);
+  canvasContext.rotate(0.08 - seduce * 0.12);
+
+  const muscleHue = hue + 150 + midsEnergy * 60;
+  canvasContext.strokeStyle = hsla(muscleHue, 96, 62, 0.86);
+  canvasContext.lineWidth = Math.max(2, size * 0.085);
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -size * 0.04);
+  canvasContext.lineTo(0, size * 0.86);
+  canvasContext.moveTo(-size * 0.42, size * 0.08);
+  canvasContext.quadraticCurveTo(-size * (0.9 + stomp * 0.45), -size * (0.08 + stomp * 0.35), -size * (1.06 + stomp * 0.4), size * 0.32);
+  canvasContext.moveTo(size * 0.42, size * 0.08);
+  canvasContext.quadraticCurveTo(size * (0.9 + stomp * 0.45), -size * (0.08 + stomp * 0.35), size * (1.06 + stomp * 0.4), size * 0.32);
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = hsla(muscleHue + 40, 100, 38 + bassEnergy * 20, 0.9);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.5, size * 0.1);
+  canvasContext.lineTo(size * 0.5, size * 0.1);
+  canvasContext.lineTo(size * 0.34, size * 0.92);
+  canvasContext.lineTo(-size * 0.34, size * 0.92);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = `rgba(255, 235, 230, ${0.32 + midsEnergy * 0.36})`;
+  canvasContext.lineWidth = Math.max(1, size * 0.026);
+  [-0.18, 0.18].forEach((x) => {
+    canvasContext.beginPath();
+    canvasContext.arc(x * size, size * 0.38, size * (0.18 + midsEnergy * 0.08), Math.PI * 0.12, Math.PI * 0.88);
+    canvasContext.stroke();
+  });
+
+  canvasContext.fillStyle = "rgba(228, 176, 136, 0.96)";
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 0.36, size * 0.25, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(8, 7, 12, 0.88)";
+  canvasContext.beginPath();
+  canvasContext.arc(-size * 0.07, -size * 0.39, size * 0.018, 0, Math.PI * 2);
+  canvasContext.arc(size * 0.07, -size * 0.39, size * 0.018, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.strokeStyle = hsla(350, 100, 52, 0.8);
+  canvasContext.lineWidth = Math.max(1, size * 0.025);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.08, -size * 0.27);
+  canvasContext.lineTo(size * 0.08, -size * 0.27);
+  canvasContext.stroke();
+
+  if (mode === "haka") {
+    canvasContext.strokeStyle = `rgba(250, 250, 235, ${0.42 + bassEnergy * 0.42})`;
+    canvasContext.lineWidth = Math.max(1, size * 0.035);
+    for (let stripe = 0; stripe < 4; stripe += 1) {
+      canvasContext.beginPath();
+      canvasContext.moveTo(-size * 0.38, size * (0.2 + stripe * 0.13));
+      canvasContext.lineTo(size * 0.38, size * (0.12 + stripe * 0.13));
+      canvasContext.stroke();
+    }
+  }
+
+  canvasContext.restore();
+  canvasContext.restore();
+}
+
+function spawnGoddessKiss(bandIndex, intensity, width, height) {
+  const rate = fireworkSpeedMultiplier();
+  const pout = handGraspAmount();
+  const scale = handSizeMultiplier();
+  const mode = fireworkFormSelect.value;
+  const hakaKick = mode === "haka" ? 0.6 : 0;
+  const rubyBoost = mode === "bloodruby" ? 1.3 : 1;
+  goddessKisses.push({
+    x: width * (0.5 + (Math.random() - 0.5) * (mode === "haka" ? 0.22 : 0.12)),
+    y: height * (0.32 + (Math.random() - 0.5) * 0.1),
+    vx: (Math.random() - 0.5) * (0.8 + pout * 2.2 + hakaKick),
+    vy: -0.45 - intensity * (1.3 + hakaKick) + (Math.random() - 0.5) * 0.7,
+    z: 0.2 + Math.random() * 0.28,
+    vz: (0.012 + intensity * 0.03 + rate * 0.004) * (0.75 + pout * 0.8 + hakaKick * 0.25),
+    size: Math.min(width, height) * (0.024 + intensity * 0.032) * scale * rubyBoost,
+    hue: mode === "bloodruby" ? 348 + intensity * 22 : goddessHue(bandIndex, intensity),
+    alpha: 1,
+    life: 1,
+    bandIndex,
+    spin: (Math.random() - 0.5) * (0.035 + pout * 0.08),
+    angle: Math.random() * Math.PI * 2,
+    pout,
+  });
+}
+
+function drawKissGlyph(canvasContext, kiss, bassEnergy, trebleEnergy) {
+  const mode = fireworkFormSelect.value;
+  const phase = Math.min(1, kiss.z);
+  const poutAmount = Math.max(0, 1 - Math.abs(phase - 0.62) * 3.2) * (0.4 + kiss.pout * 1.1 + (mode === "seduction" ? 0.35 : 0));
+  const size = kiss.size * (0.8 + phase * 2.8);
+  const hue = mode === "bloodruby" ? 350 + bassEnergy * 34 : kiss.hue + trebleEnergy * 58 + phase * 22;
+  const alpha = kiss.alpha * kiss.life * (1 - Math.max(0, phase - 0.82) * 4.2);
+
+  canvasContext.save();
+  canvasContext.translate(kiss.x, kiss.y);
+  canvasContext.rotate(kiss.angle);
+  canvasContext.globalAlpha = Math.max(0, alpha);
+  canvasContext.lineCap = "round";
+  canvasContext.lineJoin = "round";
+
+  if (poutAmount > 0.05) {
+    canvasContext.fillStyle = hsla(hue, 100, 58 + poutAmount * 18, 0.86);
+    canvasContext.beginPath();
+    canvasContext.ellipse(-size * 0.34, 0, size * (0.46 + poutAmount * 0.24), size * (0.18 + poutAmount * 0.12), -0.2, 0, Math.PI * 2);
+    canvasContext.ellipse(size * 0.34, 0, size * (0.46 + poutAmount * 0.24), size * (0.18 + poutAmount * 0.12), 0.2, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.strokeStyle = mode === "bloodruby" ? `rgba(110, 0, 20, ${0.42 + bassEnergy * 0.32})` : hsla(hue + 24, 100, 78, 0.55);
+    canvasContext.lineWidth = Math.max(1, size * 0.055);
+    canvasContext.beginPath();
+    canvasContext.moveTo(-size * 0.66, 0);
+    canvasContext.quadraticCurveTo(0, size * (0.22 + poutAmount * 0.1), size * 0.66, 0);
+    canvasContext.stroke();
+  } else {
+    canvasContext.strokeStyle = hsla(hue, 100, 66 + phase * 16, 0.92);
+    canvasContext.lineWidth = Math.max(2, size * 0.16);
+    canvasContext.beginPath();
+    canvasContext.moveTo(-size * 0.5, -size * 0.5);
+    canvasContext.lineTo(size * 0.5, size * 0.5);
+    canvasContext.moveTo(size * 0.5, -size * 0.5);
+    canvasContext.lineTo(-size * 0.5, size * 0.5);
+    canvasContext.stroke();
+  }
+  canvasContext.restore();
+}
+
+function drawGoddessKissesFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const rate = fireworkSpeedMultiplier();
+  const density = handCountValueNumber() / 6;
+  const mode = fireworkFormSelect.value;
+
+  analyser.getByteFrequencyData(buffer);
+  goddessFrame += rate;
+
+  const pulse = 0.5 + Math.sin(goddessFrame * 0.035) * 0.5;
+  const flicker = 0.5 + Math.sin(goddessFrame * 0.071 + 1.6) * 0.5;
+  const rawBassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.3);
+  const rawMidsEnergy = pressureResponse(averageBand(buffer, 12, 52), 1.36);
+  const rawTrebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.46);
+  const bassEnergy = Math.max(rawBassEnergy, 0.1 + pulse * 0.12);
+  const midsEnergy = Math.max(rawMidsEnergy, 0.12 + flicker * 0.1);
+  const trebleEnergy = Math.max(rawTrebleEnergy, 0.12 + (1 - pulse) * 0.12);
+  drawGoddessChamber(canvasContext, width, height, bassEnergy, trebleEnergy);
+  drawGoddessFigure(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+
+  goddessBands.forEach((band, bandIndex) => {
+    const intensity = pressureResponse(averageBand(buffer, band.start, band.end), 1.44);
+    const modeBoost = mode === "haka" && bandIndex < 2 ? 1.55 : mode === "seduction" && bandIndex >= 2 ? 1.25 : mode === "bloodruby" ? 1.35 : 1;
+    const chance = (0.018 + intensity * 0.12 + trebleEnergy * 0.018 + bassEnergy * (mode === "haka" ? 0.02 : 0)) * rate * density * modeBoost;
+    if (Math.random() < chance) {
+      const count = 1 + Math.floor((density - 0.45) * intensity * 2);
+      for (let index = 0; index < count; index += 1) spawnGoddessKiss(bandIndex, intensity, width, height);
+    }
+  });
+
+  if (goddessKisses.length < 8 + density * 5 && Math.floor(goddessFrame) % Math.max(4, Math.round(16 / rate)) === 0) {
+    const bandIndex = Math.floor(goddessFrame / 7) % goddessBands.length;
+    spawnGoddessKiss(bandIndex, 0.2 + pulse * 0.18, width, height);
+  }
+
+  goddessKisses = goddessKisses.filter((kiss) => kiss.life > 0.02 && kiss.z < 1.08);
+  goddessKisses.forEach((kiss) => {
+    const band = goddessBands[kiss.bandIndex] || goddessBands[0];
+    const bandEnergy = pressureResponse(averageBand(buffer, band.start, band.end), 1.35);
+    kiss.z += kiss.vz * (0.8 + bandEnergy * 0.5);
+    kiss.x += kiss.vx * (0.7 + kiss.z * 1.5);
+    kiss.y += kiss.vy * (0.7 + kiss.z) + Math.sin(goddessFrame * 0.03 + kiss.angle) * bandEnergy * 1.4;
+    kiss.angle += kiss.spin + bandEnergy * 0.018;
+    kiss.life -= 0.003 + Math.max(0, kiss.z - 0.72) * 0.012;
+    drawKissGlyph(canvasContext, kiss, bassEnergy, trebleEnergy);
+  });
+
+  const maxKisses = Math.round(70 + density * 60);
+  if (goddessKisses.length > maxKisses) goddessKisses.splice(0, goddessKisses.length - maxKisses);
+}
+
+function setupLoucheLizards(width, height) {
+  const targetCount = handCountValueNumber();
+  if (loucheLizards.length === targetCount) return;
+
+  const columns = Math.ceil(Math.sqrt(targetCount * 1.65));
+  const rows = Math.ceil(targetCount / columns);
+  loucheLizards = Array.from({ length: targetCount }, (_, index) => {
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+    return {
+      index,
+      bandIndex: index % lizardBands.length,
+      homeX: width * ((col + 0.58) / Math.max(1, columns)),
+      homeY: height * (0.24 + ((row + 0.58) / Math.max(1, rows)) * 0.58),
+      phase: Math.random() * Math.PI * 2,
+      swagger: 0.65 + Math.random() * 0.7,
+      direction: index % 2 === 0 ? 1 : -1,
+      energy: 0,
+      hueOffset: Math.random() * 42,
+    };
+  });
+}
+
+function lizardHue(index, count, intensity) {
+  const theme = themeSelect.value;
+  const progress = index / Math.max(1, count - 1);
+  if (theme === "ice") return 184 + progress * 80 + intensity * 36;
+  if (theme === "ember") return 12 + progress * 62 + intensity * 30;
+  if (theme === "pressure") return 330 - progress * 260 + intensity * 74;
+  return 320 - progress * 320 + intensity * 54;
+}
+
+function drawLizardClub(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  canvasContext.fillStyle = "rgba(5, 3, 9, 0.28)";
+  canvasContext.fillRect(0, 0, width, height);
+
+  const room = canvasContext.createLinearGradient(0, 0, width, height);
+  room.addColorStop(0, hsla(300 + trebleEnergy * 40, 98, 18, 0.34));
+  room.addColorStop(0.48, "rgba(8, 8, 14, 0.34)");
+  room.addColorStop(1, hsla(140 + bassEnergy * 80, 96, 16, 0.42));
+  canvasContext.fillStyle = room;
+  canvasContext.fillRect(0, 0, width, height);
+
+  const tile = Math.max(28, width / 24);
+  for (let x = -tile; x < width + tile; x += tile) {
+    for (let y = height * 0.62; y < height + tile; y += tile) {
+      const pulse = Math.sin(lizardFrame * 0.045 + x * 0.03 + y * 0.02) * 0.5 + 0.5;
+      canvasContext.fillStyle = hsla(330 - pulse * 260 + bassEnergy * 80, 96, 34 + pulse * 18, 0.1 + bassEnergy * 0.16);
+      canvasContext.fillRect(x, y, tile - 2, tile - 2);
+    }
+  }
+
+  for (let beam = 0; beam < 6; beam += 1) {
+    const hue = lizardHue(beam, 6, trebleEnergy);
+    const x = width * (0.08 + beam * 0.18 + Math.sin(lizardFrame * 0.014 + beam) * 0.045);
+    const glow = canvasContext.createRadialGradient(x, height * 0.1, 0, x, height * 0.1, width * 0.22);
+    glow.addColorStop(0, hsla(hue, 100, 62, 0.12 + trebleEnergy * 0.18));
+    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = glow;
+    canvasContext.fillRect(0, 0, width, height);
+  }
+}
+
+function drawZootLizard(canvasContext, lizard, count, intensity, width, height) {
+  const tempo = fireworkSpeedMultiplier();
+  const scale = handSizeMultiplier();
+  const mood = handGraspAmount();
+  const band = lizardBands[lizard.bandIndex];
+  const beat = lizardFrame * (0.055 + lizard.bandIndex * 0.005) + lizard.phase;
+  const commonBeat = lizardFrame * 0.072;
+  const size = Math.min(width, height) * 0.055 * scale * (0.86 + intensity * 0.36);
+  const hue = lizardHue(lizard.index, count, intensity) + lizard.hueOffset;
+  const shimmy = Math.sin(commonBeat * 2 + lizard.phase) * (0.16 + intensity * 0.48 + mood * 0.18);
+  const individual = Math.sin(beat * 1.7) * lizard.swagger * (0.12 + intensity * 0.28);
+  const glide = band.move === "side-glide" ? Math.sin(beat) * width * intensity * 0.018 : 0;
+  const bounce = Math.abs(Math.sin(commonBeat + lizard.phase)) * size * (0.18 + intensity * 0.72);
+  const tailPop = band.move === "tail-pop" ? Math.sin(beat * 2.4) * size * (0.7 + intensity) : 0;
+  const lapel = band.move === "lapel-snap" ? Math.max(0, Math.sin(beat * 3.1)) * intensity : 0;
+  const hatTip = band.move === "hat-tip" ? Math.max(0, Math.sin(beat * 2.2)) * intensity : 0;
+  const tongue = band.move === "tongue-flick" ? Math.max(0, Math.sin(beat * 4.8)) * intensity : 0;
+  const x = lizard.homeX + glide + Math.sin(beat * 0.5) * intensity * width * 0.01;
+  const y = lizard.homeY - bounce;
+
+  lizard.homeX += Math.sin(beat * 0.2) * intensity * tempo * 0.28;
+  lizard.homeY += Math.cos(beat * 0.17) * intensity * tempo * 0.16;
+  lizard.homeX += (Math.min(width * 0.92, Math.max(width * 0.08, lizard.homeX)) - lizard.homeX) * 0.018;
+  lizard.homeY += (Math.min(height * 0.84, Math.max(height * 0.18, lizard.homeY)) - lizard.homeY) * 0.018;
+
+  canvasContext.save();
+  canvasContext.translate(x, y);
+  canvasContext.scale(lizard.direction, 1);
+  canvasContext.rotate(shimmy + individual);
+  canvasContext.lineCap = "round";
+  canvasContext.lineJoin = "round";
+
+  const glow = canvasContext.createRadialGradient(0, 0, size * 0.2, 0, 0, size * 4.5);
+  glow.addColorStop(0, hsla(hue, 100, 58, 0.16 + intensity * 0.24));
+  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = glow;
+  canvasContext.beginPath();
+  canvasContext.arc(0, size * 0.4, size * 4.5, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(hue + 80, 100, 54, 0.72);
+  canvasContext.lineWidth = Math.max(2, size * 0.22);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.22, size * 1.04);
+  canvasContext.quadraticCurveTo(-size * (1.05 + intensity), size * (1.4 + mood), -size * (1.9 + mood), size * (1.05 + tailPop * 0.02));
+  canvasContext.stroke();
+
+  const suitHue = hue + 110 + Math.sin(beat) * 45;
+  canvasContext.fillStyle = hsla(suitHue, 100, 42 + intensity * 18, 0.96);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.62, -size * 0.15);
+  canvasContext.lineTo(size * 0.62, -size * 0.15);
+  canvasContext.lineTo(size * (0.92 + lapel * 0.35), size * 1.2);
+  canvasContext.lineTo(-size * (0.92 + lapel * 0.35), size * 1.2);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.fillStyle = hsla(hue + 220, 100, 66, 0.9);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.45, -size * 0.08);
+  canvasContext.lineTo(0, size * 0.52 + lapel * size * 0.24);
+  canvasContext.lineTo(size * 0.45, -size * 0.08);
+  canvasContext.lineTo(size * 0.18, size * 0.88);
+  canvasContext.lineTo(-size * 0.18, size * 0.88);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(hue + 20, 100, 74, 0.95);
+  canvasContext.lineWidth = Math.max(1.4, size * 0.12);
+  const armShimmy = Math.sin(beat * 3.4) * size * (0.35 + mood * 0.5 + intensity * 0.5);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.55, size * 0.18);
+  canvasContext.lineTo(-size * (1.12 + intensity * 0.45), size * 0.22 + armShimmy);
+  canvasContext.moveTo(size * 0.55, size * 0.18);
+  canvasContext.lineTo(size * (1.05 + hatTip * 0.72), -size * (0.08 + hatTip * 0.58) - armShimmy * 0.5);
+  canvasContext.stroke();
+
+  canvasContext.strokeStyle = hsla(hue + 160, 92, 56, 0.9);
+  canvasContext.lineWidth = Math.max(1.5, size * 0.15);
+  const leg = Math.sin(commonBeat * 2.3 + lizard.phase) * size * (0.36 + intensity * 0.52);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.3, size * 1.12);
+  canvasContext.lineTo(-size * 0.62, size * 1.88 + leg);
+  canvasContext.moveTo(size * 0.28, size * 1.12);
+  canvasContext.lineTo(size * 0.62, size * 1.84 - leg);
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = hsla(hue + 70, 100, 48 + intensity * 18, 0.96);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, -size * 0.64, size * 0.56, size * 0.42, -0.05, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.beginPath();
+  canvasContext.ellipse(size * 0.5, -size * 0.62, size * 0.36, size * 0.19, 0.1, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(3, 4, 7, 0.92)";
+  canvasContext.fillRect(-size * 0.42, -size * 0.72, size * 0.86, size * 0.14);
+  canvasContext.fillStyle = hsla(hue + 260, 100, 62, 0.95);
+  canvasContext.fillRect(-size * 0.34, -size * (1.14 + hatTip * 0.18), size * 0.74, size * 0.18);
+  canvasContext.fillRect(-size * 0.18, -size * (1.46 + hatTip * 0.26), size * 0.42, size * 0.34);
+
+  if (tongue > 0.05) {
+    canvasContext.strokeStyle = hsla(330, 100, 68, 0.85);
+    canvasContext.lineWidth = Math.max(1, size * 0.045);
+    canvasContext.beginPath();
+    canvasContext.moveTo(size * 0.82, -size * 0.58);
+    canvasContext.quadraticCurveTo(size * (1.2 + tongue), -size * 0.65, size * (1.5 + tongue), -size * (0.5 + tongue * 0.3));
+    canvasContext.stroke();
+  }
+
+  canvasContext.restore();
+}
+
+function drawLizardLoucheFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const tempo = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  lizardFrame += tempo;
+  setupLoucheLizards(width, height);
+
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.38);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.44);
+  const bandIntensities = lizardBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.5));
+
+  drawLizardClub(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  loucheLizards.forEach((lizard) => {
+    lizard.energy = lizard.energy * 0.8 + bandIntensities[lizard.bandIndex] * 0.2;
+  });
+
+  [...loucheLizards]
+    .sort((a, b) => a.homeY - b.homeY)
+    .forEach((lizard) => {
+      drawZootLizard(canvasContext, lizard, loucheLizards.length, lizard.energy, width, height);
+    });
+}
+
 function setupOcclusionOctopi(width, height) {
   const targetCount = handCountValueNumber();
   if (occlusionOctopi.length === targetCount) {
@@ -3025,7 +3602,16 @@ function drawCephalopodFrame(canvasContext, buffer) {
 }
 
 function drawIdleVisualizer() {
-  if (visualizerSelect.value === "octopusocclusion") {
+  const canvasContext = visualizer.getContext("2d");
+  canvasContext.setTransform(1, 0, 0, 1, 0, 0);
+  canvasContext.globalAlpha = 1;
+  canvasContext.globalCompositeOperation = "source-over";
+
+  if (visualizerSelect.value === "goddesskisses") {
+    drawIdleGoddessKisses();
+  } else if (visualizerSelect.value === "lizardlouche") {
+    drawIdleLizardLouche();
+  } else if (visualizerSelect.value === "octopusocclusion") {
     drawIdleOctopusOcclusion();
   } else if (visualizerSelect.value === "knifethunk") {
     drawIdleKnifeThunk();
@@ -3275,6 +3861,56 @@ function drawIdleOctopusOcclusion() {
     });
 }
 
+function drawIdleLizardLouche() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+
+  lizardFrame += 1;
+  setupLoucheLizards(width, height);
+  drawLizardClub(canvasContext, width, height, 0.18, 0.22);
+
+  loucheLizards.forEach((lizard) => {
+    drawZootLizard(canvasContext, lizard, loucheLizards.length, 0.16 + (lizard.bandIndex % 4) * 0.04, width, height);
+  });
+}
+
+function drawIdleGoddessKisses() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const rate = fireworkSpeedMultiplier();
+  const pulse = 0.5 + Math.sin(goddessFrame * 0.04) * 0.5;
+  const shimmer = 0.5 + Math.sin(goddessFrame * 0.073 + 0.8) * 0.5;
+
+  goddessFrame += rate;
+  drawGoddessChamber(canvasContext, width, height, 0.16 + pulse * 0.16, 0.18 + shimmer * 0.18);
+  drawGoddessFigure(canvasContext, width, height, 0.16 + pulse * 0.16, 0.16 + shimmer * 0.18, 0.18 + (1 - pulse) * 0.18);
+
+  if (goddessKisses.length < 14 || Math.floor(goddessFrame) % Math.max(5, Math.round(18 / rate)) === 0) {
+    spawnGoddessKiss(goddessKisses.length % goddessBands.length, 0.18 + pulse * 0.18, width, height);
+  }
+
+  goddessKisses = goddessKisses.filter((kiss) => kiss.life > 0.02 && kiss.z < 1.08);
+  goddessKisses.forEach((kiss) => {
+    kiss.z += kiss.vz * 0.75;
+    kiss.x += kiss.vx * (0.5 + kiss.z);
+    kiss.y += kiss.vy * 0.55;
+    kiss.angle += kiss.spin;
+    kiss.life -= 0.0025;
+    drawKissGlyph(canvasContext, kiss, 0.16 + pulse * 0.16, 0.18 + shimmer * 0.18);
+  });
+
+  if (visualizerSelect.value === "goddesskisses" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleEqualizer() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -3353,6 +3989,8 @@ function resizeCanvas() {
   knifeTargets = [];
   thrownKnives = [];
   occlusionOctopi = [];
+  loucheLizards = [];
+  goddessKisses = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -3404,6 +4042,8 @@ visualizerSelect.addEventListener("change", () => {
     butterflyhost: "Butterfly Host frequency visualisation",
     knifethunk: "Knife Thunk frequency visualisation",
     octopusocclusion: "Octopus Occlusion frequency visualisation",
+    lizardlouche: "Lizard Louche frequency visualisation",
+    goddesskisses: "Goddess Kisses frequency visualisation",
   };
 
   visualizer.setAttribute(
@@ -3432,6 +4072,8 @@ handCount.addEventListener("input", () => {
   knifeTargets = [];
   thrownKnives = [];
   occlusionOctopi = [];
+  loucheLizards = [];
+  goddessKisses = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
