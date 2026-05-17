@@ -322,6 +322,11 @@ select {
   text-align: center;
 }
 
+.visual-stage {
+  overflow: hidden;
+}
+
+.player.visual-fullscreen,
 .player:fullscreen {
   width: 100vw;
   height: 100vh;
@@ -331,10 +336,42 @@ select {
   flex-direction: column;
 }
 
+.player.visual-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #050709;
+}
+
 .player:fullscreen #visualizer {
   flex: 1 1 auto;
   height: auto;
   min-height: 0;
+}
+
+.player.visual-fullscreen,
+.player.visual-fullscreen:fullscreen {
+  background: #050709;
+}
+
+.player.visual-fullscreen .topbar,
+.player.visual-fullscreen .now-playing,
+.player.visual-fullscreen .controls,
+.player.visual-fullscreen .library-tools,
+.player.visual-fullscreen .track-list,
+.player.visual-fullscreen:fullscreen .topbar,
+.player.visual-fullscreen:fullscreen .now-playing,
+.player.visual-fullscreen:fullscreen .controls,
+.player.visual-fullscreen:fullscreen .library-tools,
+.player.visual-fullscreen:fullscreen .track-list {
+  display: none;
+}
+
+.player.visual-fullscreen #visualizer,
+.player.visual-fullscreen:fullscreen #visualizer {
+  width: 100vw;
+  height: 100vh;
+  flex: 1 1 100vh;
 }
 
 .player:fullscreen .track-list {

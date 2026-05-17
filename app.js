@@ -27,6 +27,7 @@ const handGraspValue = document.querySelector("#handGraspValue");
 const peakToggle = document.querySelector("#peakToggle");
 const trackCount = document.querySelector("#trackCount");
 const trackList = document.querySelector("#trackList");
+audio.crossOrigin = "anonymous";
 
 let tracks = [];
 let currentIndex = -1;
@@ -68,6 +69,7 @@ let goddessKisses = [];
 let goddessFrame = 0;
 let gardenVines = [];
 let gardenFrame = 0;
+let stagePulse = null;
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -75,6 +77,9 @@ let moodState = {
 };
 
 const peakHoldMs = 3200;
+const defaultDirectoryName = "Andy ChatGPT DALL-E aisongs";
+const defaultLibraryApi = "http://127.0.0.1:4173/api/tracks";
+const directoryStoreName = "waveDeckDirectory";
 const fireworksBands = [
   { start: 1, end: 5, threshold: 0.42, name: "bass" },
   { start: 6, end: 14, threshold: 0.35, name: "lowMid" },
@@ -317,6 +322,67 @@ function trackDisplayTitle(track) {
   return trackName(track).replace(/\.wav$/i, "");
 }
 
+function visualizerDisplayName() {
+  return visualizerSelect.selectedOptions[0]?.textContent || "Visualisation";
+}
+
+function pulseStageLabel(type, text) {
+  stagePulse = {
+    type,
+    text,
+    startedAt: performance.now(),
+    duration: 2100,
+    hue: type === "track" ? 48 : 184,
+  };
+}
+
+function drawStagePulse(canvasContext) {
+  if (!stagePulse) {
+    return;
+  }
+
+  const now = performance.now();
+  const progress = (now - stagePulse.startedAt) / stagePulse.duration;
+  if (progress >= 1) {
+    stagePulse = null;
+    return;
+  }
+
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const alpha = Math.sin((1 - progress) * Math.PI * 0.5);
+  const pulse = 1 + Math.sin(progress * Math.PI * 5) * 0.08;
+  const contrastHue = (stagePulse.hue + 168 + progress * 48) % 360;
+  const fontSize = Math.max(22, Math.min(width * 0.06, height * 0.16));
+  const labelSize = Math.max(12, fontSize * 0.34);
+  const maxWidth = width * 0.86;
+
+  canvasContext.save();
+  canvasContext.setTransform(1, 0, 0, 1, 0, 0);
+  canvasContext.globalAlpha = alpha;
+  canvasContext.textAlign = "center";
+  canvasContext.textBaseline = "middle";
+  canvasContext.shadowBlur = fontSize * 0.55;
+  canvasContext.shadowColor = hsla(contrastHue, 100, 58, 0.82);
+
+  const gradient = canvasContext.createLinearGradient(width * 0.18, 0, width * 0.82, 0);
+  gradient.addColorStop(0, hsla(stagePulse.hue, 100, 66, 0.95));
+  gradient.addColorStop(0.5, "rgba(255, 255, 255, 0.96)");
+  gradient.addColorStop(1, hsla(contrastHue, 100, 62, 0.95));
+
+  canvasContext.fillStyle = `rgba(0, 0, 0, ${0.28 * alpha})`;
+  canvasContext.fillRect(width * 0.07, height * 0.36, width * 0.86, height * 0.28);
+
+  canvasContext.fillStyle = hsla(contrastHue, 100, 72, 0.82);
+  canvasContext.font = `700 ${labelSize}px "Segoe UI", system-ui, sans-serif`;
+  canvasContext.fillText(stagePulse.type === "track" ? "Track" : "Visual", width * 0.5, height * 0.42, maxWidth);
+
+  canvasContext.fillStyle = gradient;
+  canvasContext.font = `800 ${fontSize * pulse}px "Segoe UI", system-ui, sans-serif`;
+  canvasContext.fillText(stagePulse.text, width * 0.5, height * 0.52, maxWidth);
+  canvasContext.restore();
+}
+
 function setStatus(status) {
   statusLight.className = "status-light";
 
@@ -476,7 +542,47 @@ function syncVisualizerControls() {
 }
 
 function setFullscreenLabel() {
-  fullscreenButton.textContent = document.fullscreenElement ? "X" : "F";
+  const active = document.querySelector(".player").classList.contains("visual-fullscreen");
+  fullscreenButton.textContent = active ? "X" : "F";
+  fullscreenButton.title = active ? "Exit fullscreen (Esc)" : "Visual fullscreen (F4)";
+}
+
+function enterVisualStage() {
+  const player = document.querySelector(".player");
+
+  if (player.classList.contains("visual-fullscreen")) {
+    return;
+  }
+
+  player.classList.add("visual-fullscreen");
+  document.body.classList.add("visual-stage");
+  setFullscreenLabel();
+  requestAnimationFrame(resizeCanvas);
+
+  if (player.requestFullscreen) {
+    player.requestFullscreen().catch(() => requestAnimationFrame(resizeCanvas));
+  }
+}
+
+function exitVisualStage() {
+  const player = document.querySelector(".player");
+
+  player.classList.remove("visual-fullscreen");
+  document.body.classList.remove("visual-stage");
+  setFullscreenLabel();
+  requestAnimationFrame(resizeCanvas);
+
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+
+function toggleVisualFullscreen() {
+  if (document.querySelector(".player").classList.contains("visual-fullscreen")) {
+    exitVisualStage();
+  } else {
+    enterVisualStage();
+  }
 }
 
 function restartVisualizer() {
@@ -544,14 +650,14 @@ function loadTrack(index, autoplay = true) {
     return;
   }
 
-  if (currentIndex >= 0 && tracks[currentIndex]?.url) {
+  if (currentIndex >= 0 && tracks[currentIndex]?.url && tracks[currentIndex].source !== "default-server") {
     URL.revokeObjectURL(tracks[currentIndex].url);
     tracks[currentIndex].url = "";
   }
 
   currentIndex = index;
   const track = tracks[currentIndex];
-  const trackUrl = URL.createObjectURL(track.file);
+  const trackUrl = track.audioUrl || URL.createObjectURL(track.file);
   track.url = trackUrl;
   audio.src = trackUrl;
   currentTrack.textContent = trackDisplayTitle(track);
@@ -591,7 +697,7 @@ function stopCurrent() {
 
 function resetLibraryState() {
   tracks.forEach((track) => {
-    if (track.url) {
+    if (track.url && track.source !== "default-server") {
       URL.revokeObjectURL(track.url);
     }
   });
@@ -602,6 +708,140 @@ function resetLibraryState() {
   currentTrack.textContent = "No track loaded";
   timeReadout.textContent = "0:00 / 0:00";
   setStatus("stopped");
+}
+
+function openDirectoryStore() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(directoryStoreName, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore("handles");
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveDirectoryHandle(handle) {
+  const db = await openDirectoryStore();
+  await new Promise((resolve, reject) => {
+    const transaction = db.transaction("handles", "readwrite");
+    transaction.objectStore("handles").put(handle, "library");
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error);
+  });
+  db.close();
+}
+
+async function loadDirectoryHandle() {
+  const db = await openDirectoryStore();
+  const handle = await new Promise((resolve, reject) => {
+    const transaction = db.transaction("handles", "readonly");
+    const request = transaction.objectStore("handles").get("library");
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
+  db.close();
+  return handle;
+}
+
+async function collectWavFilesFromHandle(directoryHandle) {
+  const files = [];
+  const walk = async (handle, prefix = "") => {
+    for await (const entry of handle.values()) {
+      if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".wav")) {
+        const file = await entry.getFile();
+        files.push({ file, relativePath: `${prefix}${entry.name}`, source: "directory-handle" });
+      } else if (entry.kind === "directory") {
+        await walk(entry, `${prefix}${entry.name}/`);
+      }
+    }
+  };
+
+  await walk(directoryHandle);
+  return files;
+}
+
+function loadTrackFiles(files, name, source) {
+  resetLibraryState();
+  tracks = files
+    .filter((entry) => entry.file?.name?.toLowerCase().endsWith(".wav"))
+    .map((entry) => ({
+      file: entry.file,
+      url: "",
+      source,
+      relativePath: entry.relativePath || entry.file.webkitRelativePath || entry.file.name,
+    }));
+
+  directoryName.textContent = name || defaultDirectoryName;
+  sortTracks();
+  renderTracks();
+}
+
+function loadServerTracks(library) {
+  resetLibraryState();
+  tracks = (library.tracks || [])
+    .filter((track) => track.name?.toLowerCase().endsWith(".wav") && track.audioUrl)
+    .map((track) => ({
+      name: track.name,
+      lastModified: track.lastModified || 0,
+      relativePath: track.relativePath || track.name,
+      audioUrl: track.audioUrl,
+      url: "",
+      source: "default-server",
+    }));
+
+  directoryName.textContent = library.directoryName || defaultDirectoryName;
+  sortTracks();
+  renderTracks();
+}
+
+async function loadDefaultServerLibrary() {
+  try {
+    const response = await fetch(defaultLibraryApi, { cache: "no-store" });
+    if (!response.ok) {
+      return false;
+    }
+
+    const library = await response.json();
+    loadServerTracks(library);
+    return tracks.length > 0;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function openRememberedDirectory({ prompt = false } = {}) {
+  if (!("showDirectoryPicker" in window)) {
+    return false;
+  }
+
+  try {
+    const handle = prompt
+      ? await window.showDirectoryPicker({ id: "wave-deck-library", mode: "read", startIn: "music" })
+      : await loadDirectoryHandle();
+
+    if (!handle) {
+      return false;
+    }
+
+    let permission = await handle.queryPermission({ mode: "read" });
+    if (permission !== "granted" && prompt) {
+      permission = await handle.requestPermission({ mode: "read" });
+    }
+
+    if (permission !== "granted") {
+      directoryName.textContent = defaultDirectoryName;
+      return false;
+    }
+
+    const files = await collectWavFilesFromHandle(handle);
+    loadTrackFiles(files, handle.name || defaultDirectoryName, "directory-handle");
+    await saveDirectoryHandle(handle);
+    return true;
+  } catch (error) {
+    if (error?.name !== "AbortError") {
+      console.warn("Directory load failed", error);
+    }
+    return false;
+  }
 }
 
 function nextIndex() {
@@ -626,6 +866,39 @@ function previousIndex() {
   }
 
   return currentIndex - 1;
+}
+
+function changeTrackByStep(step) {
+  if (tracks.length === 0) {
+    return;
+  }
+
+  const wasPlaying = !audio.paused;
+  let next = currentIndex;
+
+  if (currentIndex === -1) {
+    next = step > 0 ? 0 : tracks.length - 1;
+  } else if (shuffleToggle.checked) {
+    next = step > 0 ? nextIndex() : previousIndex();
+  } else {
+    next = (currentIndex + step + tracks.length) % tracks.length;
+  }
+
+  pulseStageLabel("track", trackDisplayTitle(tracks[next]));
+  loadTrack(next, wasPlaying);
+  if (!wasPlaying && !animationId) {
+    drawIdleVisualizer();
+  }
+}
+
+function changeVisualizerByStep(step) {
+  const options = Array.from(visualizerSelect.options);
+  const current = Math.max(0, options.findIndex((option) => option.value === visualizerSelect.value));
+  const next = (current + step + options.length) % options.length;
+
+  visualizerSelect.value = options[next].value;
+  pulseStageLabel("visual", visualizerDisplayName());
+  visualizerSelect.dispatchEvent(new Event("change"));
 }
 
 function drawVisualizer() {
@@ -673,6 +946,7 @@ function drawVisualizer() {
       } else {
         drawEqualizerFrame(canvasContext, buffer);
       }
+      drawStagePulse(canvasContext);
     } catch (error) {
       console.warn("Visualizer frame skipped", error);
     }
@@ -3843,6 +4117,7 @@ function drawIdleVisualizer() {
   } else {
     drawIdleEqualizer();
   }
+  drawStagePulse(canvasContext);
 }
 
 function drawIdleArrowStorm() {
@@ -4231,17 +4506,22 @@ function resizeCanvas() {
   }
 }
 
+folderInput.closest("label").addEventListener("click", async (event) => {
+  if (!("showDirectoryPicker" in window)) {
+    return;
+  }
+
+  event.preventDefault();
+  await openRememberedDirectory({ prompt: true });
+});
+
 folderInput.addEventListener("change", () => {
   const files = Array.from(folderInput.files || []);
-  resetLibraryState();
-
-  tracks = files
-    .filter((file) => file.name.toLowerCase().endsWith(".wav"))
-    .map((file) => ({ file, url: "", source: "picker" }));
-
-  directoryName.textContent = files[0]?.webkitRelativePath?.split("/")[0] || "Selected directory";
-  sortTracks();
-  renderTracks();
+  loadTrackFiles(
+    files.map((file) => ({ file, relativePath: file.webkitRelativePath || file.name })),
+    files[0]?.webkitRelativePath?.split("/")[0] || defaultDirectoryName,
+    "picker",
+  );
 });
 
 sortSelect.addEventListener("change", () => {
@@ -4349,13 +4629,7 @@ playButton.addEventListener("click", () => {
 stopButton.addEventListener("click", stopCurrent);
 nextButton.addEventListener("click", () => loadTrack(nextIndex()));
 previousButton.addEventListener("click", () => loadTrack(previousIndex()));
-fullscreenButton.addEventListener("click", () => {
-  if (document.fullscreenElement) {
-    document.exitFullscreen();
-  } else {
-    document.querySelector(".player").requestFullscreen();
-  }
-});
+fullscreenButton.addEventListener("click", toggleVisualFullscreen);
 
 fireworkSpeed.addEventListener("input", updateFireworkSpeedLabel);
 
@@ -4371,22 +4645,71 @@ audio.addEventListener("timeupdate", () => {
 
 window.addEventListener("resize", resizeCanvas);
 document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement) {
+    document.querySelector(".player").classList.remove("visual-fullscreen");
+    document.body.classList.remove("visual-stage");
+  }
   setFullscreenLabel();
   requestAnimationFrame(resizeCanvas);
 });
 
-document.addEventListener("keydown", (event) => {
+function handleGlobalKey(event) {
+  const player = document.querySelector(".player");
+  const key = event.key || "";
+  const code = event.code || "";
+  const lowerKey = key.toLowerCase();
+
+  if (key === "Escape" && player.classList.contains("visual-fullscreen") && !document.fullscreenElement) {
+    event.preventDefault();
+    exitVisualStage();
+    return;
+  }
+
+  if (key === "F4" || code === "F4" || event.keyCode === 115 || lowerKey === "f") {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleVisualFullscreen();
+    return;
+  }
+
   const tagName = event.target.tagName.toLowerCase();
 
   if (tagName === "input" || tagName === "select" || tagName === "textarea") {
     return;
   }
 
-  if (event.key.toLowerCase() === "f") {
+  if (key === "ArrowRight") {
     event.preventDefault();
-    fullscreenButton.click();
+    changeTrackByStep(1);
+    return;
   }
-});
+
+  if (key === "ArrowLeft") {
+    event.preventDefault();
+    changeTrackByStep(-1);
+    return;
+  }
+
+  if (key === "ArrowUp") {
+    event.preventDefault();
+    changeVisualizerByStep(1);
+    return;
+  }
+
+  if (key === "ArrowDown") {
+    event.preventDefault();
+    changeVisualizerByStep(-1);
+    return;
+  }
+
+}
+
+document.addEventListener("keydown", handleGlobalKey, true);
+document.addEventListener("keyup", (event) => {
+  if (event.key === "F4" || event.code === "F4" || event.keyCode === 115) {
+    handleGlobalKey(event);
+  }
+}, true);
 
 resizeCanvas();
 updateFireworkSpeedLabel();
@@ -4395,3 +4718,9 @@ syncVisualizerControls();
 setFullscreenLabel();
 setControlsEnabled(false);
 setStatus("stopped");
+directoryName.textContent = defaultDirectoryName;
+loadDefaultServerLibrary().then((loaded) => {
+  if (!loaded) {
+    openRememberedDirectory();
+  }
+});
