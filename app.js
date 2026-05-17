@@ -69,6 +69,9 @@ let goddessKisses = [];
 let goddessFrame = 0;
 let gardenVines = [];
 let gardenFrame = 0;
+let tigerFrame = 0;
+let tigerRoarUntil = 0;
+let tigerSpurts = [];
 let stagePulse = null;
 let moodState = {
   energy: 0,
@@ -256,6 +259,14 @@ const gardenBands = [
   { start: 43, end: 66, root: "floor" },
   { start: 67, end: 90, root: "left" },
   { start: 91, end: 112, root: "right" },
+];
+
+const tigerBands = [
+  { start: 1, end: 7, move: "pounce" },
+  { start: 8, end: 18, move: "bite" },
+  { start: 19, end: 38, move: "claw" },
+  { start: 39, end: 70, move: "worry" },
+  { start: 71, end: 112, move: "roar" },
 ];
 
 const formOptionsByVisualizer = {
@@ -522,22 +533,22 @@ function syncVisualizerControls() {
 
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden"].includes(visualizer);
-  armsLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden"].includes(visualizer);
+  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger"].includes(visualizer);
+  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger"].includes(visualizer);
 
   setControlLabel(
     fireworkSpeed,
-    visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
+    visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
   );
-  setControlLabel(handSize, visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(handSize, visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
   setControlLabel(
     handCount,
     visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
   );
   setControlLabel(
     handGrasp,
-    visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
+    visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
   );
 }
 
@@ -625,6 +636,9 @@ function restartVisualizer() {
   goddessFrame = 0;
   gardenVines = [];
   gardenFrame = 0;
+  tigerFrame = 0;
+  tigerSpurts = [];
+  tigerRoarUntil = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -901,6 +915,31 @@ function changeVisualizerByStep(step) {
   visualizerSelect.dispatchEvent(new Event("change"));
 }
 
+function roarTipusTiger() {
+  tigerRoarUntil = performance.now() + 900;
+  pulseStageLabel("visual", "Tipu's Tiger roars");
+
+  if (audioContext) {
+    const start = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    oscillator.type = "sawtooth";
+    oscillator.frequency.setValueAtTime(92, start);
+    oscillator.frequency.exponentialRampToValueAtTime(38, start + 0.75);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.18, start + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.85);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(start);
+    oscillator.stop(start + 0.9);
+  }
+
+  if (!animationId) {
+    drawIdleVisualizer();
+  }
+}
+
 function drawVisualizer() {
   if (animationId) {
     cancelAnimationFrame(animationId);
@@ -915,7 +954,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "climbinggarden") {
+      if (visualizerSelect.value === "tipustiger") {
+        drawTipusTigerFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "climbinggarden") {
         drawClimbingGardenFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "goddesskisses") {
         drawGoddessKissesFrame(canvasContext, buffer);
@@ -2808,6 +2849,389 @@ function drawClimbingGardenFrame(canvasContext, buffer) {
   });
 }
 
+function tigerPalette(intensity) {
+  const theme = themeSelect.value;
+  if (theme === "ice") return { tiger: 196, stripe: 226, blood: 342, coat: 210 };
+  if (theme === "ember") return { tiger: 30 + intensity * 16, stripe: 8, blood: 358, coat: 14 };
+  if (theme === "pressure") return { tiger: 48, stripe: 324, blood: 330 + intensity * 24, coat: 350 };
+  if (theme === "spectrum") return { tiger: 42 + intensity * 80, stripe: 250, blood: 350, coat: 8 };
+  return { tiger: 35, stripe: 20, blood: 352, coat: 3 };
+}
+
+function drawTigerBackdrop(canvasContext, width, height, bassEnergy, roar) {
+  const dusk = canvasContext.createLinearGradient(0, 0, 0, height);
+  dusk.addColorStop(0, "rgba(10, 10, 14, 0.92)");
+  dusk.addColorStop(0.5, `rgba(56, 30, 12, ${0.35 + bassEnergy * 0.25})`);
+  dusk.addColorStop(1, "rgba(7, 5, 4, 0.96)");
+  canvasContext.fillStyle = dusk;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.fillStyle = `rgba(242, 180, 65, ${0.06 + bassEnergy * 0.1 + roar * 0.12})`;
+  for (let index = 0; index < 7; index += 1) {
+    const x = width * (0.08 + index * 0.15 + Math.sin(tigerFrame * 0.006 + index) * 0.015);
+    canvasContext.beginPath();
+    canvasContext.ellipse(x, height * 0.82, width * 0.18, height * 0.09, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  if (roar > 0) {
+    canvasContext.strokeStyle = `rgba(255, 214, 90, ${0.32 * roar})`;
+    canvasContext.lineWidth = Math.max(2, width * 0.003);
+    for (let ring = 0; ring < 5; ring += 1) {
+      canvasContext.beginPath();
+      canvasContext.arc(width * 0.53, height * 0.38, width * (0.08 + ring * 0.08 + roar * 0.08), 0, Math.PI * 2);
+      canvasContext.stroke();
+    }
+  }
+}
+
+function spawnTigerSpurts(width, height, intensity, kind) {
+  const gore = handGraspAmount();
+  if (gore <= 0.02) return;
+
+  const count = Math.round((2 + intensity * 8) * (0.35 + gore * 1.6));
+  for (let index = 0; index < count; index += 1) {
+    tigerSpurts.push({
+      x: width * (0.55 + Math.random() * 0.12),
+      y: height * (0.52 + Math.random() * 0.12),
+      vx: (Math.random() - 0.35) * (1.5 + intensity * 5),
+      vy: -(1.5 + Math.random() * 5 + intensity * 7) * (kind === "bite" ? 1.3 : 1),
+      radius: 2 + Math.random() * (5 + gore * 7),
+      life: 1,
+      hue: 348 + Math.random() * 18,
+    });
+  }
+}
+
+function drawTigerSpurts(canvasContext, width, height, bassEnergy) {
+  tigerSpurts = tigerSpurts.filter((drop) => drop.life > 0.02 && drop.y < height * 1.08);
+  tigerSpurts.forEach((drop) => {
+    drop.x += drop.vx;
+    drop.y += drop.vy;
+    drop.vy += 0.18 + bassEnergy * 0.22;
+    drop.life -= 0.014;
+    canvasContext.fillStyle = hsla(drop.hue, 94, 40 + drop.life * 22, drop.life * 0.82);
+    canvasContext.beginPath();
+    canvasContext.arc(drop.x, drop.y, drop.radius * (0.6 + drop.life * 0.8), 0, Math.PI * 2);
+    canvasContext.fill();
+  });
+
+  if (tigerSpurts.length > 180) {
+    tigerSpurts.splice(0, tigerSpurts.length - 180);
+  }
+}
+
+function drawRedcoat(canvasContext, scale, biteEnergy, clawEnergy, worryEnergy, palette) {
+  const flail = Math.sin(tigerFrame * 0.12) * (0.08 + worryEnergy * 0.22);
+  canvasContext.save();
+  canvasContext.translate(scale * 0.28, scale * 0.12);
+  canvasContext.rotate(-0.36 + flail);
+
+  canvasContext.fillStyle = hsla(palette.coat, 86, 40 + biteEnergy * 14, 0.92);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-scale * 0.1, -scale * 0.18);
+  canvasContext.lineTo(scale * 0.22, -scale * 0.16);
+  canvasContext.lineTo(scale * 0.32, scale * 0.46);
+  canvasContext.lineTo(-scale * 0.2, scale * 0.5);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = "rgba(235, 220, 190, 0.88)";
+  canvasContext.lineWidth = Math.max(2, scale * 0.035);
+  canvasContext.lineCap = "round";
+  canvasContext.beginPath();
+  canvasContext.moveTo(-scale * 0.08, -scale * 0.02);
+  canvasContext.lineTo(-scale * (0.44 + clawEnergy * 0.3), -scale * (0.18 + worryEnergy * 0.22));
+  canvasContext.moveTo(scale * 0.2, 0);
+  canvasContext.lineTo(scale * (0.5 + worryEnergy * 0.28), -scale * (0.22 + biteEnergy * 0.16));
+  canvasContext.moveTo(-scale * 0.06, scale * 0.46);
+  canvasContext.lineTo(-scale * (0.34 + clawEnergy * 0.18), scale * 0.76);
+  canvasContext.moveTo(scale * 0.22, scale * 0.44);
+  canvasContext.lineTo(scale * (0.48 + worryEnergy * 0.2), scale * 0.72);
+  canvasContext.stroke();
+
+  canvasContext.strokeStyle = "rgba(244, 230, 200, 0.9)";
+  canvasContext.lineWidth = Math.max(2, scale * 0.026);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-scale * 0.07, -scale * 0.15);
+  canvasContext.lineTo(scale * 0.27, scale * 0.38);
+  canvasContext.moveTo(scale * 0.19, -scale * 0.15);
+  canvasContext.lineTo(-scale * 0.14, scale * 0.38);
+  canvasContext.stroke();
+
+  drawRedcoatFace(canvasContext, scale, biteEnergy, worryEnergy, palette);
+
+  canvasContext.restore();
+}
+
+function drawRedcoatFace(canvasContext, scale, biteEnergy, worryEnergy, palette) {
+  const scream = 0.35 + biteEnergy * 0.45 + worryEnergy * 0.35;
+  const tremble = Math.sin(tigerFrame * 0.34) * scale * (0.006 + worryEnergy * 0.018);
+  const faceX = scale * 0.08 + tremble;
+  const faceY = -scale * 0.36;
+
+  canvasContext.save();
+  canvasContext.shadowColor = "rgba(0, 0, 0, 0.32)";
+  canvasContext.shadowBlur = scale * 0.03;
+
+  canvasContext.fillStyle = "rgba(235, 235, 220, 0.96)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(faceX + scale * 0.01, faceY - scale * 0.12, scale * 0.15, scale * 0.075, -0.08, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(238, 198, 148, 0.98)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(faceX, faceY, scale * 0.13, scale * 0.155, 0.08, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(248, 232, 208, 0.9)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(faceX + scale * 0.02, faceY - scale * 0.02, scale * 0.08, scale * 0.1, 0.1, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = "rgba(70, 34, 24, 0.92)";
+  canvasContext.lineWidth = Math.max(1.5, scale * 0.012);
+  canvasContext.lineCap = "round";
+  canvasContext.beginPath();
+  canvasContext.moveTo(faceX - scale * 0.08, faceY - scale * 0.065);
+  canvasContext.lineTo(faceX - scale * 0.025, faceY - scale * (0.1 + scream * 0.03));
+  canvasContext.moveTo(faceX + scale * 0.035, faceY - scale * (0.1 + scream * 0.03));
+  canvasContext.lineTo(faceX + scale * 0.09, faceY - scale * 0.062);
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = "rgba(16, 12, 12, 0.96)";
+  [-0.045, 0.052].forEach((offset) => {
+    canvasContext.beginPath();
+    canvasContext.ellipse(faceX + scale * offset, faceY - scale * 0.042, scale * 0.014, scale * 0.022, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+  });
+
+  canvasContext.fillStyle = "rgba(80, 10, 12, 0.96)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(faceX + scale * 0.015, faceY + scale * 0.055, scale * (0.032 + scream * 0.026), scale * (0.038 + scream * 0.042), 0, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = "rgba(112, 40, 32, 0.78)";
+  canvasContext.lineWidth = Math.max(1, scale * 0.007);
+  canvasContext.beginPath();
+  canvasContext.moveTo(faceX - scale * 0.105, faceY + scale * 0.01);
+  canvasContext.quadraticCurveTo(faceX - scale * 0.055, faceY + scale * 0.035, faceX - scale * 0.08, faceY + scale * 0.082);
+  canvasContext.moveTo(faceX + scale * 0.1, faceY + scale * 0.006);
+  canvasContext.quadraticCurveTo(faceX + scale * 0.058, faceY + scale * 0.038, faceX + scale * 0.078, faceY + scale * 0.088);
+  canvasContext.stroke();
+
+  canvasContext.strokeStyle = hsla(palette.coat + 8, 96, 62, 0.72);
+  canvasContext.lineWidth = Math.max(1, scale * 0.006);
+  for (let mark = 0; mark < 3; mark += 1) {
+    const y = faceY - scale * (0.14 + mark * 0.04);
+    canvasContext.beginPath();
+    canvasContext.moveTo(faceX + scale * (0.14 + mark * 0.035), y);
+    canvasContext.lineTo(faceX + scale * (0.22 + mark * 0.04), y - scale * (0.03 + biteEnergy * 0.04));
+    canvasContext.stroke();
+  }
+
+  canvasContext.restore();
+}
+
+function drawTiger(canvasContext, scale, bassEnergy, biteEnergy, clawEnergy, worryEnergy, roar, palette) {
+  const pounce = Math.sin(tigerFrame * 0.07) * bassEnergy * scale * 0.05;
+  const bite = Math.max(0, Math.sin(tigerFrame * 0.18)) * biteEnergy;
+  const rake = Math.max(0, Math.sin(tigerFrame * 0.22 + 1.2)) * clawEnergy;
+  const worry = Math.sin(tigerFrame * 0.15) * worryEnergy;
+
+  canvasContext.save();
+  canvasContext.translate(-scale * 0.12 + pounce, -scale * 0.02);
+  canvasContext.rotate(-0.04 + worry * 0.08);
+
+  canvasContext.fillStyle = hsla(palette.tiger, 94, 48 + bassEnergy * 16, 0.98);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, scale * 0.56, scale * 0.26, -0.05, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(palette.stripe, 86, 13, 0.82);
+  canvasContext.lineWidth = Math.max(2, scale * 0.025);
+  for (let stripe = 0; stripe < 9; stripe += 1) {
+    const x = -scale * 0.38 + stripe * scale * 0.1;
+    canvasContext.beginPath();
+    canvasContext.moveTo(x, -scale * 0.22);
+    canvasContext.quadraticCurveTo(x + scale * 0.05, -scale * 0.02, x - scale * 0.01, scale * 0.2);
+    canvasContext.stroke();
+  }
+
+  canvasContext.strokeStyle = hsla(palette.tiger + 8, 94, 44, 0.95);
+  canvasContext.lineWidth = Math.max(3, scale * 0.055);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-scale * 0.48, scale * 0.02);
+  canvasContext.quadraticCurveTo(-scale * 0.86, -scale * (0.26 + bassEnergy * 0.16), -scale * 0.98, scale * (0.02 + worry * 0.12));
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = hsla(palette.tiger + 2, 94, 44 + bassEnergy * 12, 0.98);
+  [
+    [0.4, -0.26, -0.35],
+    [0.57, -0.26, 0.3],
+  ].forEach(([x, y, angle]) => {
+    canvasContext.save();
+    canvasContext.translate(scale * x, scale * y);
+    canvasContext.rotate(angle + worry * 0.12);
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, -scale * 0.12);
+    canvasContext.lineTo(scale * 0.085, scale * 0.045);
+    canvasContext.lineTo(-scale * 0.085, scale * 0.045);
+    canvasContext.closePath();
+    canvasContext.fill();
+    canvasContext.fillStyle = "rgba(35, 16, 10, 0.8)";
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, -scale * 0.06);
+    canvasContext.lineTo(scale * 0.04, scale * 0.022);
+    canvasContext.lineTo(-scale * 0.04, scale * 0.022);
+    canvasContext.closePath();
+    canvasContext.fill();
+    canvasContext.restore();
+  });
+
+  canvasContext.fillStyle = hsla(palette.tiger + 2, 94, 50 + biteEnergy * 12, 0.98);
+  canvasContext.beginPath();
+  canvasContext.ellipse(scale * (0.48 + bite * 0.04), -scale * (0.12 + bite * 0.05), scale * 0.23, scale * 0.18, -0.28 + worry * 0.18, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(palette.stripe, 86, 12, 0.8);
+  canvasContext.lineWidth = Math.max(2, scale * 0.017);
+  canvasContext.lineCap = "round";
+  [-0.065, 0, 0.065].forEach((offset) => {
+    canvasContext.beginPath();
+    canvasContext.moveTo(scale * (0.45 + offset), -scale * 0.28);
+    canvasContext.lineTo(scale * (0.48 + offset * 0.4), -scale * 0.2);
+    canvasContext.stroke();
+  });
+
+  canvasContext.fillStyle = "rgba(255, 220, 170, 0.9)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(scale * (0.58 + bite * 0.03), -scale * (0.08 + bite * 0.035), scale * 0.105, scale * 0.072, -0.25, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(48, 14, 10, 0.96)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(scale * (0.64 + bite * 0.06), -scale * (0.08 + bite * 0.03), scale * (0.05 + bite * 0.04 + roar * 0.02), scale * (0.035 + bite * 0.035 + roar * 0.03), -0.18, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(18, 9, 7, 0.96)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(scale * 0.69, -scale * 0.12, scale * 0.03, scale * 0.022, -0.2, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(250, 238, 210, 0.94)";
+  canvasContext.beginPath();
+  canvasContext.moveTo(scale * 0.6, -scale * 0.07);
+  canvasContext.lineTo(scale * (0.76 + bite * 0.08), -scale * (0.1 + bite * 0.04));
+  canvasContext.lineTo(scale * 0.62, -scale * (0.01 - bite * 0.05));
+  canvasContext.fill();
+  canvasContext.beginPath();
+  canvasContext.moveTo(scale * 0.61, -scale * 0.16);
+  canvasContext.lineTo(scale * (0.74 + bite * 0.07), -scale * (0.2 + bite * 0.03));
+  canvasContext.lineTo(scale * 0.62, -scale * 0.11);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(8, 6, 5, 0.96)";
+  canvasContext.beginPath();
+  canvasContext.arc(scale * 0.55, -scale * 0.2, scale * 0.024 + roar * scale * 0.008, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.fillStyle = "rgba(248, 224, 90, 0.94)";
+  canvasContext.beginPath();
+  canvasContext.arc(scale * 0.552, -scale * 0.202, scale * 0.01, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = "rgba(20, 10, 7, 0.8)";
+  canvasContext.lineWidth = Math.max(1.2, scale * 0.006);
+  for (let side = -1; side <= 1; side += 2) {
+    for (let whisker = 0; whisker < 3; whisker += 1) {
+      canvasContext.beginPath();
+      canvasContext.moveTo(scale * 0.62, -scale * (0.08 - whisker * 0.026));
+      canvasContext.quadraticCurveTo(scale * (0.74 + side * 0.03), -scale * (0.12 - whisker * 0.012), scale * (0.82 + side * 0.02), -scale * (0.16 - whisker * 0.052));
+      canvasContext.stroke();
+    }
+  }
+
+  canvasContext.strokeStyle = hsla(palette.tiger + 8, 94, 43, 0.96);
+  canvasContext.lineWidth = Math.max(3, scale * 0.055);
+  canvasContext.lineCap = "round";
+  [-0.26, 0.24].forEach((x, index) => {
+    const strike = index === 1 ? rake : bassEnergy * 0.4;
+    canvasContext.beginPath();
+    canvasContext.moveTo(x * scale, scale * 0.14);
+    canvasContext.quadraticCurveTo(scale * (x + 0.08), scale * (0.34 + strike * 0.18), scale * (x + 0.03), scale * 0.55);
+    canvasContext.stroke();
+  });
+
+  canvasContext.strokeStyle = "rgba(250, 238, 210, 0.85)";
+  canvasContext.lineWidth = Math.max(1.5, scale * 0.013);
+  for (let claw = 0; claw < 4; claw += 1) {
+    canvasContext.beginPath();
+    canvasContext.moveTo(scale * (0.15 + claw * 0.03), scale * (0.45 + rake * 0.08));
+    canvasContext.lineTo(scale * (0.28 + claw * 0.035 + rake * 0.16), scale * (0.36 - rake * 0.12));
+    canvasContext.stroke();
+  }
+
+  if (roar > 0.08) {
+    canvasContext.strokeStyle = `rgba(255, 220, 108, ${0.5 * roar})`;
+    canvasContext.lineWidth = Math.max(2, scale * 0.016);
+    for (let wave = 0; wave < 4; wave += 1) {
+      canvasContext.beginPath();
+      canvasContext.arc(scale * 0.72, -scale * 0.15, scale * (0.16 + wave * 0.11 + roar * 0.06), -0.5, 0.6);
+      canvasContext.stroke();
+    }
+  }
+
+  canvasContext.restore();
+}
+
+function drawTipusTigerScene(canvasContext, width, height, bassEnergy, biteEnergy, clawEnergy, worryEnergy, trebleEnergy) {
+  const zoom = handSizeMultiplier();
+  const gore = handGraspAmount();
+  const roar = Math.max(0, (tigerRoarUntil - performance.now()) / 900);
+  const palette = tigerPalette(trebleEnergy);
+  const scale = Math.min(width, height) * 0.48 * zoom * (0.92 + bassEnergy * 0.08);
+
+  drawTigerBackdrop(canvasContext, width, height, bassEnergy, roar);
+  canvasContext.save();
+  canvasContext.translate(width * 0.5, height * 0.58);
+
+  canvasContext.fillStyle = "rgba(0, 0, 0, 0.28)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, scale * 0.34, scale * 1.15, scale * 0.16, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  drawRedcoat(canvasContext, scale, biteEnergy, clawEnergy, worryEnergy, palette);
+  drawTiger(canvasContext, scale, bassEnergy, biteEnergy, clawEnergy, worryEnergy, roar, palette);
+  canvasContext.save();
+  canvasContext.translate(scale * 0.28, scale * 0.12);
+  canvasContext.rotate(-0.36 + Math.sin(tigerFrame * 0.12) * (0.08 + worryEnergy * 0.22));
+  drawRedcoatFace(canvasContext, scale, biteEnergy, worryEnergy, palette);
+  canvasContext.restore();
+  canvasContext.restore();
+
+  if (gore > 0.03 && Math.random() < (biteEnergy * 0.08 + clawEnergy * 0.1 + roar * 0.06) * (0.3 + gore)) {
+    spawnTigerSpurts(width, height, Math.max(biteEnergy, clawEnergy, roar), biteEnergy > clawEnergy ? "bite" : "claw");
+  }
+  drawTigerSpurts(canvasContext, width, height, bassEnergy);
+}
+
+function drawTipusTigerFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const tempo = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  tigerFrame += tempo;
+
+  const bassEnergy = pressureResponse(averageBand(buffer, tigerBands[0].start, tigerBands[0].end), 1.38);
+  const biteEnergy = pressureResponse(averageBand(buffer, tigerBands[1].start, tigerBands[1].end), 1.42);
+  const clawEnergy = pressureResponse(averageBand(buffer, tigerBands[2].start, tigerBands[2].end), 1.44);
+  const worryEnergy = pressureResponse(averageBand(buffer, tigerBands[3].start, tigerBands[3].end), 1.38);
+  const trebleEnergy = pressureResponse(averageBand(buffer, tigerBands[4].start, tigerBands[4].end), 1.5);
+
+  drawTipusTigerScene(canvasContext, width, height, bassEnergy, biteEnergy, clawEnergy, worryEnergy, trebleEnergy);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -4086,7 +4510,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "climbinggarden") {
+  if (visualizerSelect.value === "tipustiger") {
+    drawIdleTipusTiger();
+  } else if (visualizerSelect.value === "climbinggarden") {
     drawIdleClimbingGarden();
   } else if (visualizerSelect.value === "goddesskisses") {
     drawIdleGoddessKisses();
@@ -4419,6 +4845,28 @@ function drawIdleClimbingGarden() {
   }
 }
 
+function drawIdleTipusTiger() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(tigerFrame * 0.045) * 0.5;
+  const bite = 0.2 + Math.max(0, Math.sin(tigerFrame * 0.09)) * 0.28;
+  const claw = 0.18 + Math.max(0, Math.sin(tigerFrame * 0.11 + 1.4)) * 0.28;
+  const roar = Math.max(0, (tigerRoarUntil - performance.now()) / 900);
+
+  tigerFrame += fireworkSpeedMultiplier();
+  drawTipusTigerScene(canvasContext, width, height, 0.2 + pulse * 0.22, bite, claw, 0.18 + pulse * 0.22, 0.18 + roar * 0.36);
+
+  if (visualizerSelect.value === "tipustiger" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleEqualizer() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -4500,6 +4948,7 @@ function resizeCanvas() {
   loucheLizards = [];
   goddessKisses = [];
   gardenVines = [];
+  tigerSpurts = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -4559,6 +5008,7 @@ visualizerSelect.addEventListener("change", () => {
     lizardlouche: "Lizard Louche frequency visualisation",
     goddesskisses: "Goddess Kisses frequency visualisation",
     climbinggarden: "Climbing Garden frequency visualisation",
+    tipustiger: "Tipu's Tiger frequency visualisation",
   };
 
   visualizer.setAttribute(
@@ -4590,6 +5040,7 @@ handCount.addEventListener("input", () => {
   loucheLizards = [];
   goddessKisses = [];
   gardenVines = [];
+  tigerSpurts = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
@@ -4669,6 +5120,12 @@ function handleGlobalKey(event) {
     event.preventDefault();
     event.stopPropagation();
     toggleVisualFullscreen();
+    return;
+  }
+
+  if (lowerKey === "t") {
+    event.preventDefault();
+    roarTipusTiger();
     return;
   }
 
