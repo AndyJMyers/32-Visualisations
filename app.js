@@ -74,6 +74,7 @@ let tigerRoarUntil = 0;
 let tigerSpurts = [];
 let mandelbrotFrame = 0;
 const mandelbrotCanvas = document.createElement("canvas");
+let eyeFrame = 0;
 let stagePulse = null;
 let moodState = {
   energy: 0,
@@ -297,6 +298,14 @@ const formOptionsByVisualizer = {
     ["seduction", "Seduction"],
     ["haka", "Haka"],
     ["bloodruby", "Blood ruby"],
+  ],
+  eyevisions: [
+    ["sauron", "Sauron's eye"],
+    ["snake", "Snake eyes"],
+    ["cat", "Cat's eyes"],
+    ["dog", "Dog's eyes"],
+    ["deer", "Deer eyes"],
+    ["filmstar", "Italian film star"],
   ],
 };
 
@@ -535,22 +544,22 @@ function syncVisualizerControls() {
 
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot"].includes(visualizer);
-  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot"].includes(visualizer);
+  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions"].includes(visualizer);
+  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions"].includes(visualizer);
 
   setControlLabel(
     fireworkSpeed,
-    visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
+    visualizer === "eyevisions" ? "Blink rate" : visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
   );
-  setControlLabel(handSize, visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(handSize, visualizer === "eyevisions" ? "Lashes" : visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
   setControlLabel(
     handCount,
-    visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
+    visualizer === "eyevisions" ? "Flecks" : visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
   );
   setControlLabel(
     handGrasp,
-    visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
+    visualizer === "eyevisions" ? "Gaze" : visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
   );
 }
 
@@ -642,6 +651,7 @@ function restartVisualizer() {
   tigerSpurts = [];
   tigerRoarUntil = 0;
   mandelbrotFrame = 0;
+  eyeFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -957,7 +967,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "mandelbrot") {
+      if (visualizerSelect.value === "eyevisions") {
+        drawEyeVisionsFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "mandelbrot") {
         drawMandelbrotFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "tipustiger") {
         drawTipusTigerFrame(canvasContext, buffer);
@@ -3405,6 +3417,238 @@ function drawMandelbrotFrame(canvasContext, buffer) {
   drawMandelbrotScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
 }
 
+function eyeHue(form, intensity) {
+  const theme = themeSelect.value;
+  if (form === "sauron") return 34 - intensity * 28;
+  if (form === "snake") return theme === "ice" ? 176 + intensity * 52 : 74 + intensity * 44;
+  if (form === "cat") return theme === "ember" ? 42 + intensity * 24 : 92 + intensity * 46;
+  if (form === "dog") return 28 + intensity * 14;
+  if (form === "deer") return 42 + intensity * 18;
+  if (theme === "ice") return 190 + intensity * 42;
+  if (theme === "ember") return 18 + intensity * 36;
+  if (theme === "pressure") return 318 - intensity * 210;
+  if (theme === "spectrum") return 305 - intensity * 285 + eyeFrame * 0.25;
+  return 150 + intensity * 52;
+}
+
+function eyeConfig(form) {
+  if (form === "sauron") {
+    return { count: 1, sclera: "rgba(255, 214, 84, 0.96)", skin: "rgba(20, 7, 5, 0.9)", pupil: "vertical", lash: 0.1, lid: 0.08 };
+  }
+  if (form === "snake") {
+    return { count: 2, sclera: "rgba(228, 214, 124, 0.9)", skin: "rgba(24, 40, 18, 0.94)", pupil: "vertical", lash: 0.06, lid: 0.22 };
+  }
+  if (form === "cat") {
+    return { count: 2, sclera: "rgba(245, 230, 158, 0.94)", skin: "rgba(21, 18, 15, 0.95)", pupil: "vertical", lash: 0.18, lid: 0.16 };
+  }
+  if (form === "dog") {
+    return { count: 2, sclera: "rgba(235, 218, 190, 0.9)", skin: "rgba(52, 33, 23, 0.92)", pupil: "round", lash: 0.08, lid: 0.26 };
+  }
+  if (form === "deer") {
+    return { count: 2, sclera: "rgba(239, 218, 176, 0.9)", skin: "rgba(72, 44, 28, 0.92)", pupil: "horizontal", lash: 0.28, lid: 0.18 };
+  }
+  return { count: 2, sclera: "rgba(250, 238, 224, 0.96)", skin: "rgba(48, 24, 28, 0.9)", pupil: "round", lash: 0.58, lid: 0.12 };
+}
+
+function drawEyeLashes(canvasContext, radiusX, radiusY, blink, energy, lashStrength, upper) {
+  const count = Math.round(8 + lashStrength * 18);
+  const span = upper ? Math.PI * 0.78 : Math.PI * 0.5;
+  const start = upper ? Math.PI * 1.1 : Math.PI * 0.2;
+  const baseY = upper ? -radiusY * (0.64 - blink * 0.42) : radiusY * 0.58;
+  const length = radiusY * (0.14 + lashStrength * 0.22 + energy * 0.08);
+
+  canvasContext.strokeStyle = upper ? "rgba(12, 8, 9, 0.86)" : "rgba(18, 12, 12, 0.44)";
+  canvasContext.lineWidth = Math.max(1, radiusY * (0.012 + lashStrength * 0.01));
+  canvasContext.lineCap = "round";
+  for (let index = 0; index < count; index += 1) {
+    const t = count === 1 ? 0.5 : index / (count - 1);
+    const angle = start + t * span;
+    const x = Math.cos(angle) * radiusX * 0.96;
+    const y = baseY + Math.sin(angle) * radiusY * 0.28;
+    const lean = (t - 0.5) * radiusX * 0.08;
+    canvasContext.beginPath();
+    canvasContext.moveTo(x, y);
+    canvasContext.quadraticCurveTo(x + lean, y - length * (upper ? 0.72 : -0.28), x + lean * 1.4, y - length * (upper ? 1 : -0.45));
+    canvasContext.stroke();
+  }
+}
+
+function drawSingleEye(canvasContext, x, y, radiusX, radiusY, side, form, bassEnergy, midsEnergy, trebleEnergy) {
+  const config = eyeConfig(form);
+  const blinkRate = fireworkSpeedMultiplier();
+  const lashControl = handSizeMultiplier();
+  const flecks = handCountValueNumber();
+  const gaze = handGraspAmount();
+  const blinkWave = Math.max(0, Math.sin(eyeFrame * (0.022 + blinkRate * 0.018) + side * 0.6));
+  const blink = Math.pow(blinkWave, 18 - blinkRate * 4) * (0.85 - bassEnergy * 0.2);
+  const pupilBeat = 0.74 + bassEnergy * 0.28 - trebleEnergy * 0.14;
+  const irisHue = eyeHue(form, midsEnergy + trebleEnergy * 0.45);
+  const gazeX = Math.sin(eyeFrame * 0.016 + side + midsEnergy * 2.2) * radiusX * (0.08 + gaze * 0.16);
+  const gazeY = Math.cos(eyeFrame * 0.013 + side * 1.7) * radiusY * (0.04 + gaze * 0.08);
+  const irisRadius = radiusY * (form === "sauron" ? 0.68 : 0.6);
+  const lashStrength = config.lash * lashControl;
+
+  canvasContext.save();
+  canvasContext.translate(x, y);
+
+  const socket = canvasContext.createRadialGradient(0, 0, radiusY * 0.2, 0, 0, radiusX * 1.25);
+  socket.addColorStop(0, "rgba(255, 255, 255, 0.04)");
+  socket.addColorStop(1, config.skin);
+  canvasContext.fillStyle = socket;
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, radiusX * 1.48, radiusY * 1.45, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.save();
+  canvasContext.beginPath();
+  if (form === "sauron") {
+    canvasContext.ellipse(0, 0, radiusX * 0.55, radiusY * 1.05, 0, 0, Math.PI * 2);
+  } else {
+    canvasContext.ellipse(0, 0, radiusX, radiusY * (0.72 + config.lid * 0.28), 0, 0, Math.PI * 2);
+  }
+  canvasContext.clip();
+
+  canvasContext.fillStyle = config.sclera;
+  canvasContext.fillRect(-radiusX * 1.1, -radiusY, radiusX * 2.2, radiusY * 2);
+
+  const irisGradient = canvasContext.createRadialGradient(gazeX, gazeY, irisRadius * 0.08, gazeX, gazeY, irisRadius);
+  irisGradient.addColorStop(0, hsla(irisHue + 30, 90, 74 + trebleEnergy * 10, 0.98));
+  irisGradient.addColorStop(0.45, hsla(irisHue, 86, 40 + midsEnergy * 18, 0.96));
+  irisGradient.addColorStop(1, hsla(irisHue - 34, 92, 16 + bassEnergy * 14, 0.98));
+  canvasContext.fillStyle = irisGradient;
+  canvasContext.beginPath();
+  canvasContext.arc(gazeX, gazeY, irisRadius, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(irisHue + 70, 90, 70, 0.28 + trebleEnergy * 0.3);
+  canvasContext.lineWidth = Math.max(1, radiusY * 0.012);
+  for (let ray = 0; ray < 42; ray += 1) {
+    const angle = ray * 0.68 + eyeFrame * 0.006;
+    const inner = irisRadius * (0.18 + Math.sin(ray) * 0.04);
+    const outer = irisRadius * (0.72 + Math.sin(ray * 2.4 + eyeFrame * 0.03) * 0.18);
+    canvasContext.beginPath();
+    canvasContext.moveTo(gazeX + Math.cos(angle) * inner, gazeY + Math.sin(angle) * inner);
+    canvasContext.lineTo(gazeX + Math.cos(angle) * outer, gazeY + Math.sin(angle) * outer);
+    canvasContext.stroke();
+  }
+
+  for (let fleck = 0; fleck < flecks * 5; fleck += 1) {
+    const angle = fleck * 2.399 + side;
+    const distance = irisRadius * (0.22 + ((fleck * 37) % 61) / 100);
+    canvasContext.fillStyle = hsla(irisHue + fleck * 9, 96, 64 + trebleEnergy * 20, 0.35 + trebleEnergy * 0.35);
+    canvasContext.beginPath();
+    canvasContext.arc(gazeX + Math.cos(angle) * distance, gazeY + Math.sin(angle) * distance, radiusY * (0.009 + (fleck % 4) * 0.004), 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  canvasContext.fillStyle = "rgba(2, 2, 3, 0.96)";
+  canvasContext.beginPath();
+  if (config.pupil === "vertical") {
+    const slitWidth = form === "sauron" ? 0.07 : 0.12 + trebleEnergy * 0.03;
+    const slitHeight = form === "sauron" ? 0.66 : 0.86 * pupilBeat;
+    canvasContext.ellipse(gazeX, gazeY, irisRadius * slitWidth, irisRadius * slitHeight, 0, 0, Math.PI * 2);
+  } else if (config.pupil === "horizontal") {
+    canvasContext.ellipse(gazeX, gazeY, irisRadius * (0.76 * pupilBeat), irisRadius * 0.18, 0, 0, Math.PI * 2);
+  } else {
+    canvasContext.arc(gazeX, gazeY, irisRadius * (0.34 * pupilBeat), 0, Math.PI * 2);
+  }
+  canvasContext.fill();
+
+  canvasContext.fillStyle = `rgba(255, 248, 216, ${0.62 + trebleEnergy * 0.28})`;
+  canvasContext.beginPath();
+  canvasContext.ellipse(gazeX - irisRadius * 0.24, gazeY - irisRadius * 0.3, radiusY * 0.09, radiusY * 0.04, -0.45, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.fillStyle = `rgba(158, 232, 255, ${0.22 + midsEnergy * 0.22})`;
+  canvasContext.beginPath();
+  canvasContext.arc(gazeX + irisRadius * 0.3, gazeY - irisRadius * 0.14, radiusY * (0.035 + trebleEnergy * 0.035), 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.restore();
+
+  canvasContext.fillStyle = form === "sauron" ? "rgba(18, 4, 3, 0.52)" : config.skin;
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, -radiusY * (0.78 - blink * 0.62), radiusX * 1.06, radiusY * (0.36 + blink * 0.78), 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, radiusY * (0.78 - blink * 0.52), radiusX * 1.06, radiusY * (0.2 + blink * 0.6), 0, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = "rgba(255, 244, 220, 0.18)";
+  canvasContext.lineWidth = Math.max(1, radiusY * 0.012);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, -radiusY * 0.02, radiusX, radiusY * 0.75, 0, Math.PI * 1.03, Math.PI * 1.97);
+  canvasContext.stroke();
+
+  if (lashStrength > 0.04) {
+    drawEyeLashes(canvasContext, radiusX, radiusY, blink, trebleEnergy, lashStrength, true);
+    drawEyeLashes(canvasContext, radiusX, radiusY, blink, trebleEnergy * 0.6, lashStrength * 0.45, false);
+  }
+
+  if (form === "sauron") {
+    canvasContext.strokeStyle = `rgba(255, 84, 24, ${0.38 + bassEnergy * 0.42})`;
+    canvasContext.lineWidth = Math.max(2, radiusY * 0.03);
+    for (let flare = 0; flare < 7; flare += 1) {
+      const angle = flare * Math.PI / 3.5 + eyeFrame * 0.012;
+      canvasContext.beginPath();
+      canvasContext.moveTo(Math.cos(angle) * radiusX * 0.38, Math.sin(angle) * radiusY * 0.74);
+      canvasContext.lineTo(Math.cos(angle) * radiusX * (1.05 + bassEnergy * 0.36), Math.sin(angle) * radiusY * (1.5 + bassEnergy * 0.42));
+      canvasContext.stroke();
+    }
+  }
+
+  canvasContext.restore();
+}
+
+function drawEyeVisionsScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  const form = fireworkFormSelect.value || "sauron";
+  const config = eyeConfig(form);
+  const gaze = handGraspAmount();
+  const hue = eyeHue(form, midsEnergy);
+  const background = canvasContext.createRadialGradient(width * 0.5, height * 0.46, 0, width * 0.5, height * 0.5, Math.max(width, height) * 0.72);
+  background.addColorStop(0, hsla(hue, 70, 20 + trebleEnergy * 16, 0.92));
+  background.addColorStop(0.5, hsla(hue - 80, 72, 9 + bassEnergy * 10, 0.94));
+  background.addColorStop(1, "rgba(3, 3, 6, 0.98)");
+
+  canvasContext.fillStyle = background;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.globalCompositeOperation = "lighter";
+  for (let ray = 0; ray < 9; ray += 1) {
+    const angle = ray * 0.72 + eyeFrame * 0.006;
+    const x = width * (0.5 + Math.cos(angle) * (0.12 + bassEnergy * 0.08));
+    const y = height * (0.35 + Math.sin(angle) * (0.08 + midsEnergy * 0.08));
+    const glow = canvasContext.createRadialGradient(x, y, 0, x, y, width * (0.08 + trebleEnergy * 0.08));
+    glow.addColorStop(0, hsla(hue + ray * 24, 92, 68, 0.06 + trebleEnergy * 0.08));
+    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = glow;
+    canvasContext.fillRect(0, 0, width, height);
+  }
+  canvasContext.globalCompositeOperation = "source-over";
+
+  const baseRadius = Math.min(width, height) * (config.count === 1 ? 0.34 : 0.25) * (0.9 + bassEnergy * 0.12);
+  const eyeY = height * (form === "sauron" ? 0.52 : 0.5 + Math.sin(eyeFrame * 0.011) * 0.015);
+  if (config.count === 1) {
+    drawSingleEye(canvasContext, width * 0.5, eyeY, baseRadius * (0.72 + gaze * 0.12), baseRadius * 1.08, 0, form, bassEnergy, midsEnergy, trebleEnergy);
+  } else {
+    const spacing = width * (0.21 + gaze * 0.035);
+    drawSingleEye(canvasContext, width * 0.5 - spacing, eyeY, baseRadius * 1.2, baseRadius * 0.68, -1, form, bassEnergy, midsEnergy, trebleEnergy);
+    drawSingleEye(canvasContext, width * 0.5 + spacing, eyeY, baseRadius * 1.2, baseRadius * 0.68, 1, form, bassEnergy, midsEnergy, trebleEnergy);
+  }
+}
+
+function drawEyeVisionsFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const rate = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.36);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 54), 1.36);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.48);
+  eyeFrame += rate * (0.7 + bassEnergy * 0.7 + trebleEnergy * 0.35);
+  drawEyeVisionsScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -4683,7 +4927,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "mandelbrot") {
+  if (visualizerSelect.value === "eyevisions") {
+    drawIdleEyeVisions();
+  } else if (visualizerSelect.value === "mandelbrot") {
     drawIdleMandelbrot();
   } else if (visualizerSelect.value === "tipustiger") {
     drawIdleTipusTiger();
@@ -5062,6 +5308,26 @@ function drawIdleMandelbrot() {
   }
 }
 
+function drawIdleEyeVisions() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(eyeFrame * 0.043) * 0.5;
+  const shimmer = 0.5 + Math.sin(eyeFrame * 0.061 + 1.4) * 0.5;
+
+  eyeFrame += fireworkSpeedMultiplier() * 0.85;
+  drawEyeVisionsScene(canvasContext, width, height, 0.14 + pulse * 0.22, 0.16 + shimmer * 0.24, 0.18 + (1 - pulse) * 0.26);
+
+  if (visualizerSelect.value === "eyevisions" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleEqualizer() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -5205,6 +5471,7 @@ visualizerSelect.addEventListener("change", () => {
     climbinggarden: "Climbing Garden frequency visualisation",
     tipustiger: "Tipu's Tiger frequency visualisation",
     mandelbrot: "Mandelbrot Set frequency visualisation",
+    eyevisions: "Eye Visions frequency visualisation",
   };
 
   visualizer.setAttribute(
