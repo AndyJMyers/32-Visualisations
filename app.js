@@ -72,6 +72,8 @@ let gardenFrame = 0;
 let tigerFrame = 0;
 let tigerRoarUntil = 0;
 let tigerSpurts = [];
+let mandelbrotFrame = 0;
+const mandelbrotCanvas = document.createElement("canvas");
 let stagePulse = null;
 let moodState = {
   energy: 0,
@@ -533,22 +535,22 @@ function syncVisualizerControls() {
 
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger"].includes(visualizer);
-  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger"].includes(visualizer);
+  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot"].includes(visualizer);
+  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot"].includes(visualizer);
 
   setControlLabel(
     fireworkSpeed,
-    visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
+    visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
   );
-  setControlLabel(handSize, visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(handSize, visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
   setControlLabel(
     handCount,
-    visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
+    visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
   );
   setControlLabel(
     handGrasp,
-    visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
+    visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
   );
 }
 
@@ -639,6 +641,7 @@ function restartVisualizer() {
   tigerFrame = 0;
   tigerSpurts = [];
   tigerRoarUntil = 0;
+  mandelbrotFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -954,7 +957,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "tipustiger") {
+      if (visualizerSelect.value === "mandelbrot") {
+        drawMandelbrotFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "tipustiger") {
         drawTipusTigerFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "climbinggarden") {
         drawClimbingGardenFrame(canvasContext, buffer);
@@ -3232,6 +3237,174 @@ function drawTipusTigerFrame(canvasContext, buffer) {
   drawTipusTigerScene(canvasContext, width, height, bassEnergy, biteEnergy, clawEnergy, worryEnergy, trebleEnergy);
 }
 
+function hslToRgb(hue, saturation, lightness) {
+  const h = (((hue % 360) + 360) % 360) / 360;
+  const s = saturation / 100;
+  const l = lightness / 100;
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const hueToRgb = (offset) => {
+    let t = h + offset;
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+
+  return [
+    Math.round(hueToRgb(1 / 3) * 255),
+    Math.round(hueToRgb(0) * 255),
+    Math.round(hueToRgb(-1 / 3) * 255),
+  ];
+}
+
+function mandelbrotColour(iteration, maxIterations, smoothEscape, bassEnergy, trebleEnergy) {
+  if (iteration >= maxIterations) {
+    const ember = themeSelect.value === "ember" ? 12 : themeSelect.value === "pressure" ? 28 : 4;
+    return [ember + bassEnergy * 20, 5 + trebleEnergy * 10, 12 + bassEnergy * 18];
+  }
+
+  const progress = smoothEscape / maxIterations;
+  const theme = themeSelect.value;
+  let hue = 155;
+  let saturation = 82;
+  let lightness = 42 + Math.sqrt(progress) * 42 + bassEnergy * 10;
+
+  if (theme === "ice") {
+    hue = 188 + progress * 92 + trebleEnergy * 42;
+    saturation = 86;
+    lightness = 34 + Math.sqrt(progress) * 48 + trebleEnergy * 12;
+  } else if (theme === "ember") {
+    hue = 4 + progress * 62 + bassEnergy * 32;
+    saturation = 96;
+    lightness = 28 + Math.sqrt(progress) * 48 + bassEnergy * 16;
+  } else if (theme === "pressure") {
+    hue = 334 - progress * 250 + trebleEnergy * 80;
+    saturation = 100;
+    lightness = 26 + Math.sqrt(progress) * 58;
+  } else if (theme === "spectrum") {
+    hue = 300 - progress * 320 + mandelbrotFrame * 0.7 + trebleEnergy * 70;
+    saturation = 92;
+    lightness = 32 + Math.sqrt(progress) * 50;
+  } else {
+    hue = 142 + progress * 80 + trebleEnergy * 24;
+    saturation = 68 + bassEnergy * 22;
+    lightness = 30 + Math.sqrt(progress) * 45 + trebleEnergy * 8;
+  }
+
+  return hslToRgb(hue, saturation, Math.max(4, Math.min(88, lightness)));
+}
+
+function drawMandelbrotScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  const detail = handCountValueNumber();
+  const warp = handGraspAmount();
+  const magnify = handSizeMultiplier();
+  const renderWidth = Math.round(Math.min(336, Math.max(132, 112 + detail * 16)));
+  const renderHeight = Math.max(72, Math.round(renderWidth * (height / Math.max(1, width))));
+  const maxIterations = Math.round(42 + detail * 13 + trebleEnergy * 42);
+  const phase = mandelbrotFrame * 0.007;
+  const introspection = (1 - Math.cos(phase)) * 0.5;
+  const zoom = Math.pow(1 + magnify * 56 + bassEnergy * 36, introspection) * (0.95 + bassEnergy * 0.22);
+  const aspect = width / Math.max(1, height);
+  const drift = (1 - introspection) * (0.0026 + warp * 0.0036);
+  const targetX = -0.743643887037151;
+  const targetY = 0.13182590420533;
+  const cameraEase = Math.pow(introspection, 1.35);
+  const centerX = -0.54 + (targetX + Math.sin(phase * 0.37 + midsEnergy * 2) * drift + 0.54) * cameraEase;
+  const centerY = (targetY + Math.cos(phase * 0.31 + trebleEnergy * 2.4) * drift) * cameraEase;
+  const scale = 3.25 / zoom;
+  const imageContext = mandelbrotCanvas.getContext("2d");
+
+  if (mandelbrotCanvas.width !== renderWidth || mandelbrotCanvas.height !== renderHeight) {
+    mandelbrotCanvas.width = renderWidth;
+    mandelbrotCanvas.height = renderHeight;
+  }
+
+  const image = imageContext.createImageData(renderWidth, renderHeight);
+  const data = image.data;
+
+  for (let y = 0; y < renderHeight; y += 1) {
+    const ci = centerY + (y / renderHeight - 0.5) * scale;
+    for (let x = 0; x < renderWidth; x += 1) {
+      const cr = centerX + (x / renderWidth - 0.5) * scale * aspect;
+      let zr = 0;
+      let zi = 0;
+      let zr2 = 0;
+      let zi2 = 0;
+      let iteration = 0;
+
+      while (iteration < maxIterations && zr2 + zi2 <= 4) {
+        zi = 2 * zr * zi + ci;
+        zr = zr2 - zi2 + cr;
+        zr2 = zr * zr;
+        zi2 = zi * zi;
+        iteration += 1;
+      }
+
+      const escaped = iteration < maxIterations;
+      const magnitude = Math.sqrt(Math.max(1.000001, zr2 + zi2));
+      const smoothEscape = escaped ? iteration + 1 - Math.log2(Math.log2(magnitude)) : iteration;
+      const [red, green, blue] = mandelbrotColour(iteration, maxIterations, smoothEscape, bassEnergy, trebleEnergy);
+      const edge = escaped ? Math.min(1, smoothEscape / maxIterations) : 0;
+      const shimmer = escaped ? 1 + Math.sin(edge * 44 + mandelbrotFrame * 0.05) * (0.03 + warp * 0.06 + trebleEnergy * 0.04) : 1;
+      const index = (y * renderWidth + x) * 4;
+
+      data[index] = Math.max(0, Math.min(255, red * shimmer));
+      data[index + 1] = Math.max(0, Math.min(255, green * shimmer));
+      data[index + 2] = Math.max(0, Math.min(255, blue * shimmer));
+      data[index + 3] = 255;
+    }
+  }
+
+  imageContext.putImageData(image, 0, 0);
+
+  canvasContext.save();
+  canvasContext.imageSmoothingEnabled = false;
+  canvasContext.drawImage(mandelbrotCanvas, 0, 0, width, height);
+  canvasContext.imageSmoothingEnabled = true;
+
+  const glow = canvasContext.createRadialGradient(width * 0.5, height * 0.5, 0, width * 0.5, height * 0.5, Math.max(width, height) * 0.62);
+  glow.addColorStop(0, `rgba(255, 255, 255, ${0.03 + trebleEnergy * 0.06})`);
+  glow.addColorStop(0.42, `rgba(92, 255, 214, ${0.018 + midsEnergy * 0.042})`);
+  glow.addColorStop(1, `rgba(0, 0, 0, ${0.42 - bassEnergy * 0.12})`);
+  canvasContext.fillStyle = glow;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.strokeStyle = `rgba(255, 255, 255, ${0.035 + trebleEnergy * 0.07})`;
+  canvasContext.lineWidth = Math.max(1, width * 0.0012);
+  for (let ring = 0; ring < 5; ring += 1) {
+    const radius = Math.min(width, height) * (0.12 + ring * 0.085 + bassEnergy * 0.04);
+    canvasContext.beginPath();
+    canvasContext.ellipse(
+      width * (0.5 + Math.sin(phase * 0.53 + ring) * warp * 0.06),
+      height * (0.5 + Math.cos(phase * 0.47 + ring) * warp * 0.05),
+      radius * aspect,
+      radius,
+      phase * 0.08,
+      0,
+      Math.PI * 2,
+    );
+    canvasContext.stroke();
+  }
+  canvasContext.restore();
+}
+
+function drawMandelbrotFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const tempo = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  mandelbrotFrame += tempo * (0.62 + pressureResponse(averageBand(buffer, 1, 8), 1.35) * 0.7);
+
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.38);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 54), 1.34);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.46);
+  drawMandelbrotScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -4510,7 +4683,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "tipustiger") {
+  if (visualizerSelect.value === "mandelbrot") {
+    drawIdleMandelbrot();
+  } else if (visualizerSelect.value === "tipustiger") {
     drawIdleTipusTiger();
   } else if (visualizerSelect.value === "climbinggarden") {
     drawIdleClimbingGarden();
@@ -4867,6 +5042,26 @@ function drawIdleTipusTiger() {
   }
 }
 
+function drawIdleMandelbrot() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(mandelbrotFrame * 0.032) * 0.5;
+  const shimmer = 0.5 + Math.sin(mandelbrotFrame * 0.051 + 1.7) * 0.5;
+
+  mandelbrotFrame += fireworkSpeedMultiplier() * 0.68;
+  drawMandelbrotScene(canvasContext, width, height, 0.14 + pulse * 0.2, 0.12 + shimmer * 0.2, 0.18 + (1 - pulse) * 0.22);
+
+  if (visualizerSelect.value === "mandelbrot" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleEqualizer() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -5009,6 +5204,7 @@ visualizerSelect.addEventListener("change", () => {
     goddesskisses: "Goddess Kisses frequency visualisation",
     climbinggarden: "Climbing Garden frequency visualisation",
     tipustiger: "Tipu's Tiger frequency visualisation",
+    mandelbrot: "Mandelbrot Set frequency visualisation",
   };
 
   visualizer.setAttribute(
