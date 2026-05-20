@@ -75,6 +75,8 @@ let tigerSpurts = [];
 let mandelbrotFrame = 0;
 const mandelbrotCanvas = document.createElement("canvas");
 let eyeFrame = 0;
+let lightningFrame = 0;
+let lightningBolts = [];
 let stagePulse = null;
 let moodState = {
   energy: 0,
@@ -544,22 +546,22 @@ function syncVisualizerControls() {
 
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions"].includes(visualizer);
-  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions"].includes(visualizer);
+  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning"].includes(visualizer);
+  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions", "lightning"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning"].includes(visualizer);
 
   setControlLabel(
     fireworkSpeed,
-    visualizer === "eyevisions" ? "Blink rate" : visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
+    visualizer === "lightning" ? "Strike rate" : visualizer === "eyevisions" ? "Blink rate" : visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
   );
-  setControlLabel(handSize, visualizer === "eyevisions" ? "Lashes" : visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(handSize, visualizer === "lightning" ? "Bolt size" : visualizer === "eyevisions" ? "Lashes" : visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
   setControlLabel(
     handCount,
-    visualizer === "eyevisions" ? "Flecks" : visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
+    visualizer === "lightning" ? "Afterglow" : visualizer === "eyevisions" ? "Flecks" : visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
   );
   setControlLabel(
     handGrasp,
-    visualizer === "eyevisions" ? "Gaze" : visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
+    visualizer === "lightning" ? "Snaking" : visualizer === "eyevisions" ? "Gaze" : visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
   );
 }
 
@@ -652,6 +654,8 @@ function restartVisualizer() {
   tigerRoarUntil = 0;
   mandelbrotFrame = 0;
   eyeFrame = 0;
+  lightningFrame = 0;
+  lightningBolts = [];
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -967,7 +971,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "eyevisions") {
+      if (visualizerSelect.value === "lightning") {
+        drawLightningFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "eyevisions") {
         drawEyeVisionsFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "mandelbrot") {
         drawMandelbrotFrame(canvasContext, buffer);
@@ -3649,6 +3655,198 @@ function drawEyeVisionsFrame(canvasContext, buffer) {
   drawEyeVisionsScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
 }
 
+function lightningSkyPalette(intensity) {
+  const theme = themeSelect.value;
+  if (theme === "ice") {
+    return { top: `rgba(8, 24, 50, ${0.96})`, mid: `rgba(32, 72, 112, ${0.88})`, ground: "rgba(8, 18, 26, 0.98)", hue: 200 + intensity * 24 };
+  }
+  if (theme === "ember") {
+    return { top: "rgba(42, 11, 8, 0.96)", mid: `rgba(112, 46, 22, ${0.74 + intensity * 0.12})`, ground: "rgba(25, 9, 6, 0.98)", hue: 34 + intensity * 22 };
+  }
+  if (theme === "pressure") {
+    return { top: "rgba(26, 4, 36, 0.96)", mid: `rgba(74, 12, 84, ${0.78 + intensity * 0.1})`, ground: "rgba(9, 4, 14, 0.98)", hue: 306 - intensity * 120 };
+  }
+  if (theme === "spectrum") {
+    return { top: hsla(235 + intensity * 80, 74, 10, 0.96), mid: hsla(278 - intensity * 210, 70, 22, 0.84), ground: "rgba(4, 7, 12, 0.98)", hue: 290 - intensity * 250 };
+  }
+  return { top: "rgba(8, 26, 22, 0.96)", mid: `rgba(16, 70, 62, ${0.68 + intensity * 0.12})`, ground: "rgba(5, 15, 13, 0.98)", hue: 158 + intensity * 40 };
+}
+
+function drawLightningSky(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const palette = lightningSkyPalette(trebleEnergy);
+  const sky = canvasContext.createLinearGradient(0, 0, 0, height);
+  sky.addColorStop(0, palette.top);
+  sky.addColorStop(0.56, palette.mid);
+  sky.addColorStop(1, palette.ground);
+  canvasContext.fillStyle = sky;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.globalCompositeOperation = "lighter";
+  for (let cloud = 0; cloud < 8; cloud += 1) {
+    const x = width * (0.08 + cloud * 0.13 + Math.sin(lightningFrame * 0.006 + cloud) * 0.02);
+    const y = height * (0.12 + Math.sin(lightningFrame * 0.004 + cloud * 1.7) * 0.04);
+    const glow = canvasContext.createRadialGradient(x, y, 0, x, y, width * (0.14 + bassEnergy * 0.06));
+    glow.addColorStop(0, hsla(palette.hue + cloud * 9, 80, 56, 0.035 + trebleEnergy * 0.05));
+    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = glow;
+    canvasContext.fillRect(0, 0, width, height * 0.45);
+  }
+  canvasContext.globalCompositeOperation = "source-over";
+
+  canvasContext.fillStyle = "rgba(0, 0, 0, 0.28)";
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, height);
+  for (let point = 0; point <= 9; point += 1) {
+    const x = width * (point / 9);
+    const y = height * (0.82 + Math.sin(point * 1.8 + lightningFrame * 0.01) * 0.025 + bassEnergy * 0.035);
+    canvasContext.lineTo(x, y);
+  }
+  canvasContext.lineTo(width, height);
+  canvasContext.closePath();
+  canvasContext.fill();
+}
+
+function createLightningBolt(width, height, intensity, bandIndex, bassEnergy, midsEnergy, trebleEnergy) {
+  const size = handSizeMultiplier();
+  const afterglow = handCountValueNumber();
+  const snaking = handGraspAmount();
+  const palette = lightningSkyPalette(trebleEnergy);
+  const startX = width * (0.12 + Math.random() * 0.76);
+  const endX = startX + (Math.random() - 0.5) * width * (0.18 + snaking * 0.34 + midsEnergy * 0.16);
+  const startY = -height * (0.02 + Math.random() * 0.1);
+  const endY = height * (0.74 + Math.random() * 0.18);
+  const segments = Math.round(9 + size * 8 + snaking * 10 + intensity * 8);
+  const points = [];
+  let x = startX;
+
+  for (let segment = 0; segment <= segments; segment += 1) {
+    const progress = segment / segments;
+    const fall = startY + (endY - startY) * progress;
+    const target = startX + (endX - startX) * progress;
+    const musicCurl = Math.sin(progress * Math.PI * (2.5 + bandIndex * 0.4) + lightningFrame * 0.05) * width * (0.012 + midsEnergy * 0.026);
+    const randomCurl = (Math.random() - 0.5) * width * (0.035 + snaking * 0.075 + intensity * 0.025);
+    x += (target - x) * (0.45 + bassEnergy * 0.2) + musicCurl + randomCurl;
+    points.push({ x, y: fall });
+  }
+
+  const branches = [];
+  const branchCount = Math.round((1 + intensity * 4 + snaking * 4) * Math.sqrt(size));
+  for (let branch = 0; branch < branchCount; branch += 1) {
+    const originIndex = 1 + Math.floor(Math.random() * Math.max(1, points.length - 3));
+    const origin = points[originIndex];
+    const length = height * (0.07 + Math.random() * 0.18 + intensity * 0.08) * size;
+    const direction = (Math.random() < 0.5 ? -1 : 1) * (0.45 + Math.random() * 0.55 + snaking * 0.5);
+    const branchPoints = [origin];
+    for (let step = 1; step <= 4; step += 1) {
+      branchPoints.push({
+        x: origin.x + direction * length * (step / 4) + (Math.random() - 0.5) * width * 0.035 * snaking,
+        y: origin.y + length * (step / 4) * (0.2 + Math.random() * 0.5),
+      });
+    }
+    branches.push(branchPoints);
+  }
+
+  return {
+    points,
+    branches,
+    life: 1,
+    maxLife: 18 + afterglow * 4 + intensity * 18,
+    age: 0,
+    width: (1.4 + intensity * 5.4 + bassEnergy * 4.2) * size,
+    hue: palette.hue + bandIndex * 9 + trebleEnergy * 30,
+    groundX: points[points.length - 1].x,
+    groundY: points[points.length - 1].y,
+  };
+}
+
+function drawLightningPath(canvasContext, points, width, hue, alpha) {
+  canvasContext.lineCap = "round";
+  canvasContext.lineJoin = "round";
+  canvasContext.strokeStyle = hsla(hue, 96, 88, alpha);
+  canvasContext.lineWidth = Math.max(1, width);
+  canvasContext.beginPath();
+  points.forEach((point, index) => {
+    if (index === 0) {
+      canvasContext.moveTo(point.x, point.y);
+    } else {
+      canvasContext.lineTo(point.x, point.y);
+    }
+  });
+  canvasContext.stroke();
+}
+
+function drawLightningBolts(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  lightningBolts = lightningBolts.filter((bolt) => bolt.life > 0.02);
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+
+  lightningBolts.forEach((bolt) => {
+    bolt.age += 1;
+    bolt.life = Math.max(0, 1 - bolt.age / bolt.maxLife);
+    const flicker = 0.68 + Math.sin(lightningFrame * 0.7 + bolt.age * 1.9) * 0.22 + Math.random() * 0.1;
+    const alpha = bolt.life * flicker;
+
+    if (bolt.age < 4) {
+      canvasContext.fillStyle = hsla(bolt.hue + 22, 92, 78, (4 - bolt.age) * 0.035);
+      canvasContext.fillRect(0, 0, width, height);
+    }
+
+    drawLightningPath(canvasContext, bolt.points, bolt.width * 5.8, bolt.hue, alpha * 0.18);
+    drawLightningPath(canvasContext, bolt.points, bolt.width * 2.5, bolt.hue + 18, alpha * 0.42);
+    drawLightningPath(canvasContext, bolt.points, bolt.width * 0.72, bolt.hue + 40, Math.min(1, alpha * 1.2));
+
+    bolt.branches.forEach((branch) => {
+      drawLightningPath(canvasContext, branch, bolt.width * 1.7, bolt.hue + 20, alpha * 0.28);
+      drawLightningPath(canvasContext, branch, bolt.width * 0.46, bolt.hue + 46, Math.min(1, alpha * 0.9));
+    });
+
+    const ground = canvasContext.createRadialGradient(bolt.groundX, bolt.groundY, 0, bolt.groundX, bolt.groundY, width * (0.04 + bassEnergy * 0.08));
+    ground.addColorStop(0, hsla(bolt.hue + 24, 100, 82, alpha * 0.3));
+    ground.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = ground;
+    canvasContext.fillRect(0, height * 0.55, width, height * 0.45);
+  });
+
+  canvasContext.restore();
+  if (lightningBolts.length > 22) {
+    lightningBolts.splice(0, lightningBolts.length - 22);
+  }
+}
+
+function drawLightningScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, bandIntensities) {
+  const rate = fireworkSpeedMultiplier();
+  drawLightningSky(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  bandIntensities.forEach((intensity, bandIndex) => {
+    const threshold = 0.18 + bandIndex * 0.035;
+    const chance = (intensity - threshold) * (0.05 + rate * 0.04);
+    if (chance > 0 && Math.random() < chance) {
+      lightningBolts.push(createLightningBolt(width, height, intensity, bandIndex, bassEnergy, midsEnergy, trebleEnergy));
+    }
+  });
+
+  if (lightningBolts.length === 0 && Math.floor(lightningFrame) % Math.max(18, Math.round(58 / rate)) === 0) {
+    lightningBolts.push(createLightningBolt(width, height, 0.28, 2, bassEnergy, midsEnergy, trebleEnergy));
+  }
+
+  drawLightningBolts(canvasContext, width, height, bassEnergy, trebleEnergy);
+}
+
+function drawLightningFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const rate = fireworkSpeedMultiplier();
+
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.36);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 54), 1.34);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.46);
+  const bandIntensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.4));
+  lightningFrame += rate * (0.8 + bassEnergy * 0.8 + trebleEnergy * 0.32);
+
+  drawLightningScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, bandIntensities);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -4927,7 +5125,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "eyevisions") {
+  if (visualizerSelect.value === "lightning") {
+    drawIdleLightning();
+  } else if (visualizerSelect.value === "eyevisions") {
     drawIdleEyeVisions();
   } else if (visualizerSelect.value === "mandelbrot") {
     drawIdleMandelbrot();
@@ -5328,6 +5528,28 @@ function drawIdleEyeVisions() {
   }
 }
 
+function drawIdleLightning() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const rate = fireworkSpeedMultiplier();
+  const pulse = 0.5 + Math.sin(lightningFrame * 0.05) * 0.5;
+  const shimmer = 0.5 + Math.sin(lightningFrame * 0.071 + 1.2) * 0.5;
+  const bandIntensities = fireworksBands.map((band, index) => 0.12 + pulse * 0.18 + (index % 2) * shimmer * 0.08);
+
+  lightningFrame += rate;
+  drawLightningScene(canvasContext, width, height, 0.14 + pulse * 0.18, 0.12 + shimmer * 0.22, 0.16 + (1 - pulse) * 0.22, bandIntensities);
+
+  if (visualizerSelect.value === "lightning" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleEqualizer() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -5472,6 +5694,7 @@ visualizerSelect.addEventListener("change", () => {
     tipustiger: "Tipu's Tiger frequency visualisation",
     mandelbrot: "Mandelbrot Set frequency visualisation",
     eyevisions: "Eye Visions frequency visualisation",
+    lightning: "Lightning frequency visualisation",
   };
 
   visualizer.setAttribute(
@@ -5504,6 +5727,7 @@ handCount.addEventListener("input", () => {
   goddessKisses = [];
   gardenVines = [];
   tigerSpurts = [];
+  lightningBolts = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
