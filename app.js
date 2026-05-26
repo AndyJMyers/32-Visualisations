@@ -20,6 +20,7 @@ const fireworkSpeed = document.querySelector("#fireworkSpeed");
 const fireworkSpeedValue = document.querySelector("#fireworkSpeedValue");
 const handSize = document.querySelector("#handSize");
 const handSizeValue = document.querySelector("#handSizeValue");
+const eyeDischargeSelect = document.querySelector("#eyeDischargeSelect");
 const handCount = document.querySelector("#handCount");
 const handCountValue = document.querySelector("#handCountValue");
 const handGrasp = document.querySelector("#handGrasp");
@@ -78,6 +79,7 @@ let eyeFrame = 0;
 let eyePointer = { x: 0, y: 0, active: false };
 let lightningFrame = 0;
 let lightningBolts = [];
+let lightningImpacts = [];
 let stagePulse = null;
 let moodState = {
   energy: 0,
@@ -310,7 +312,25 @@ const formOptionsByVisualizer = {
     ["deer", "Deer eyes"],
     ["filmstar", "Italian film star"],
   ],
+  lightning: [
+    ["storm", "Storm"],
+    ["missilecommand", "Missile Command"],
+  ],
 };
+
+const standardThemeOptions = [
+  ["mono", "Mono green"],
+  ["ice", "Ice blue"],
+  ["ember", "Ember"],
+  ["spectrum", "Spectrum"],
+  ["pressure", "High Pressure"],
+];
+const sauronMoodOptions = [
+  ["alarmed", "Alarmed"],
+  ["dominant", "Dominant"],
+  ["victory", "Sure of victory"],
+  ["overthrown", "Overthrown"],
+];
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -519,6 +539,43 @@ function setControlLabel(control, text) {
   }
 }
 
+function setSelectOptions(select, options, value) {
+  select.replaceChildren(...options.map(([optionValue, label]) => {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = label;
+    return option;
+  }));
+  select.value = value;
+}
+
+function syncSauronMoodControl(active) {
+  const selected = themeSelect.value;
+  const isMood = sauronMoodOptions.some(([value]) => value === selected);
+  const isStandard = standardThemeOptions.some(([value]) => value === selected);
+
+  if (active) {
+    const mappedMood = {
+      mono: "dominant",
+      ice: "overthrown",
+      ember: "alarmed",
+      spectrum: "victory",
+      pressure: "dominant",
+    }[selected] || "dominant";
+    setSelectOptions(themeSelect, sauronMoodOptions, isMood ? selected : mappedMood);
+    setControlLabel(themeSelect, "Mood");
+  } else {
+    const mappedTheme = {
+      alarmed: "ember",
+      dominant: "pressure",
+      victory: "spectrum",
+      overthrown: "ice",
+    }[selected] || "mono";
+    setSelectOptions(themeSelect, standardThemeOptions, isStandard ? selected : mappedTheme);
+    setControlLabel(themeSelect, "Colour");
+  }
+}
+
 function syncVisualizerControls() {
   const visualizer = visualizerSelect.value;
   const formOptions = formOptionsByVisualizer[visualizer] || [];
@@ -527,6 +584,7 @@ function syncVisualizerControls() {
   const peakLabel = peakToggle.closest("label");
   const speedLabel = fireworkSpeed.closest("label");
   const reachLabel = handSize.closest("label");
+  const dischargeLabel = eyeDischargeSelect.closest("label");
   const armsLabel = handCount.closest("label");
   const graspLabel = handGrasp.closest("label");
 
@@ -545,9 +603,14 @@ function syncVisualizerControls() {
     }
   }
 
+  const isSauron = visualizer === "eyevisions" && fireworkFormSelect.value === "sauron";
+  const isMissileCommand = visualizer === "lightning" && fireworkFormSelect.value === "missilecommand";
+  syncSauronMoodControl(isSauron);
+  document.querySelector("#visualizer").classList.toggle("missile-targeting", isMissileCommand);
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning"].includes(visualizer);
+  reachLabel.hidden = isSauron || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning"].includes(visualizer);
+  dischargeLabel.hidden = !isSauron;
   armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions", "lightning"].includes(visualizer);
   graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning"].includes(visualizer);
 
@@ -657,6 +720,7 @@ function restartVisualizer() {
   eyeFrame = 0;
   lightningFrame = 0;
   lightningBolts = [];
+  lightningImpacts = [];
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -3424,9 +3488,32 @@ function drawMandelbrotFrame(canvasContext, buffer) {
   drawMandelbrotScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
 }
 
+function sauronMoodPalette() {
+  const mood = themeSelect.value;
+  if (mood === "alarmed") {
+    return { hue: 10, core: 30, mid: 352, edge: 326, intensity: 1.18 };
+  }
+  if (mood === "victory") {
+    return { hue: 42, core: 36, mid: 18, edge: 350, intensity: 1.28 };
+  }
+  if (mood === "overthrown") {
+    return { hue: 258, core: 260, mid: 222, edge: 198, intensity: 0.62 };
+  }
+  return { hue: 24, core: 18, mid: 2, edge: 344, intensity: 1 };
+}
+
+function sauronDischargeConfig() {
+  const style = eyeDischargeSelect.value;
+  if (style === "white-fury") return { hue: 48, strength: 1.42, fork: 1.35, lightness: 94 };
+  if (style === "violet-venom") return { hue: 282, strength: 1.08, fork: 1.22, lightness: 76 };
+  if (style === "blood-arc") return { hue: 354, strength: 1.22, fork: 1.08, lightness: 68 };
+  if (style === "ashen-static") return { hue: 206, strength: 0.72, fork: 0.82, lightness: 76 };
+  return { hue: 22, strength: 1, fork: 1, lightness: 84 };
+}
+
 function eyeHue(form, intensity) {
   const theme = themeSelect.value;
-  if (form === "sauron") return 34 - intensity * 28;
+  if (form === "sauron") return sauronMoodPalette().hue + intensity * 18;
   if (form === "snake") return theme === "ice" ? 176 + intensity * 52 : 74 + intensity * 44;
   if (form === "cat") return theme === "ember" ? 42 + intensity * 24 : 92 + intensity * 46;
   if (form === "dog") return 28 + intensity * 14;
@@ -3478,6 +3565,129 @@ function drawEyeLashes(canvasContext, radiusX, radiusY, blink, energy, lashStren
     canvasContext.quadraticCurveTo(x + lean, y - length * (upper ? 0.72 : -0.28), x + lean * 1.4, y - length * (upper ? 1 : -0.45));
     canvasContext.stroke();
   }
+}
+
+function drawSauronCracks(canvasContext, radiusX, radiusY, bassEnergy, midsEnergy, trebleEnergy) {
+  const crackCount = 8;
+  const discharge = sauronDischargeConfig();
+  const mood = sauronMoodPalette();
+  const force = (0.75 + bassEnergy * 0.62 + trebleEnergy * 0.34) * discharge.strength * mood.intensity;
+  const sides = [-1, 1, -1, 1, 1, -1, 1, -1];
+  const starts = [-0.7, -0.46, -0.06, 0.28, -0.76, 0.64, 0.02, 0.48];
+
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  canvasContext.lineCap = "round";
+  canvasContext.lineJoin = "round";
+
+  for (let crack = 0; crack < crackCount; crack += 1) {
+    const side = sides[crack];
+    const startY = radiusY * starts[crack];
+    const points = [{ x: side * radiusX * 0.35, y: startY }];
+    const reach = radiusX * (0.42 + bassEnergy * 0.4 + (crack % 4) * 0.09);
+    const steps = 4 + (crack % 3);
+    const verticalDrift = radiusY * (Math.sin(crack * 2.19 + eyeFrame * 0.011) * 0.5 + (crack % 2 ? -0.12 : 0.16));
+
+    for (let step = 1; step <= steps; step += 1) {
+      const progress = step / steps;
+      const jitter = Math.sin(eyeFrame * (0.035 + crack * 0.003) + crack * 7.2 + step * 3.9) * radiusY * (0.12 + midsEnergy * 0.2);
+      points.push({
+        x: side * (radiusX * 0.35 + reach * progress),
+        y: startY + verticalDrift * progress + jitter,
+      });
+    }
+
+    const strokeCrack = (lineWidth, alpha, lightness) => {
+      canvasContext.strokeStyle = hsla(discharge.hue + trebleEnergy * 26, 100, lightness, alpha * force);
+      canvasContext.lineWidth = lineWidth;
+      canvasContext.beginPath();
+      points.forEach((point, index) => {
+        if (index === 0) {
+          canvasContext.moveTo(point.x, point.y);
+        } else {
+          canvasContext.lineTo(point.x, point.y);
+        }
+      });
+      canvasContext.stroke();
+    };
+
+    strokeCrack(Math.max(3, radiusY * 0.075), 0.08, 42);
+    strokeCrack(Math.max(1.5, radiusY * 0.026), 0.52, 58);
+    strokeCrack(Math.max(1, radiusY * 0.01), 0.9, discharge.lightness);
+
+    if (crack % 3 !== 1) {
+      const forkPoint = points[Math.min(2 + (crack % 2), points.length - 2)];
+      canvasContext.strokeStyle = hsla(discharge.hue + 12 + trebleEnergy * 22, 100, Math.min(96, discharge.lightness + 4), 0.48 * force);
+      canvasContext.lineWidth = Math.max(1, radiusY * 0.012);
+      canvasContext.beginPath();
+      canvasContext.moveTo(forkPoint.x, forkPoint.y);
+      canvasContext.lineTo(
+        forkPoint.x + side * radiusX * (0.16 + midsEnergy * 0.14) * discharge.fork,
+        forkPoint.y + Math.sign(verticalDrift || 1) * radiusY * (0.16 + trebleEnergy * 0.18),
+      );
+      canvasContext.lineTo(
+        forkPoint.x + side * radiusX * (0.26 + bassEnergy * 0.12) * discharge.fork,
+        forkPoint.y + Math.sign(verticalDrift || 1) * radiusY * (0.03 + trebleEnergy * 0.12),
+      );
+      canvasContext.stroke();
+    }
+  }
+
+  canvasContext.restore();
+}
+
+function drawSauronAtmosphere(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  const mood = sauronMoodPalette();
+  const core = canvasContext.createRadialGradient(width * 0.5, height * 0.52, 0, width * 0.5, height * 0.52, width * 0.68);
+  core.addColorStop(0, hsla(mood.core + trebleEnergy * 16, 98, 28 + bassEnergy * 20, 1));
+  core.addColorStop(0.24, hsla(mood.mid + midsEnergy * 18, 94, 16 + bassEnergy * 14, 0.98));
+  core.addColorStop(0.58, hsla(mood.edge, 78, 9 + bassEnergy * 6, 0.98));
+  core.addColorStop(1, "rgba(4, 2, 3, 1)");
+  canvasContext.fillStyle = core;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  for (let flame = 0; flame < 15; flame += 1) {
+    const phase = eyeFrame * (0.025 + flame * 0.0018) + flame * 2.7;
+    const baseX = width * (0.03 + flame / 15) + Math.sin(phase) * width * 0.018;
+    const baseY = height * (0.98 - (flame % 3) * 0.05);
+    const heightLift = height * (0.2 + (flame % 5) * 0.04 + bassEnergy * 0.25) * mood.intensity;
+    const widthLift = width * (0.028 + midsEnergy * 0.032 + (flame % 4) * 0.008);
+    canvasContext.fillStyle = hsla(mood.hue + flame * 3 + trebleEnergy * 18, 100, 42 + trebleEnergy * 18, (0.045 + bassEnergy * 0.08) * mood.intensity);
+    canvasContext.beginPath();
+    canvasContext.moveTo(baseX - widthLift, baseY);
+    canvasContext.bezierCurveTo(
+      baseX - widthLift * 1.4,
+      baseY - heightLift * 0.34,
+      baseX + Math.sin(phase * 1.8) * widthLift,
+      baseY - heightLift * 0.72,
+      baseX + Math.cos(phase) * widthLift * 0.32,
+      baseY - heightLift,
+    );
+    canvasContext.bezierCurveTo(
+      baseX + widthLift * 0.9,
+      baseY - heightLift * 0.54,
+      baseX + widthLift * 1.25,
+      baseY - heightLift * 0.28,
+      baseX + widthLift,
+      baseY,
+    );
+    canvasContext.closePath();
+    canvasContext.fill();
+  }
+
+  for (let ember = 0; ember < 34; ember += 1) {
+    const rise = ((eyeFrame * (0.008 + (ember % 5) * 0.003) + ember * 0.073) % 1);
+    const x = width * (0.06 + ((ember * 0.179) % 0.88)) + Math.sin(eyeFrame * 0.025 + ember) * width * 0.012;
+    const y = height * (0.94 - rise * 0.84);
+    const radius = 1.3 + (ember % 4) + trebleEnergy * 3;
+    canvasContext.fillStyle = hsla(mood.hue + (ember % 4) * 12, 100, 64, (0.1 + (1 - rise) * 0.34) * (0.6 + trebleEnergy) * mood.intensity);
+    canvasContext.beginPath();
+    canvasContext.arc(x, y, radius, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+  canvasContext.restore();
 }
 
 function drawSingleEye(canvasContext, x, y, radiusX, radiusY, side, form, bassEnergy, midsEnergy, trebleEnergy, pointerGaze) {
@@ -3594,15 +3804,7 @@ function drawSingleEye(canvasContext, x, y, radiusX, radiusY, side, form, bassEn
   }
 
   if (form === "sauron") {
-    canvasContext.strokeStyle = `rgba(255, 84, 24, ${0.38 + bassEnergy * 0.42})`;
-    canvasContext.lineWidth = Math.max(2, radiusY * 0.03);
-    for (let flare = 0; flare < 7; flare += 1) {
-      const angle = flare * Math.PI / 3.5 + eyeFrame * 0.012;
-      canvasContext.beginPath();
-      canvasContext.moveTo(Math.cos(angle) * radiusX * 0.38, Math.sin(angle) * radiusY * 0.74);
-      canvasContext.lineTo(Math.cos(angle) * radiusX * (1.05 + bassEnergy * 0.36), Math.sin(angle) * radiusY * (1.5 + bassEnergy * 0.42));
-      canvasContext.stroke();
-    }
+    drawSauronCracks(canvasContext, radiusX, radiusY, bassEnergy, midsEnergy, trebleEnergy);
   }
 
   canvasContext.restore();
@@ -3618,26 +3820,30 @@ function drawEyeVisionsScene(canvasContext, width, height, bassEnergy, midsEnerg
     weight: eyePointer.active ? 1 : 0,
   };
   const hue = eyeHue(form, midsEnergy);
-  const background = canvasContext.createRadialGradient(width * 0.5, height * 0.46, 0, width * 0.5, height * 0.5, Math.max(width, height) * 0.72);
-  background.addColorStop(0, hsla(hue, 70, 20 + trebleEnergy * 16, 0.92));
-  background.addColorStop(0.5, hsla(hue - 80, 72, 9 + bassEnergy * 10, 0.94));
-  background.addColorStop(1, "rgba(3, 3, 6, 0.98)");
+  if (form === "sauron") {
+    drawSauronAtmosphere(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+  } else {
+    const background = canvasContext.createRadialGradient(width * 0.5, height * 0.46, 0, width * 0.5, height * 0.5, Math.max(width, height) * 0.72);
+    background.addColorStop(0, hsla(hue, 70, 20 + trebleEnergy * 16, 0.92));
+    background.addColorStop(0.5, hsla(hue - 80, 72, 9 + bassEnergy * 10, 0.94));
+    background.addColorStop(1, "rgba(3, 3, 6, 0.98)");
 
-  canvasContext.fillStyle = background;
-  canvasContext.fillRect(0, 0, width, height);
-
-  canvasContext.globalCompositeOperation = "lighter";
-  for (let ray = 0; ray < 9; ray += 1) {
-    const angle = ray * 0.72 + eyeFrame * 0.006;
-    const x = width * (0.5 + Math.cos(angle) * (0.12 + bassEnergy * 0.08));
-    const y = height * (0.35 + Math.sin(angle) * (0.08 + midsEnergy * 0.08));
-    const glow = canvasContext.createRadialGradient(x, y, 0, x, y, width * (0.08 + trebleEnergy * 0.08));
-    glow.addColorStop(0, hsla(hue + ray * 24, 92, 68, 0.06 + trebleEnergy * 0.08));
-    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-    canvasContext.fillStyle = glow;
+    canvasContext.fillStyle = background;
     canvasContext.fillRect(0, 0, width, height);
+
+    canvasContext.globalCompositeOperation = "lighter";
+    for (let ray = 0; ray < 9; ray += 1) {
+      const angle = ray * 0.72 + eyeFrame * 0.006;
+      const x = width * (0.5 + Math.cos(angle) * (0.12 + bassEnergy * 0.08));
+      const y = height * (0.35 + Math.sin(angle) * (0.08 + midsEnergy * 0.08));
+      const glow = canvasContext.createRadialGradient(x, y, 0, x, y, width * (0.08 + trebleEnergy * 0.08));
+      glow.addColorStop(0, hsla(hue + ray * 24, 92, 68, 0.06 + trebleEnergy * 0.08));
+      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+      canvasContext.fillStyle = glow;
+      canvasContext.fillRect(0, 0, width, height);
+    }
+    canvasContext.globalCompositeOperation = "source-over";
   }
-  canvasContext.globalCompositeOperation = "source-over";
 
   const baseRadius = Math.min(width, height) * (config.count === 1 ? 0.34 : 0.25) * (0.9 + bassEnergy * 0.12);
   const eyeY = height * (form === "sauron" ? 0.52 : 0.5 + Math.sin(eyeFrame * 0.011) * 0.015);
@@ -3714,31 +3920,38 @@ function drawLightningSky(canvasContext, width, height, bassEnergy, trebleEnergy
   canvasContext.fill();
 }
 
-function createLightningBolt(width, height, intensity, bandIndex, bassEnergy, midsEnergy, trebleEnergy) {
+function createLightningBolt(width, height, intensity, bandIndex, bassEnergy, midsEnergy, trebleEnergy, destination = null, spectacular = false) {
   const size = handSizeMultiplier();
   const afterglow = handCountValueNumber();
   const snaking = handGraspAmount();
   const palette = lightningSkyPalette(trebleEnergy);
-  const startX = width * (0.12 + Math.random() * 0.76);
-  const endX = startX + (Math.random() - 0.5) * width * (0.18 + snaking * 0.34 + midsEnergy * 0.16);
+  const startX = destination
+    ? destination.x + (Math.random() - 0.5) * width * 0.68
+    : width * (0.12 + Math.random() * 0.76);
+  const endX = destination
+    ? destination.x
+    : startX + (Math.random() - 0.5) * width * (0.18 + snaking * 0.34 + midsEnergy * 0.16);
   const startY = -height * (0.02 + Math.random() * 0.1);
-  const endY = height * (0.74 + Math.random() * 0.18);
-  const segments = Math.round(9 + size * 8 + snaking * 10 + intensity * 8);
+  const endY = destination ? destination.y : height * (0.74 + Math.random() * 0.18);
+  const segments = Math.round(9 + size * 8 + snaking * 10 + intensity * 8 + (spectacular ? 8 : 0));
   const points = [];
   let x = startX;
 
   for (let segment = 0; segment <= segments; segment += 1) {
     const progress = segment / segments;
     const fall = startY + (endY - startY) * progress;
-    const target = startX + (endX - startX) * progress;
+    const destinationX = startX + (endX - startX) * progress;
     const musicCurl = Math.sin(progress * Math.PI * (2.5 + bandIndex * 0.4) + lightningFrame * 0.05) * width * (0.012 + midsEnergy * 0.026);
     const randomCurl = (Math.random() - 0.5) * width * (0.035 + snaking * 0.075 + intensity * 0.025);
-    x += (target - x) * (0.45 + bassEnergy * 0.2) + musicCurl + randomCurl;
+    x += (destinationX - x) * (0.45 + bassEnergy * 0.2) + musicCurl + randomCurl;
     points.push({ x, y: fall });
+  }
+  if (destination) {
+    points[points.length - 1] = { x: destination.x, y: destination.y };
   }
 
   const branches = [];
-  const branchCount = Math.round((1 + intensity * 4 + snaking * 4) * Math.sqrt(size));
+  const branchCount = Math.round((1 + intensity * 4 + snaking * 4) * Math.sqrt(size) * (spectacular ? 1.65 : 1));
   for (let branch = 0; branch < branchCount; branch += 1) {
     const originIndex = 1 + Math.floor(Math.random() * Math.max(1, points.length - 3));
     const origin = points[originIndex];
@@ -3758,12 +3971,13 @@ function createLightningBolt(width, height, intensity, bandIndex, bassEnergy, mi
     points,
     branches,
     life: 1,
-    maxLife: 18 + afterglow * 4 + intensity * 18,
+    maxLife: 18 + afterglow * 4 + intensity * 18 + (spectacular ? 20 : 0),
     age: 0,
-    width: (1.4 + intensity * 5.4 + bassEnergy * 4.2) * size,
+    width: (1.4 + intensity * 5.4 + bassEnergy * 4.2) * size * (spectacular ? 1.65 : 1),
     hue: palette.hue + bandIndex * 9 + trebleEnergy * 30,
     groundX: points[points.length - 1].x,
     groundY: points[points.length - 1].y,
+    spectacular,
   };
 }
 
@@ -3821,15 +4035,76 @@ function drawLightningBolts(canvasContext, width, height, bassEnergy, trebleEner
   }
 }
 
+function launchMissileCommandStrike(width, height, x, y) {
+  const palette = lightningSkyPalette(0.96);
+  const target = { x, y };
+  for (let bolt = 0; bolt < 4; bolt += 1) {
+    lightningBolts.push(createLightningBolt(width, height, 0.9 + Math.random() * 0.1, bolt % fireworksBands.length, 0.94, 0.86, 0.94, target, true));
+  }
+  lightningImpacts.push({
+    x,
+    y,
+    age: 0,
+    life: 1,
+    hue: palette.hue,
+    seed: Math.random() * Math.PI * 2,
+  });
+}
+
+function drawLightningImpacts(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  lightningImpacts = lightningImpacts.filter((impact) => impact.life > 0.015);
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+
+  lightningImpacts.forEach((impact) => {
+    impact.age += 1;
+    impact.life = Math.max(0, 1 - impact.age / 100);
+    const birth = Math.min(1, impact.age / 12);
+    const flareRadius = width * (0.025 + birth * (0.14 + bassEnergy * 0.08));
+    const flare = canvasContext.createRadialGradient(impact.x, impact.y, 0, impact.x, impact.y, flareRadius);
+    flare.addColorStop(0, hsla(impact.hue + 40, 100, 94, impact.life * 0.8));
+    flare.addColorStop(0.22, hsla(impact.hue + 12, 100, 65, impact.life * 0.54));
+    flare.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = flare;
+    canvasContext.fillRect(impact.x - flareRadius, impact.y - flareRadius, flareRadius * 2, flareRadius * 2);
+
+    for (let ring = 0; ring < 3; ring += 1) {
+      const radius = width * (0.018 + (impact.age + ring * 10) * (0.0013 + bassEnergy * 0.0006));
+      canvasContext.strokeStyle = hsla(impact.hue + ring * 22, 98, 78, impact.life * (0.6 - ring * 0.13));
+      canvasContext.lineWidth = Math.max(1, 3.8 - ring);
+      canvasContext.beginPath();
+      canvasContext.arc(impact.x, impact.y, radius, 0, Math.PI * 2);
+      canvasContext.stroke();
+    }
+
+    const sparkCount = 22;
+    for (let spark = 0; spark < sparkCount; spark += 1) {
+      const angle = impact.seed + (spark / sparkCount) * Math.PI * 2 + Math.sin(lightningFrame * 0.04 + spark) * 0.08;
+      const travel = width * (0.015 + impact.age * (0.0013 + trebleEnergy * 0.0004)) * (0.65 + (spark % 5) * 0.1);
+      const sx = impact.x + Math.cos(angle) * travel;
+      const sy = impact.y + Math.sin(angle) * travel + impact.age * impact.age * height * 0.000012;
+      canvasContext.fillStyle = hsla(impact.hue + spark * 3, 100, 76, impact.life * 0.85);
+      canvasContext.beginPath();
+      canvasContext.arc(sx, sy, Math.max(1, width * 0.0025 * impact.life), 0, Math.PI * 2);
+      canvasContext.fill();
+    }
+  });
+  canvasContext.restore();
+}
+
 function drawLightningScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, bandIntensities) {
   const rate = fireworkSpeedMultiplier();
+  const missileMode = fireworkFormSelect.value === "missilecommand";
+  const activeImpact = missileMode
+    ? lightningImpacts.slice().reverse().find((impact) => impact.age < 86)
+    : null;
   drawLightningSky(canvasContext, width, height, bassEnergy, trebleEnergy);
 
   bandIntensities.forEach((intensity, bandIndex) => {
     const threshold = 0.18 + bandIndex * 0.035;
     const chance = (intensity - threshold) * (0.05 + rate * 0.04);
     if (chance > 0 && Math.random() < chance) {
-      lightningBolts.push(createLightningBolt(width, height, intensity, bandIndex, bassEnergy, midsEnergy, trebleEnergy));
+      lightningBolts.push(createLightningBolt(width, height, intensity, bandIndex, bassEnergy, midsEnergy, trebleEnergy, activeImpact, Boolean(activeImpact)));
     }
   });
 
@@ -3838,6 +4113,9 @@ function drawLightningScene(canvasContext, width, height, bassEnergy, midsEnergy
   }
 
   drawLightningBolts(canvasContext, width, height, bassEnergy, trebleEnergy);
+  if (missileMode) {
+    drawLightningImpacts(canvasContext, width, height, bassEnergy, trebleEnergy);
+  }
 }
 
 function drawLightningFrame(canvasContext, buffer) {
@@ -5696,6 +5974,21 @@ window.addEventListener("pointerleave", () => {
   eyePointer.active = false;
 });
 
+visualizer.addEventListener("click", (event) => {
+  if (visualizerSelect.value !== "lightning" || fireworkFormSelect.value !== "missilecommand") {
+    return;
+  }
+
+  const bounds = visualizer.getBoundingClientRect();
+  const x = (event.clientX - bounds.left) * (visualizer.width / bounds.width);
+  const y = (event.clientY - bounds.top) * (visualizer.height / bounds.height);
+  launchMissileCommandStrike(visualizer.width, visualizer.height, x, y);
+
+  if (!animationId) {
+    drawIdleVisualizer();
+  }
+});
+
 peakToggle.addEventListener("change", () => {
   peakLevels = [];
   peakUpdatedAt = [];
@@ -5733,7 +6026,14 @@ visualizerSelect.addEventListener("change", () => {
 });
 
 fireworkFormSelect.addEventListener("change", () => {
+  syncVisualizerControls();
   restartVisualizer();
+});
+
+eyeDischargeSelect.addEventListener("change", () => {
+  if (!animationId) {
+    drawIdleVisualizer();
+  }
 });
 
 handSize.addEventListener("input", () => {
@@ -5755,6 +6055,7 @@ handCount.addEventListener("input", () => {
   gardenVines = [];
   tigerSpurts = [];
   lightningBolts = [];
+  lightningImpacts = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
