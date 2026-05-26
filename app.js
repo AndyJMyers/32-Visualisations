@@ -80,6 +80,15 @@ let eyePointer = { x: 0, y: 0, active: false };
 let lightningFrame = 0;
 let lightningBolts = [];
 let lightningImpacts = [];
+let asteroidFrame = 0;
+let asteroidShip = null;
+let asteroidRocks = [];
+let asteroidShots = [];
+let asteroidSaucers = [];
+let asteroidBursts = [];
+let asteroidKeys = new Set();
+let asteroidScore = 0;
+let asteroidLastShot = 0;
 let stagePulse = null;
 let moodState = {
   energy: 0,
@@ -315,6 +324,11 @@ const formOptionsByVisualizer = {
   lightning: [
     ["storm", "Storm"],
     ["missilecommand", "Missile Command"],
+  ],
+  asteroids: [
+    ["deepfield", "Deep field"],
+    ["arcade", "Arcade neon"],
+    ["redalert", "Red alert"],
   ],
 };
 
@@ -609,23 +623,23 @@ function syncVisualizerControls() {
   document.querySelector("#visualizer").classList.toggle("missile-targeting", isMissileCommand);
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = isSauron || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning"].includes(visualizer);
+  reachLabel.hidden = isSauron || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids"].includes(visualizer);
   dischargeLabel.hidden = !isSauron;
-  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions", "lightning"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning"].includes(visualizer);
+  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions", "lightning", "asteroids"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids"].includes(visualizer);
 
   setControlLabel(
     fireworkSpeed,
-    visualizer === "lightning" ? "Strike rate" : visualizer === "eyevisions" ? "Blink rate" : visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
+    visualizer === "asteroids" ? "Game tempo" : visualizer === "lightning" ? "Strike rate" : visualizer === "eyevisions" ? "Blink rate" : visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
   );
-  setControlLabel(handSize, visualizer === "lightning" ? "Bolt size" : visualizer === "eyevisions" ? "Lashes" : visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(handSize, visualizer === "asteroids" ? "Rock scale" : visualizer === "lightning" ? "Bolt size" : visualizer === "eyevisions" ? "Lashes" : visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
   setControlLabel(
     handCount,
-    visualizer === "lightning" ? "Afterglow" : visualizer === "eyevisions" ? "Flecks" : visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
+    visualizer === "asteroids" ? "Rock density" : visualizer === "lightning" ? "Afterglow" : visualizer === "eyevisions" ? "Flecks" : visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
   );
   setControlLabel(
     handGrasp,
-    visualizer === "lightning" ? "Snaking" : visualizer === "eyevisions" ? "Gaze" : visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
+    visualizer === "asteroids" ? "Saucer threat" : visualizer === "lightning" ? "Snaking" : visualizer === "eyevisions" ? "Gaze" : visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
   );
 }
 
@@ -721,6 +735,15 @@ function restartVisualizer() {
   lightningFrame = 0;
   lightningBolts = [];
   lightningImpacts = [];
+  asteroidFrame = 0;
+  asteroidShip = null;
+  asteroidRocks = [];
+  asteroidShots = [];
+  asteroidSaucers = [];
+  asteroidBursts = [];
+  asteroidKeys.clear();
+  asteroidScore = 0;
+  asteroidLastShot = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -1036,7 +1059,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "lightning") {
+      if (visualizerSelect.value === "asteroids") {
+        drawAsteroidsFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "lightning") {
         drawLightningFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "eyevisions") {
         drawEyeVisionsFrame(canvasContext, buffer);
@@ -4133,6 +4158,392 @@ function drawLightningFrame(canvasContext, buffer) {
   drawLightningScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, bandIntensities);
 }
 
+function asteroidHue(progress, intensity) {
+  const theme = themeSelect.value;
+  if (theme === "ice") return 192 + progress * 54 + intensity * 18;
+  if (theme === "ember") return 12 + progress * 35 + intensity * 24;
+  if (theme === "pressure") return 330 - progress * 170 + intensity * 40;
+  if (theme === "spectrum") return (320 - progress * 275 + intensity * 42 + 360) % 360;
+  return 152 + progress * 54 + intensity * 22;
+}
+
+function setupAsteroidShip(width, height) {
+  if (asteroidShip) return;
+  asteroidShip = {
+    x: width * 0.5,
+    y: height * 0.5,
+    vx: 0,
+    vy: 0,
+    angle: -Math.PI / 2,
+    radius: Math.min(width, height) * 0.035,
+    thrust: 0,
+    shield: 0,
+  };
+}
+
+function wrapSpaceObject(object, width, height, padding = 0) {
+  if (object.x < -padding) object.x = width + padding;
+  if (object.x > width + padding) object.x = -padding;
+  if (object.y < -padding) object.y = height + padding;
+  if (object.y > height + padding) object.y = -padding;
+}
+
+function spawnAsteroid(width, height, intensity, generation = 0, x = null, y = null) {
+  const scale = handSizeMultiplier();
+  const edge = Math.floor(Math.random() * 4);
+  const radius = Math.min(width, height) * (0.028 + Math.random() * 0.048 + intensity * 0.036) * scale * (generation ? 0.6 : 1);
+  let rockX = x;
+  let rockY = y;
+  if (rockX === null) {
+    rockX = edge % 2 === 0 ? Math.random() * width : (edge === 1 ? -radius : width + radius);
+    rockY = edge % 2 === 1 ? Math.random() * height : (edge === 0 ? -radius : height + radius);
+  }
+  const targetAngle = Math.atan2(height * (0.3 + Math.random() * 0.4) - rockY, width * (0.3 + Math.random() * 0.4) - rockX);
+  const speed = (0.55 + intensity * 3.1 + fireworkSpeedMultiplier() * 0.35) * (generation ? 1.18 : 1);
+  const vertexCount = 8 + Math.floor(Math.random() * 5);
+  asteroidRocks.push({
+    x: rockX,
+    y: rockY,
+    vx: Math.cos(targetAngle) * speed,
+    vy: Math.sin(targetAngle) * speed,
+    radius,
+    rotation: Math.random() * Math.PI * 2,
+    spin: (Math.random() - 0.5) * (0.025 + intensity * 0.04),
+    hue: asteroidHue(Math.random(), intensity),
+    intensity,
+    generation,
+    vertices: Array.from({ length: vertexCount }, () => 0.72 + Math.random() * 0.38),
+  });
+}
+
+function spawnAsteroidSaucer(width, height, intensity) {
+  const fromLeft = Math.random() < 0.5;
+  asteroidSaucers.push({
+    x: fromLeft ? -55 : width + 55,
+    y: height * (0.14 + Math.random() * 0.55),
+    vx: (fromLeft ? 1 : -1) * (1.1 + intensity * 2.4),
+    phase: Math.random() * Math.PI * 2,
+    radius: Math.min(width, height) * (0.04 + intensity * 0.018),
+    hue: asteroidHue(0.8, intensity),
+    energy: intensity,
+    cooldown: 24 + Math.random() * 45,
+    life: 1,
+  });
+}
+
+function fireShipMissile() {
+  if (!asteroidShip || asteroidFrame - asteroidLastShot < 7) return;
+  const speed = 11;
+  asteroidShots.push({
+    x: asteroidShip.x + Math.cos(asteroidShip.angle) * asteroidShip.radius,
+    y: asteroidShip.y + Math.sin(asteroidShip.angle) * asteroidShip.radius,
+    vx: asteroidShip.vx + Math.cos(asteroidShip.angle) * speed,
+    vy: asteroidShip.vy + Math.sin(asteroidShip.angle) * speed,
+    life: 72,
+    hostile: false,
+    hue: asteroidHue(0.98, 0.9),
+  });
+  asteroidLastShot = asteroidFrame;
+}
+
+function fireSaucerShot(saucer, intensity) {
+  if (!asteroidShip) return;
+  const angle = Math.atan2(asteroidShip.y - saucer.y, asteroidShip.x - saucer.x) + (Math.random() - 0.5) * (0.38 - intensity * 0.2);
+  asteroidShots.push({
+    x: saucer.x,
+    y: saucer.y,
+    vx: Math.cos(angle) * (3.2 + intensity * 3.4),
+    vy: Math.sin(angle) * (3.2 + intensity * 3.4),
+    life: 110,
+    hostile: true,
+    hue: asteroidHue(0.12, intensity),
+  });
+}
+
+function burstAsteroid(x, y, hue, force, count = 14) {
+  for (let piece = 0; piece < count; piece += 1) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.7 + Math.random() * (2.4 + force * 4);
+    asteroidBursts.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      radius: 1.2 + Math.random() * (2.5 + force * 3),
+      hue: hue + (Math.random() - 0.5) * 36,
+      life: 1,
+    });
+  }
+}
+
+function drawAsteroidField(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const mode = fireworkFormSelect.value;
+  const top = mode === "redalert" ? "#18060e" : mode === "arcade" ? "#09051d" : "#020612";
+  const lower = mode === "redalert" ? "#320812" : mode === "arcade" ? "#081526" : "#040d18";
+  const space = canvasContext.createLinearGradient(0, 0, 0, height);
+  space.addColorStop(0, top);
+  space.addColorStop(1, lower);
+  canvasContext.fillStyle = space;
+  canvasContext.fillRect(0, 0, width, height);
+
+  for (let star = 0; star < 96; star += 1) {
+    const x = (star * 137.7 + asteroidFrame * (0.04 + (star % 4) * 0.025)) % width;
+    const y = (star * 61.3 + Math.sin(star * 3.1) * 42 + height) % height;
+    const pulse = 0.28 + ((star % 7) / 10) + trebleEnergy * (star % 4 === 0 ? 0.65 : 0.12);
+    canvasContext.fillStyle = hsla(asteroidHue(star / 96, trebleEnergy), 72, 78, Math.min(0.92, pulse));
+    canvasContext.fillRect(x, y, star % 9 === 0 ? 2.4 : 1.2, star % 9 === 0 ? 2.4 : 1.2);
+  }
+
+  if (bassEnergy > 0.18) {
+    const halo = canvasContext.createRadialGradient(width * 0.5, height * 0.5, 0, width * 0.5, height * 0.5, width * 0.54);
+    halo.addColorStop(0, hsla(asteroidHue(0.42, bassEnergy), 86, 46, bassEnergy * 0.12));
+    halo.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = halo;
+    canvasContext.fillRect(0, 0, width, height);
+  }
+}
+
+function drawAsteroidRock(canvasContext, rock) {
+  canvasContext.save();
+  canvasContext.translate(rock.x, rock.y);
+  canvasContext.rotate(rock.rotation);
+  canvasContext.fillStyle = hsla(rock.hue, 45, 18 + rock.intensity * 22, 0.88);
+  canvasContext.strokeStyle = hsla(rock.hue + 28, 82, 65, 0.76);
+  canvasContext.lineWidth = Math.max(1.5, rock.radius * 0.06);
+  canvasContext.beginPath();
+  rock.vertices.forEach((variance, index) => {
+    const angle = (index / rock.vertices.length) * Math.PI * 2;
+    const radius = rock.radius * variance;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+    if (index === 0) canvasContext.moveTo(x, y);
+    else canvasContext.lineTo(x, y);
+  });
+  canvasContext.closePath();
+  canvasContext.fill();
+  canvasContext.stroke();
+  canvasContext.strokeStyle = hsla(rock.hue + 18, 60, 48, 0.34);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-rock.radius * 0.42, -rock.radius * 0.14);
+  canvasContext.lineTo(rock.radius * 0.18, rock.radius * 0.28);
+  canvasContext.lineTo(rock.radius * 0.42, -rock.radius * 0.22);
+  canvasContext.stroke();
+  canvasContext.restore();
+}
+
+function drawAsteroidShip(canvasContext, ship, trebleEnergy) {
+  const glowHue = asteroidHue(0.62, trebleEnergy);
+  canvasContext.save();
+  canvasContext.translate(ship.x, ship.y);
+  canvasContext.rotate(ship.angle + Math.PI / 2);
+  canvasContext.shadowBlur = 15 + trebleEnergy * 20;
+  canvasContext.shadowColor = hsla(glowHue, 100, 62, 0.75);
+  canvasContext.strokeStyle = hsla(glowHue, 92, 78, 0.98);
+  canvasContext.fillStyle = "rgba(8, 14, 24, 0.94)";
+  canvasContext.lineWidth = 2.4;
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -ship.radius * 1.38);
+  canvasContext.lineTo(ship.radius * 0.82, ship.radius);
+  canvasContext.lineTo(0, ship.radius * 0.54);
+  canvasContext.lineTo(-ship.radius * 0.82, ship.radius);
+  canvasContext.closePath();
+  canvasContext.fill();
+  canvasContext.stroke();
+  if (ship.thrust > 0.04) {
+    canvasContext.fillStyle = hsla(24 + trebleEnergy * 32, 100, 60, 0.85);
+    canvasContext.beginPath();
+    canvasContext.moveTo(-ship.radius * 0.35, ship.radius * 0.72);
+    canvasContext.lineTo(0, ship.radius * (1.1 + ship.thrust * 1.65 + Math.random() * 0.35));
+    canvasContext.lineTo(ship.radius * 0.35, ship.radius * 0.72);
+    canvasContext.fill();
+  }
+  if (ship.shield > 0) {
+    canvasContext.strokeStyle = hsla(glowHue + 70, 100, 72, ship.shield);
+    canvasContext.lineWidth = 3;
+    canvasContext.beginPath();
+    canvasContext.arc(0, 0, ship.radius * 1.7, 0, Math.PI * 2);
+    canvasContext.stroke();
+  }
+  canvasContext.restore();
+}
+
+function drawAsteroidSaucer(canvasContext, saucer, trebleEnergy) {
+  const pulse = 0.5 + Math.sin(asteroidFrame * 0.14 + saucer.phase) * 0.5;
+  canvasContext.save();
+  canvasContext.translate(saucer.x, saucer.y);
+  canvasContext.shadowBlur = 18 + pulse * 18;
+  canvasContext.shadowColor = hsla(saucer.hue, 100, 60, 0.7);
+  canvasContext.fillStyle = hsla(saucer.hue, 80, 42 + pulse * 18, 0.9);
+  canvasContext.strokeStyle = hsla(saucer.hue + 44, 100, 76, 0.9);
+  canvasContext.lineWidth = 2;
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, saucer.radius * 1.45, saucer.radius * 0.38, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.stroke();
+  canvasContext.fillStyle = hsla(saucer.hue + trebleEnergy * 70, 88, 68, 0.72);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, -saucer.radius * 0.23, saucer.radius * 0.58, saucer.radius * 0.42, 0, Math.PI, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+}
+
+function drawAsteroidShotsAndBursts(canvasContext) {
+  asteroidShots.forEach((shot) => {
+    canvasContext.strokeStyle = hsla(shot.hue, 100, 74, 0.94);
+    canvasContext.lineWidth = shot.hostile ? 2.8 : 2.1;
+    canvasContext.beginPath();
+    canvasContext.moveTo(shot.x, shot.y);
+    canvasContext.lineTo(shot.x - shot.vx * 1.8, shot.y - shot.vy * 1.8);
+    canvasContext.stroke();
+  });
+  asteroidBursts = asteroidBursts.filter((piece) => piece.life > 0.02);
+  asteroidBursts.forEach((piece) => {
+    piece.x += piece.vx;
+    piece.y += piece.vy;
+    piece.vx *= 0.985;
+    piece.vy *= 0.985;
+    piece.life *= 0.952;
+    canvasContext.fillStyle = hsla(piece.hue, 100, 66, piece.life);
+    canvasContext.beginPath();
+    canvasContext.arc(piece.x, piece.y, piece.radius * piece.life, 0, Math.PI * 2);
+    canvasContext.fill();
+  });
+}
+
+function drawAsteroidHud(canvasContext, width, height, bassEnergy) {
+  canvasContext.save();
+  canvasContext.fillStyle = hsla(asteroidHue(0.6, bassEnergy), 92, 72, 0.86);
+  canvasContext.font = `600 ${Math.max(13, Math.min(width, height) * 0.04)}px "Segoe UI", system-ui, sans-serif`;
+  canvasContext.textAlign = "left";
+  canvasContext.fillText(`SCORE ${String(asteroidScore).padStart(5, "0")}`, width * 0.035, height * 0.09);
+  canvasContext.restore();
+}
+
+function updateAsteroidsScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, bandIntensities) {
+  setupAsteroidShip(width, height);
+  const tempo = fireworkSpeedMultiplier();
+  const density = handCountValueNumber() / 6;
+  const threat = handGraspAmount();
+  asteroidFrame += tempo;
+
+  if (asteroidKeys.has("KeyA")) asteroidShip.angle -= 0.065 * tempo;
+  if (asteroidKeys.has("KeyD")) asteroidShip.angle += 0.065 * tempo;
+  asteroidShip.thrust *= 0.82;
+  if (asteroidKeys.has("KeyW")) {
+    asteroidShip.vx += Math.cos(asteroidShip.angle) * 0.18 * tempo;
+    asteroidShip.vy += Math.sin(asteroidShip.angle) * 0.18 * tempo;
+    asteroidShip.thrust = 1;
+  }
+  if (asteroidKeys.has("KeyS")) {
+    asteroidShip.vx *= 0.94;
+    asteroidShip.vy *= 0.94;
+  }
+  asteroidShip.vx *= 0.993;
+  asteroidShip.vy *= 0.993;
+  const shipSpeed = Math.hypot(asteroidShip.vx, asteroidShip.vy);
+  if (shipSpeed > 8) {
+    asteroidShip.vx = (asteroidShip.vx / shipSpeed) * 8;
+    asteroidShip.vy = (asteroidShip.vy / shipSpeed) * 8;
+  }
+  asteroidShip.x += asteroidShip.vx * tempo;
+  asteroidShip.y += asteroidShip.vy * tempo;
+  asteroidShip.shield *= 0.94;
+  wrapSpaceObject(asteroidShip, width, height, asteroidShip.radius);
+  if (asteroidKeys.has("Space")) {
+    fireShipMissile();
+  }
+
+  const frequencySurge = Math.max(...bandIntensities);
+  const spawnDrive = bassEnergy * 0.075 * density * tempo + midsEnergy * 0.018 + frequencySurge * 0.018;
+  if (asteroidRocks.length < Math.round(4 + density * 4) || (asteroidRocks.length < 48 && Math.random() < spawnDrive)) {
+    spawnAsteroid(width, height, Math.max(0.16, bassEnergy, frequencySurge));
+  }
+  if (asteroidSaucers.length < 4 && Math.random() < (0.0015 + trebleEnergy * threat * 0.028) * tempo) {
+    spawnAsteroidSaucer(width, height, Math.max(0.2, trebleEnergy));
+  }
+
+  asteroidRocks.forEach((rock) => {
+    rock.x += rock.vx * tempo;
+    rock.y += rock.vy * tempo;
+    rock.rotation += rock.spin * tempo * (1 + midsEnergy);
+    wrapSpaceObject(rock, width, height, rock.radius);
+  });
+
+  asteroidSaucers.forEach((saucer) => {
+    saucer.x += saucer.vx * tempo;
+    saucer.y += Math.sin(asteroidFrame * (0.035 + trebleEnergy * 0.03) + saucer.phase) * (0.5 + trebleEnergy * 2.4);
+    saucer.cooldown -= tempo * (0.7 + trebleEnergy * 2 + threat);
+    if (saucer.cooldown <= 0) {
+      fireSaucerShot(saucer, trebleEnergy * (0.5 + threat * 0.5));
+      saucer.cooldown = 20 + Math.random() * (65 - threat * 28);
+    }
+    if (saucer.x < -100 || saucer.x > width + 100) saucer.life = 0;
+  });
+
+  asteroidShots = asteroidShots.filter((shot) => shot.life > 0);
+  asteroidShots.forEach((shot) => {
+    shot.x += shot.vx * tempo;
+    shot.y += shot.vy * tempo;
+    shot.life -= tempo;
+    wrapSpaceObject(shot, width, height);
+    if (shot.hostile && Math.hypot(shot.x - asteroidShip.x, shot.y - asteroidShip.y) < asteroidShip.radius * 1.25) {
+      asteroidShip.shield = 1;
+      asteroidShip.vx -= shot.vx * 0.28;
+      asteroidShip.vy -= shot.vy * 0.28;
+      burstAsteroid(asteroidShip.x, asteroidShip.y, shot.hue, 0.5, 12);
+      shot.life = 0;
+    }
+    if (!shot.hostile) {
+      asteroidRocks.forEach((rock) => {
+        if (rock.hit || shot.life <= 0 || Math.hypot(shot.x - rock.x, shot.y - rock.y) > rock.radius) return;
+        rock.hit = true;
+        shot.life = 0;
+        asteroidScore += rock.generation ? 25 : 10;
+        burstAsteroid(rock.x, rock.y, rock.hue, rock.intensity, 10 + Math.round(rock.radius / 4));
+        if (rock.generation < 1 && rock.radius > Math.min(width, height) * 0.035) {
+          spawnAsteroid(width, height, rock.intensity * 0.76, 1, rock.x, rock.y);
+          spawnAsteroid(width, height, rock.intensity * 0.76, 1, rock.x, rock.y);
+        }
+      });
+      asteroidSaucers.forEach((saucer) => {
+        if (saucer.life <= 0 || shot.life <= 0 || Math.hypot(shot.x - saucer.x, shot.y - saucer.y) > saucer.radius * 1.4) return;
+        saucer.life = 0;
+        shot.life = 0;
+        asteroidScore += 75;
+        burstAsteroid(saucer.x, saucer.y, saucer.hue, 1, 28);
+      });
+    }
+  });
+  asteroidRocks = asteroidRocks.filter((rock) => !rock.hit);
+  asteroidSaucers = asteroidSaucers.filter((saucer) => saucer.life > 0);
+
+  asteroidRocks.forEach((rock) => {
+    if (asteroidShip.shield > 0.2 || Math.hypot(rock.x - asteroidShip.x, rock.y - asteroidShip.y) > rock.radius + asteroidShip.radius * 0.72) return;
+    asteroidShip.shield = 1;
+    asteroidShip.vx -= rock.vx * 0.42;
+    asteroidShip.vy -= rock.vy * 0.42;
+    burstAsteroid(asteroidShip.x, asteroidShip.y, asteroidHue(0.3, bassEnergy), 0.7, 20);
+  });
+
+  drawAsteroidField(canvasContext, width, height, bassEnergy, trebleEnergy);
+  asteroidRocks.forEach((rock) => drawAsteroidRock(canvasContext, rock));
+  asteroidSaucers.forEach((saucer) => drawAsteroidSaucer(canvasContext, saucer, trebleEnergy));
+  drawAsteroidShotsAndBursts(canvasContext);
+  drawAsteroidShip(canvasContext, asteroidShip, trebleEnergy);
+  drawAsteroidHud(canvasContext, width, height, bassEnergy);
+}
+
+function drawAsteroidsFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.4);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 54), 1.36);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.48);
+  const bandIntensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.42));
+  updateAsteroidsScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, bandIntensities);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -5411,7 +5822,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "lightning") {
+  if (visualizerSelect.value === "asteroids") {
+    drawIdleAsteroids();
+  } else if (visualizerSelect.value === "lightning") {
     drawIdleLightning();
   } else if (visualizerSelect.value === "eyevisions") {
     drawIdleEyeVisions();
@@ -5814,6 +6227,26 @@ function drawIdleEyeVisions() {
   }
 }
 
+function drawIdleAsteroids() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(asteroidFrame * 0.037) * 0.5;
+  const shimmer = 0.5 + Math.sin(asteroidFrame * 0.063 + 1.3) * 0.5;
+  const bandIntensities = fireworksBands.map((band, index) => 0.1 + pulse * 0.12 + (index % 2) * shimmer * 0.07);
+
+  updateAsteroidsScene(canvasContext, width, height, 0.12 + pulse * 0.16, 0.12 + shimmer * 0.14, 0.13 + (1 - pulse) * 0.2, bandIntensities);
+
+  if (visualizerSelect.value === "asteroids" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleLightning() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -5918,6 +6351,11 @@ function resizeCanvas() {
   goddessKisses = [];
   gardenVines = [];
   tigerSpurts = [];
+  asteroidShip = null;
+  asteroidRocks = [];
+  asteroidShots = [];
+  asteroidSaucers = [];
+  asteroidBursts = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -6015,6 +6453,7 @@ visualizerSelect.addEventListener("change", () => {
     mandelbrot: "Mandelbrot Set frequency visualisation",
     eyevisions: "Eye Visions frequency visualisation",
     lightning: "Lightning frequency visualisation",
+    asteroids: "Playable Asteroids music visualisation",
   };
 
   visualizer.setAttribute(
@@ -6056,6 +6495,10 @@ handCount.addEventListener("input", () => {
   tigerSpurts = [];
   lightningBolts = [];
   lightningImpacts = [];
+  asteroidRocks = [];
+  asteroidShots = [];
+  asteroidSaucers = [];
+  asteroidBursts = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
@@ -6144,6 +6587,21 @@ function handleGlobalKey(event) {
     return;
   }
 
+  if (visualizerSelect.value === "asteroids" && ["KeyA", "KeyD", "KeyW", "KeyS", "Space"].includes(code)) {
+    event.preventDefault();
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+    asteroidKeys.add(code);
+    if (code === "Space" && !event.repeat) {
+      fireShipMissile();
+    }
+    if (!animationId) {
+      drawIdleVisualizer();
+    }
+    return;
+  }
+
   const tagName = event.target.tagName.toLowerCase();
 
   if (tagName === "input" || tagName === "select" || tagName === "textarea") {
@@ -6178,10 +6636,12 @@ function handleGlobalKey(event) {
 
 document.addEventListener("keydown", handleGlobalKey, true);
 document.addEventListener("keyup", (event) => {
+  asteroidKeys.delete(event.code);
   if (event.key === "F4" || event.code === "F4" || event.keyCode === 115) {
     handleGlobalKey(event);
   }
 }, true);
+window.addEventListener("blur", () => asteroidKeys.clear());
 
 resizeCanvas();
 updateFireworkSpeedLabel();
