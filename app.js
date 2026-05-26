@@ -75,6 +75,7 @@ let tigerSpurts = [];
 let mandelbrotFrame = 0;
 const mandelbrotCanvas = document.createElement("canvas");
 let eyeFrame = 0;
+let eyePointer = { x: 0, y: 0, active: false };
 let lightningFrame = 0;
 let lightningBolts = [];
 let stagePulse = null;
@@ -3479,7 +3480,7 @@ function drawEyeLashes(canvasContext, radiusX, radiusY, blink, energy, lashStren
   }
 }
 
-function drawSingleEye(canvasContext, x, y, radiusX, radiusY, side, form, bassEnergy, midsEnergy, trebleEnergy) {
+function drawSingleEye(canvasContext, x, y, radiusX, radiusY, side, form, bassEnergy, midsEnergy, trebleEnergy, pointerGaze) {
   const config = eyeConfig(form);
   const blinkRate = fireworkSpeedMultiplier();
   const lashControl = handSizeMultiplier();
@@ -3489,8 +3490,10 @@ function drawSingleEye(canvasContext, x, y, radiusX, radiusY, side, form, bassEn
   const blink = Math.pow(blinkWave, 18 - blinkRate * 4) * (0.85 - bassEnergy * 0.2);
   const pupilBeat = 0.74 + bassEnergy * 0.28 - trebleEnergy * 0.14;
   const irisHue = eyeHue(form, midsEnergy + trebleEnergy * 0.45);
-  const gazeX = Math.sin(eyeFrame * 0.016 + side + midsEnergy * 2.2) * radiusX * (0.08 + gaze * 0.16);
-  const gazeY = Math.cos(eyeFrame * 0.013 + side * 1.7) * radiusY * (0.04 + gaze * 0.08);
+  const wanderX = Math.sin(eyeFrame * 0.016 + side + midsEnergy * 2.2) * radiusX * (0.08 + gaze * 0.16);
+  const wanderY = Math.cos(eyeFrame * 0.013 + side * 1.7) * radiusY * (0.04 + gaze * 0.08);
+  const gazeX = wanderX * (1 - pointerGaze.weight) + pointerGaze.x * radiusX * (0.42 + gaze * 0.14) * pointerGaze.weight;
+  const gazeY = wanderY * (1 - pointerGaze.weight) + pointerGaze.y * radiusY * (0.38 + gaze * 0.12) * pointerGaze.weight;
   const irisRadius = radiusY * (form === "sauron" ? 0.68 : 0.6);
   const lashStrength = config.lash * lashControl;
 
@@ -3609,6 +3612,11 @@ function drawEyeVisionsScene(canvasContext, width, height, bassEnergy, midsEnerg
   const form = fireworkFormSelect.value || "sauron";
   const config = eyeConfig(form);
   const gaze = handGraspAmount();
+  const pointerGaze = {
+    x: eyePointer.x,
+    y: eyePointer.y,
+    weight: eyePointer.active ? 1 : 0,
+  };
   const hue = eyeHue(form, midsEnergy);
   const background = canvasContext.createRadialGradient(width * 0.5, height * 0.46, 0, width * 0.5, height * 0.5, Math.max(width, height) * 0.72);
   background.addColorStop(0, hsla(hue, 70, 20 + trebleEnergy * 16, 0.92));
@@ -3634,11 +3642,11 @@ function drawEyeVisionsScene(canvasContext, width, height, bassEnergy, midsEnerg
   const baseRadius = Math.min(width, height) * (config.count === 1 ? 0.34 : 0.25) * (0.9 + bassEnergy * 0.12);
   const eyeY = height * (form === "sauron" ? 0.52 : 0.5 + Math.sin(eyeFrame * 0.011) * 0.015);
   if (config.count === 1) {
-    drawSingleEye(canvasContext, width * 0.5, eyeY, baseRadius * (0.72 + gaze * 0.12), baseRadius * 1.08, 0, form, bassEnergy, midsEnergy, trebleEnergy);
+    drawSingleEye(canvasContext, width * 0.5, eyeY, baseRadius * (0.72 + gaze * 0.12), baseRadius * 1.08, 0, form, bassEnergy, midsEnergy, trebleEnergy, pointerGaze);
   } else {
     const spacing = width * (0.21 + gaze * 0.035);
-    drawSingleEye(canvasContext, width * 0.5 - spacing, eyeY, baseRadius * 1.2, baseRadius * 0.68, -1, form, bassEnergy, midsEnergy, trebleEnergy);
-    drawSingleEye(canvasContext, width * 0.5 + spacing, eyeY, baseRadius * 1.2, baseRadius * 0.68, 1, form, bassEnergy, midsEnergy, trebleEnergy);
+    drawSingleEye(canvasContext, width * 0.5 - spacing, eyeY, baseRadius * 1.2, baseRadius * 0.68, -1, form, bassEnergy, midsEnergy, trebleEnergy, pointerGaze);
+    drawSingleEye(canvasContext, width * 0.5 + spacing, eyeY, baseRadius * 1.2, baseRadius * 0.68, 1, form, bassEnergy, midsEnergy, trebleEnergy, pointerGaze);
   }
 }
 
@@ -5667,6 +5675,25 @@ themeSelect.addEventListener("change", () => {
   if (!animationId) {
     drawIdleVisualizer();
   }
+});
+
+window.addEventListener("pointermove", (event) => {
+  const bounds = visualizer.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) {
+    return;
+  }
+
+  eyePointer.x = Math.max(-1, Math.min(1, ((event.clientX - bounds.left) / bounds.width - 0.5) * 2));
+  eyePointer.y = Math.max(-1, Math.min(1, ((event.clientY - bounds.top) / bounds.height - 0.5) * 2));
+  eyePointer.active = true;
+
+  if (visualizerSelect.value === "eyevisions" && audio.paused && !animationId) {
+    drawIdleVisualizer();
+  }
+});
+
+window.addEventListener("pointerleave", () => {
+  eyePointer.active = false;
 });
 
 peakToggle.addEventListener("change", () => {
