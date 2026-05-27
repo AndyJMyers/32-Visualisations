@@ -89,6 +89,13 @@ let asteroidBursts = [];
 let asteroidKeys = new Set();
 let asteroidScore = 0;
 let asteroidLastShot = 0;
+let interzoneFrame = 0;
+let interzoneFigures = [];
+let interzoneDrops = [];
+let interzoneWisps = [];
+let sunflowerFrame = 0;
+let sunflowerFaces = [];
+let sunflowerInsects = [];
 let stagePulse = null;
 let moodState = {
   energy: 0,
@@ -329,6 +336,16 @@ const formOptionsByVisualizer = {
     ["deepfield", "Deep field"],
     ["arcade", "Arcade neon"],
     ["redalert", "Red alert"],
+  ],
+  interzoneoracles: [
+    ["salon", "Salon"],
+    ["procession", "Procession"],
+    ["withdrawal", "Withdrawal"],
+  ],
+  sunflowersmiles: [
+    ["pinkpond", "Powder-pink pond"],
+    ["morning", "Morning meadow"],
+    ["sunset", "Peach sunset"],
   ],
 };
 
@@ -623,23 +640,23 @@ function syncVisualizerControls() {
   document.querySelector("#visualizer").classList.toggle("missile-targeting", isMissileCommand);
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = isSauron || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids"].includes(visualizer);
+  reachLabel.hidden = isSauron || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles"].includes(visualizer);
   dischargeLabel.hidden = !isSauron;
-  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions", "lightning", "asteroids"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids"].includes(visualizer);
+  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles"].includes(visualizer);
 
   setControlLabel(
     fireworkSpeed,
-    visualizer === "asteroids" ? "Game tempo" : visualizer === "lightning" ? "Strike rate" : visualizer === "eyevisions" ? "Blink rate" : visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
+    visualizer === "sunflowersmiles" ? "Breeze" : visualizer === "interzoneoracles" ? "Pulse" : visualizer === "asteroids" ? "Game tempo" : visualizer === "lightning" ? "Strike rate" : visualizer === "eyevisions" ? "Blink rate" : visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
   );
-  setControlLabel(handSize, visualizer === "asteroids" ? "Rock scale" : visualizer === "lightning" ? "Bolt size" : visualizer === "eyevisions" ? "Lashes" : visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(handSize, visualizer === "sunflowersmiles" ? "Bloom size" : visualizer === "interzoneoracles" ? "Stature" : visualizer === "asteroids" ? "Rock scale" : visualizer === "lightning" ? "Bolt size" : visualizer === "eyevisions" ? "Lashes" : visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
   setControlLabel(
     handCount,
-    visualizer === "asteroids" ? "Rock density" : visualizer === "lightning" ? "Afterglow" : visualizer === "eyevisions" ? "Flecks" : visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
+    visualizer === "sunflowersmiles" ? "Flowers" : visualizer === "interzoneoracles" ? "Chorus" : visualizer === "asteroids" ? "Rock density" : visualizer === "lightning" ? "Afterglow" : visualizer === "eyevisions" ? "Flecks" : visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
   );
   setControlLabel(
     handGrasp,
-    visualizer === "asteroids" ? "Saucer threat" : visualizer === "lightning" ? "Snaking" : visualizer === "eyevisions" ? "Gaze" : visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
+    visualizer === "sunflowersmiles" ? "Insects" : visualizer === "interzoneoracles" ? "Exudation" : visualizer === "asteroids" ? "Saucer threat" : visualizer === "lightning" ? "Snaking" : visualizer === "eyevisions" ? "Gaze" : visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
   );
 }
 
@@ -744,6 +761,13 @@ function restartVisualizer() {
   asteroidKeys.clear();
   asteroidScore = 0;
   asteroidLastShot = 0;
+  interzoneFrame = 0;
+  interzoneFigures = [];
+  interzoneDrops = [];
+  interzoneWisps = [];
+  sunflowerFrame = 0;
+  sunflowerFaces = [];
+  sunflowerInsects = [];
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -1059,7 +1083,11 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "asteroids") {
+      if (visualizerSelect.value === "sunflowersmiles") {
+        drawSunflowerSmilesFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "interzoneoracles") {
+        drawInterzoneOraclesFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "asteroids") {
         drawAsteroidsFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "lightning") {
         drawLightningFrame(canvasContext, buffer);
@@ -4544,6 +4572,512 @@ function drawAsteroidsFrame(canvasContext, buffer) {
   updateAsteroidsScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, bandIntensities);
 }
 
+function interzoneHue(progress, intensity) {
+  const theme = themeSelect.value;
+  if (theme === "ice") return 188 + progress * 62 + intensity * 18;
+  if (theme === "ember") return 346 + progress * 44 + intensity * 25;
+  if (theme === "pressure") return 310 - progress * 145 + intensity * 55;
+  if (theme === "spectrum") return 318 - progress * 260 + intensity * 38;
+  return 148 + progress * 42 + intensity * 24;
+}
+
+function setupInterzoneFigures(width, height) {
+  const desiredCount = Math.max(3, Math.min(14, handCountValueNumber()));
+  if (interzoneFigures.length === desiredCount) return;
+  interzoneFigures = Array.from({ length: desiredCount }, (_, index) => {
+    const spread = desiredCount === 1 ? 0.5 : index / (desiredCount - 1);
+    const depth = index % 2 === 0 ? 1 : 0.83;
+    return {
+      index,
+      x: width * (0.1 + spread * 0.8),
+      baseY: height * (0.81 + (index % 3) * 0.035),
+      depth,
+      phase: Math.random() * Math.PI * 2,
+      tilt: (Math.random() - 0.5) * 0.32,
+      memory: 0.12,
+      blink: Math.random() * Math.PI * 2,
+    };
+  });
+}
+
+function drawInterzoneBackground(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  const mode = fireworkFormSelect.value;
+  const palette = mode === "withdrawal"
+    ? { top: "#070b12", mid: "#15212a", floor: "#09050b", haze: 198 }
+    : mode === "procession"
+      ? { top: "#190b12", mid: "#32151a", floor: "#090307", haze: 352 }
+      : { top: "#130d13", mid: "#262026", floor: "#090609", haze: 308 };
+  const room = canvasContext.createLinearGradient(0, 0, 0, height);
+  room.addColorStop(0, palette.top);
+  room.addColorStop(0.55, palette.mid);
+  room.addColorStop(1, palette.floor);
+  canvasContext.fillStyle = room;
+  canvasContext.fillRect(0, 0, width, height);
+
+  for (let veil = 0; veil < 7; veil += 1) {
+    const x = width * (0.08 + veil * 0.145) + Math.sin(interzoneFrame * 0.006 + veil) * width * 0.035;
+    const glow = canvasContext.createRadialGradient(x, height * 0.38, 0, x, height * 0.38, width * (0.17 + bassEnergy * 0.06));
+    glow.addColorStop(0, hsla(palette.haze + veil * 8, 60, 42 + trebleEnergy * 16, 0.055 + midsEnergy * 0.06));
+    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = glow;
+    canvasContext.fillRect(0, 0, width, height * 0.75);
+  }
+
+  const pool = canvasContext.createLinearGradient(0, height * 0.68, 0, height);
+  pool.addColorStop(0, `rgba(12, 5, 12, ${0.4 + bassEnergy * 0.24})`);
+  pool.addColorStop(1, "rgba(1, 2, 4, 0.98)");
+  canvasContext.fillStyle = pool;
+  canvasContext.fillRect(0, height * 0.68, width, height * 0.32);
+
+  for (let ripple = 0; ripple < 6; ripple += 1) {
+    canvasContext.strokeStyle = hsla(palette.haze + ripple * 12, 72, 42, 0.06 + bassEnergy * 0.09);
+    canvasContext.lineWidth = 1.4;
+    canvasContext.beginPath();
+    canvasContext.ellipse(width * (0.18 + ripple * 0.13), height * 0.88, width * (0.08 + bassEnergy * 0.06), height * 0.012, 0, 0, Math.PI * 2);
+    canvasContext.stroke();
+  }
+}
+
+function spawnInterzoneEmission(figure, intensity, width, height) {
+  const secretion = handGraspAmount();
+  if (Math.random() > (0.02 + intensity * (0.11 + secretion * 0.22)) * fireworkSpeedMultiplier()) return;
+  const stature = handSizeMultiplier();
+  const bodyHeight = height * 0.38 * stature * figure.depth;
+  const headY = figure.baseY - bodyHeight;
+  const direction = figure.index % 2 === 0 ? 1 : -1;
+  const mouthX = figure.x + direction * width * (0.018 + stature * 0.022);
+  const hue = interzoneHue(figure.index / Math.max(1, interzoneFigures.length - 1), intensity);
+  interzoneDrops.push({
+    x: mouthX,
+    y: headY + height * 0.02,
+    vx: direction * (0.2 + intensity * 1.2) + (Math.random() - 0.5) * 0.8,
+    vy: 0.7 + intensity * (2.5 + secretion * 2.2),
+    size: 2.5 + intensity * (6 + secretion * 8),
+    hue,
+    life: 1,
+    trail: [],
+  });
+  if (trebleResponse(intensity) > 0.42 && Math.random() < 0.25 + secretion * 0.34) {
+    interzoneWisps.push({
+      x: mouthX,
+      y: headY,
+      vx: direction * (0.1 + Math.random() * 0.5),
+      vy: -(0.16 + Math.random() * 0.38),
+      curl: Math.random() * Math.PI * 2,
+      hue,
+      life: 1,
+      radius: 8 + intensity * 24,
+    });
+  }
+}
+
+function trebleResponse(intensity) {
+  return Math.max(0, Math.min(1, intensity * (1.08 + handGraspAmount() * 0.25)));
+}
+
+function drawInterzoneFigure(canvasContext, figure, intensity, bassEnergy, trebleEnergy, width, height) {
+  const stature = handSizeMultiplier();
+  const indexProgress = figure.index / Math.max(1, interzoneFigures.length - 1);
+  const hue = interzoneHue(indexProgress, intensity);
+  const sway = Math.sin(interzoneFrame * (0.018 + fireworkSpeedMultiplier() * 0.008) + figure.phase) * (0.08 + trebleEnergy * 0.18);
+  figure.memory += (intensity - figure.memory) * 0.13;
+  const swell = 1 + figure.memory * 0.35 + bassEnergy * 0.16;
+  const bodyHeight = height * 0.38 * stature * figure.depth;
+  const bodyWidth = Math.min(width, height) * 0.055 * stature * figure.depth * swell;
+  const headRadius = bodyWidth * (0.76 + intensity * 0.28);
+  const headY = figure.baseY - bodyHeight;
+  const direction = figure.index % 2 === 0 ? 1 : -1;
+  const proboscisLength = bodyWidth * (0.78 + intensity * 1.18 + handGraspAmount() * 0.6);
+
+  canvasContext.save();
+  canvasContext.translate(figure.x, figure.baseY);
+  canvasContext.rotate(figure.tilt + sway);
+  const torso = canvasContext.createLinearGradient(-bodyWidth, -bodyHeight, bodyWidth, 0);
+  torso.addColorStop(0, hsla(hue + 14, 56, 54 + trebleEnergy * 12, 0.84));
+  torso.addColorStop(0.5, hsla(hue - 10, 42, 25 + intensity * 17, 0.94));
+  torso.addColorStop(1, hsla(hue - 26, 54, 12, 0.9));
+  canvasContext.fillStyle = torso;
+  canvasContext.beginPath();
+  canvasContext.moveTo(-bodyWidth * 0.84, 0);
+  canvasContext.bezierCurveTo(-bodyWidth * 1.2, -bodyHeight * 0.38, -bodyWidth * 0.52, -bodyHeight * 0.76, -headRadius * 0.48, -bodyHeight);
+  canvasContext.bezierCurveTo(headRadius * 0.48, -bodyHeight, bodyWidth * 0.72, -bodyHeight * 0.7, bodyWidth * 0.94, 0);
+  canvasContext.closePath();
+  canvasContext.fill();
+  canvasContext.strokeStyle = hsla(hue + 30, 66, 63, 0.28 + intensity * 0.22);
+  canvasContext.lineWidth = 1.4 + intensity * 1.8;
+  canvasContext.stroke();
+
+  const throatPulse = 0.55 + Math.sin(interzoneFrame * 0.08 + figure.phase) * 0.2 + bassEnergy * 0.4;
+  canvasContext.strokeStyle = hsla(hue + 34, 78, 68, 0.18 + throatPulse * 0.24);
+  canvasContext.lineWidth = bodyWidth * (0.12 + throatPulse * 0.09);
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -bodyHeight * 0.14);
+  canvasContext.bezierCurveTo(direction * bodyWidth * 0.23, -bodyHeight * 0.45, -direction * bodyWidth * 0.17, -bodyHeight * 0.7, 0, -bodyHeight * 0.9);
+  canvasContext.stroke();
+
+  canvasContext.translate(0, -bodyHeight);
+  canvasContext.fillStyle = hsla(hue + 7, 48, 35 + intensity * 18, 0.96);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, headRadius * 0.86, headRadius * 1.05, sway * 0.2, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.strokeStyle = hsla(hue + 34, 72, 68, 0.38);
+  canvasContext.stroke();
+
+  const blink = Math.max(0.1, Math.abs(Math.sin(interzoneFrame * 0.025 + figure.blink)) * (0.62 + trebleEnergy * 0.38));
+  canvasContext.fillStyle = "rgba(234, 220, 188, 0.72)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(-direction * headRadius * 0.26, -headRadius * 0.12, headRadius * 0.18, headRadius * 0.12 * blink, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.fillStyle = hsla(hue + 80, 96, 42, 0.96);
+  canvasContext.beginPath();
+  canvasContext.arc(-direction * headRadius * 0.27, -headRadius * 0.12, headRadius * 0.055, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(hue + 6, 55, 43 + intensity * 18, 0.94);
+  canvasContext.lineCap = "round";
+  canvasContext.lineWidth = headRadius * (0.38 + intensity * 0.12);
+  canvasContext.beginPath();
+  canvasContext.moveTo(direction * headRadius * 0.36, headRadius * 0.12);
+  canvasContext.bezierCurveTo(
+    direction * (headRadius + proboscisLength * 0.35),
+    headRadius * (0.12 + Math.sin(interzoneFrame * 0.04 + figure.phase) * 0.14),
+    direction * (headRadius + proboscisLength * 0.7),
+    headRadius * (0.26 + intensity * 0.18),
+    direction * (headRadius + proboscisLength),
+    headRadius * (0.34 + intensity * 0.16),
+  );
+  canvasContext.stroke();
+  canvasContext.fillStyle = hsla(hue + 20, 70, 56 + intensity * 14, 0.88);
+  canvasContext.beginPath();
+  canvasContext.arc(direction * (headRadius + proboscisLength), headRadius * (0.34 + intensity * 0.16), headRadius * (0.17 + intensity * 0.1), 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+}
+
+function drawInterzoneEmissions(canvasContext, width, height, bassEnergy) {
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  interzoneDrops = interzoneDrops.filter((drop) => drop.life > 0.02 && drop.y < height * 1.06);
+  interzoneDrops.forEach((drop) => {
+    drop.trail.unshift({ x: drop.x, y: drop.y });
+    drop.trail = drop.trail.slice(0, 9);
+    drop.x += drop.vx;
+    drop.y += drop.vy;
+    drop.vy += 0.045 + bassEnergy * 0.08;
+    drop.life *= 0.986;
+    drop.trail.forEach((point, index) => {
+      canvasContext.fillStyle = hsla(drop.hue + index * 4, 86, 62, drop.life * (1 - index / 11) * 0.68);
+      canvasContext.beginPath();
+      canvasContext.arc(point.x, point.y, drop.size * (1 - index / 13), 0, Math.PI * 2);
+      canvasContext.fill();
+    });
+  });
+
+  interzoneWisps = interzoneWisps.filter((wisp) => wisp.life > 0.02);
+  interzoneWisps.forEach((wisp) => {
+    wisp.x += wisp.vx + Math.sin(interzoneFrame * 0.035 + wisp.curl) * 0.65;
+    wisp.y += wisp.vy;
+    wisp.radius *= 1.015;
+    wisp.life *= 0.972;
+    const haze = canvasContext.createRadialGradient(wisp.x, wisp.y, 0, wisp.x, wisp.y, wisp.radius);
+    haze.addColorStop(0, hsla(wisp.hue + 24, 84, 64, wisp.life * 0.16));
+    haze.addColorStop(1, "rgba(0, 0, 0, 0)");
+    canvasContext.fillStyle = haze;
+    canvasContext.fillRect(wisp.x - wisp.radius, wisp.y - wisp.radius, wisp.radius * 2, wisp.radius * 2);
+  });
+  canvasContext.restore();
+}
+
+function drawInterzoneScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  interzoneFrame += fireworkSpeedMultiplier() * (0.7 + midsEnergy * 0.6);
+  setupInterzoneFigures(width, height);
+  drawInterzoneBackground(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+  interzoneFigures.forEach((figure, index) => {
+    const intensity = intensities[index % intensities.length];
+    spawnInterzoneEmission(figure, intensity, width, height);
+    drawInterzoneFigure(canvasContext, figure, intensity, bassEnergy, trebleEnergy, width, height);
+  });
+  drawInterzoneEmissions(canvasContext, width, height, bassEnergy);
+}
+
+function drawInterzoneOraclesFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.43);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 54), 1.36);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.5);
+  const intensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.46));
+  drawInterzoneScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
+}
+
+function sunflowerAccent(index, intensity) {
+  const theme = themeSelect.value;
+  if (theme === "ice") return 42 + intensity * 16 + index * 2;
+  if (theme === "ember") return 26 + intensity * 20 + index * 2;
+  if (theme === "pressure") return 322 + intensity * 42 + index * 8;
+  if (theme === "spectrum") return 42 + index * 38 + intensity * 34;
+  return 44 + index * 3 + intensity * 18;
+}
+
+function setupSunflowers(width, height) {
+  const desired = Math.max(3, Math.min(14, handCountValueNumber()));
+  if (sunflowerFaces.length === desired) return;
+  sunflowerFaces = Array.from({ length: desired }, (_, index) => {
+    const lane = desired === 1 ? 0.5 : index / (desired - 1);
+    const foreground = index % 3 !== 1;
+    return {
+      index,
+      x: width * (0.08 + lane * 0.84),
+      groundY: height * (foreground ? 0.92 : 0.82),
+      height: height * (foreground ? 0.34 + (index % 4) * 0.035 : 0.26 + (index % 2) * 0.025),
+      phase: Math.random() * Math.PI * 2,
+      lean: (Math.random() - 0.5) * 0.14,
+      memory: 0.16,
+      foreground,
+    };
+  });
+}
+
+function drawSunflowerLandscape(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  const scene = fireworkFormSelect.value;
+  const skyTop = scene === "sunset" ? "#ffc0b9" : scene === "morning" ? "#ffd4d7" : "#f8b7d0";
+  const skyLow = scene === "sunset" ? "#ffd98d" : scene === "morning" ? "#ffe7dc" : "#fcd5d8";
+  const sky = canvasContext.createLinearGradient(0, 0, 0, height * 0.7);
+  sky.addColorStop(0, skyTop);
+  sky.addColorStop(1, skyLow);
+  canvasContext.fillStyle = sky;
+  canvasContext.fillRect(0, 0, width, height);
+
+  for (let cloud = 0; cloud < 5; cloud += 1) {
+    const cloudX = ((width * (cloud * 0.26 - 0.1) + sunflowerFrame * (0.18 + cloud * 0.025)) % (width * 1.25)) - width * 0.12;
+    const cloudY = height * (0.12 + (cloud % 3) * 0.085 + Math.sin(sunflowerFrame * 0.008 + cloud) * 0.012);
+    const scale = width * (0.055 + (cloud % 2) * 0.022 + trebleEnergy * 0.012);
+    canvasContext.fillStyle = `rgba(255, 255, 255, ${0.68 + trebleEnergy * 0.18})`;
+    [[0, 0, 1], [0.62, -0.22, 0.82], [1.22, 0.02, 0.7], [-0.52, 0.14, 0.62]].forEach(([dx, dy, size]) => {
+      canvasContext.beginPath();
+      canvasContext.arc(cloudX + dx * scale, cloudY + dy * scale, scale * size, 0, Math.PI * 2);
+      canvasContext.fill();
+    });
+  }
+
+  const hills = canvasContext.createLinearGradient(0, height * 0.46, 0, height);
+  hills.addColorStop(0, "#89cc75");
+  hills.addColorStop(0.42, "#52a84f");
+  hills.addColorStop(1, "#1b6135");
+  canvasContext.fillStyle = hills;
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, height);
+  canvasContext.lineTo(0, height * 0.58);
+  for (let point = 0; point <= 12; point += 1) {
+    const x = width * point / 12;
+    const y = height * (0.57 + Math.sin(point * 1.34 + sunflowerFrame * 0.004) * 0.035 - midsEnergy * 0.012);
+    canvasContext.lineTo(x, y);
+  }
+  canvasContext.lineTo(width, height);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  const pondX = width * 0.55;
+  const pondY = height * 0.7;
+  const pondWidth = width * (0.34 + bassEnergy * 0.035);
+  const pondHeight = height * 0.1;
+  const pond = canvasContext.createRadialGradient(pondX, pondY, 0, pondX, pondY, pondWidth);
+  pond.addColorStop(0, "#8ce2df");
+  pond.addColorStop(0.56, "#42acbb");
+  pond.addColorStop(1, "#237375");
+  canvasContext.fillStyle = pond;
+  canvasContext.beginPath();
+  canvasContext.ellipse(pondX, pondY, pondWidth, pondHeight, -0.05, 0, Math.PI * 2);
+  canvasContext.fill();
+  for (let ripple = 0; ripple < 4; ripple += 1) {
+    canvasContext.strokeStyle = `rgba(245, 255, 255, ${0.22 + trebleEnergy * 0.15})`;
+    canvasContext.lineWidth = 1.2;
+    canvasContext.beginPath();
+    canvasContext.ellipse(pondX + Math.sin(ripple + sunflowerFrame * 0.02) * pondWidth * 0.4, pondY, pondWidth * (0.12 + ripple * 0.16), pondHeight * (0.12 + ripple * 0.14), 0, 0, Math.PI * 2);
+    canvasContext.stroke();
+  }
+
+  canvasContext.fillStyle = `rgba(250, 230, 120, ${0.18 + bassEnergy * 0.22})`;
+  for (let fleck = 0; fleck < 46; fleck += 1) {
+    const x = (fleck * 97 + sunflowerFrame * 0.22) % width;
+    const y = height * (0.63 + ((fleck * 23) % 32) / 100);
+    canvasContext.beginPath();
+    canvasContext.arc(x, y, 1 + (fleck % 3), 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+}
+
+function drawSunflowerExpression(canvasContext, radius, intensity, trebleEnergy, phase) {
+  const smile = intensity < 0.24 ? "sleepy" : intensity < 0.5 ? "smile" : intensity < 0.74 ? "laugh" : "surprise";
+  const wink = Math.sin(sunflowerFrame * 0.035 + phase) > 0.94 && trebleEnergy > 0.22;
+  canvasContext.strokeStyle = "rgba(55, 33, 20, 0.9)";
+  canvasContext.fillStyle = "rgba(48, 29, 18, 0.92)";
+  canvasContext.lineWidth = Math.max(1.4, radius * 0.055);
+  canvasContext.lineCap = "round";
+
+  [-1, 1].forEach((side, eyeIndex) => {
+    const eyeX = side * radius * 0.28;
+    const closed = wink && eyeIndex === 1;
+    if (closed || smile === "sleepy") {
+      canvasContext.beginPath();
+      canvasContext.arc(eyeX, -radius * 0.12, radius * 0.11, 0.15 * Math.PI, 0.85 * Math.PI);
+      canvasContext.stroke();
+    } else {
+      canvasContext.beginPath();
+      canvasContext.arc(eyeX, -radius * 0.12, radius * (0.07 + trebleEnergy * 0.025), 0, Math.PI * 2);
+      canvasContext.fill();
+      canvasContext.fillStyle = "rgba(255, 255, 255, 0.84)";
+      canvasContext.beginPath();
+      canvasContext.arc(eyeX - radius * 0.024, -radius * 0.15, radius * 0.018, 0, Math.PI * 2);
+      canvasContext.fill();
+      canvasContext.fillStyle = "rgba(48, 29, 18, 0.92)";
+    }
+  });
+  canvasContext.beginPath();
+  if (smile === "surprise") {
+    canvasContext.fillStyle = "rgba(121, 41, 47, 0.8)";
+    canvasContext.ellipse(0, radius * 0.25, radius * 0.14, radius * 0.2, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+  } else if (smile === "laugh") {
+    canvasContext.fillStyle = "rgba(121, 41, 47, 0.84)";
+    canvasContext.arc(0, radius * 0.12, radius * 0.28, 0, Math.PI);
+    canvasContext.closePath();
+    canvasContext.fill();
+  } else {
+    canvasContext.arc(0, radius * 0.08, radius * (smile === "smile" ? 0.29 : 0.2), 0.12 * Math.PI, 0.88 * Math.PI);
+    canvasContext.stroke();
+  }
+}
+
+function drawSunflower(canvasContext, flower, intensity, bassEnergy, trebleEnergy, width, height) {
+  flower.memory += (intensity - flower.memory) * 0.14;
+  const scale = handSizeMultiplier() * (flower.foreground ? 1 : 0.75);
+  const breeze = Math.sin(sunflowerFrame * (0.022 + fireworkSpeedMultiplier() * 0.012) + flower.phase) * (0.06 + bassEnergy * 0.14) + flower.lean;
+  const stalkHeight = flower.height * (0.82 + flower.memory * 0.32);
+  const faceX = flower.x + Math.sin(breeze) * stalkHeight * 0.34;
+  const faceY = flower.groundY - Math.cos(breeze) * stalkHeight;
+  const radius = Math.min(width, height) * (0.055 + flower.memory * 0.026) * scale;
+  const hue = sunflowerAccent(flower.index, intensity);
+
+  canvasContext.strokeStyle = hsla(108 + trebleEnergy * 16, 62, 32 + intensity * 18, 0.96);
+  canvasContext.lineWidth = Math.max(3, radius * 0.18);
+  canvasContext.lineCap = "round";
+  canvasContext.beginPath();
+  canvasContext.moveTo(flower.x, flower.groundY);
+  canvasContext.bezierCurveTo(flower.x - breeze * stalkHeight * 0.35, flower.groundY - stalkHeight * 0.35, faceX - radius * 0.2, faceY + radius * 1.2, faceX, faceY);
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = hsla(112, 66, 39 + intensity * 12, 0.9);
+  [-1, 1].forEach((side) => {
+    const leafY = flower.groundY - stalkHeight * (side === 1 ? 0.36 : 0.55);
+    const leafX = flower.x + side * radius * 0.38;
+    canvasContext.beginPath();
+    canvasContext.moveTo(leafX, leafY);
+    canvasContext.quadraticCurveTo(leafX + side * radius * 1.1, leafY - radius * 0.45, leafX + side * radius * 1.2, leafY + radius * 0.24);
+    canvasContext.quadraticCurveTo(leafX + side * radius * 0.44, leafY + radius * 0.38, leafX, leafY);
+    canvasContext.fill();
+  });
+
+  canvasContext.save();
+  canvasContext.translate(faceX, faceY);
+  canvasContext.rotate(breeze * 0.6);
+  const petals = 17;
+  for (let petal = 0; petal < petals; petal += 1) {
+    const angle = petal / petals * Math.PI * 2 + Math.sin(sunflowerFrame * 0.02 + flower.phase) * 0.03;
+    canvasContext.save();
+    canvasContext.rotate(angle);
+    canvasContext.fillStyle = hsla(hue + petal % 3 * 5, 94, 54 + intensity * 13, 0.96);
+    canvasContext.beginPath();
+    canvasContext.ellipse(0, -radius * 1.14, radius * (0.23 + intensity * 0.04), radius * (0.62 + bassEnergy * 0.12), 0, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.restore();
+  }
+  const centre = canvasContext.createRadialGradient(-radius * 0.2, -radius * 0.25, radius * 0.08, 0, 0, radius);
+  centre.addColorStop(0, "#d89144");
+  centre.addColorStop(0.58, "#9a5a27");
+  centre.addColorStop(1, "#633719");
+  canvasContext.fillStyle = centre;
+  canvasContext.beginPath();
+  canvasContext.arc(0, 0, radius, 0, Math.PI * 2);
+  canvasContext.fill();
+  drawSunflowerExpression(canvasContext, radius, flower.memory, trebleEnergy, flower.phase);
+  canvasContext.restore();
+}
+
+function spawnSunflowerInsect(width, height, trebleEnergy) {
+  const abundance = handGraspAmount();
+  if (sunflowerInsects.length >= 54 || Math.random() > (0.008 + trebleEnergy * (0.08 + abundance * 0.12)) * fireworkSpeedMultiplier()) return;
+  const type = Math.random() < 0.38 ? "butterfly" : Math.random() < 0.72 ? "bee" : "ladybird";
+  sunflowerInsects.push({
+    type,
+    x: Math.random() * width,
+    y: height * (0.28 + Math.random() * 0.48),
+    vx: (Math.random() - 0.5) * (1.3 + trebleEnergy * 2.8),
+    vy: (Math.random() - 0.5) * 0.8,
+    phase: Math.random() * Math.PI * 2,
+    life: 1,
+    hue: 35 + Math.random() * 265,
+    size: 3.5 + Math.random() * 6 + trebleEnergy * 4,
+  });
+}
+
+function drawSunflowerInsects(canvasContext, width, height, midsEnergy, trebleEnergy) {
+  sunflowerInsects = sunflowerInsects.filter((insect) => insect.life > 0.02);
+  sunflowerInsects.forEach((insect) => {
+    insect.x += insect.vx + Math.sin(sunflowerFrame * 0.07 + insect.phase) * (0.7 + trebleEnergy * 1.8);
+    insect.y += insect.vy + Math.cos(sunflowerFrame * 0.052 + insect.phase) * (0.45 + midsEnergy * 0.75);
+    insect.life -= 0.0018;
+    if (insect.x < -18) insect.x = width + 18;
+    if (insect.x > width + 18) insect.x = -18;
+    if (insect.y < height * 0.14 || insect.y > height * 0.88) insect.vy *= -1;
+    canvasContext.save();
+    canvasContext.translate(insect.x, insect.y);
+    if (insect.type === "butterfly") {
+      const flap = 0.3 + Math.abs(Math.sin(sunflowerFrame * 0.18 + insect.phase)) * 0.7;
+      canvasContext.fillStyle = hsla(insect.hue, 88, 68, insect.life * 0.86);
+      canvasContext.beginPath();
+      canvasContext.ellipse(-insect.size * 0.52, 0, insect.size * flap, insect.size, -0.35, 0, Math.PI * 2);
+      canvasContext.ellipse(insect.size * 0.52, 0, insect.size * flap, insect.size, 0.35, 0, Math.PI * 2);
+      canvasContext.fill();
+    } else {
+      canvasContext.fillStyle = insect.type === "bee" ? "#f2c339" : "#ee504a";
+      canvasContext.beginPath();
+      canvasContext.ellipse(0, 0, insect.size, insect.size * 0.58, 0, 0, Math.PI * 2);
+      canvasContext.fill();
+      canvasContext.fillStyle = "rgba(255, 255, 255, 0.58)";
+      canvasContext.beginPath();
+      canvasContext.ellipse(-insect.size * 0.1, -insect.size * 0.62, insect.size * 0.56, insect.size * 0.35, -0.4, 0, Math.PI * 2);
+      canvasContext.ellipse(insect.size * 0.34, -insect.size * 0.52, insect.size * 0.56, insect.size * 0.35, 0.3, 0, Math.PI * 2);
+      canvasContext.fill();
+    }
+    canvasContext.restore();
+  });
+}
+
+function drawSunflowerScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  sunflowerFrame += fireworkSpeedMultiplier() * (0.72 + midsEnergy * 0.46);
+  setupSunflowers(width, height);
+  drawSunflowerLandscape(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+  sunflowerFaces
+    .slice()
+    .sort((a, b) => a.groundY - b.groundY)
+    .forEach((flower, index) => drawSunflower(canvasContext, flower, intensities[index % intensities.length], bassEnergy, trebleEnergy, width, height));
+  spawnSunflowerInsect(width, height, trebleEnergy);
+  drawSunflowerInsects(canvasContext, width, height, midsEnergy, trebleEnergy);
+}
+
+function drawSunflowerSmilesFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.36);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 54), 1.34);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.48);
+  const intensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.4));
+  drawSunflowerScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -5822,7 +6356,11 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "asteroids") {
+  if (visualizerSelect.value === "sunflowersmiles") {
+    drawIdleSunflowerSmiles();
+  } else if (visualizerSelect.value === "interzoneoracles") {
+    drawIdleInterzoneOracles();
+  } else if (visualizerSelect.value === "asteroids") {
     drawIdleAsteroids();
   } else if (visualizerSelect.value === "lightning") {
     drawIdleLightning();
@@ -6247,6 +6785,44 @@ function drawIdleAsteroids() {
   }
 }
 
+function drawIdleInterzoneOracles() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(interzoneFrame * 0.04) * 0.5;
+  const tremor = 0.5 + Math.sin(interzoneFrame * 0.071 + 1.8) * 0.5;
+  const intensities = fireworksBands.map((band, index) => 0.14 + pulse * 0.18 + (index % 2) * tremor * 0.1);
+  drawInterzoneScene(canvasContext, width, height, 0.14 + pulse * 0.18, 0.13 + tremor * 0.15, 0.16 + (1 - pulse) * 0.2, intensities);
+
+  if (visualizerSelect.value === "interzoneoracles" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
+function drawIdleSunflowerSmiles() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const sway = 0.5 + Math.sin(sunflowerFrame * 0.036) * 0.5;
+  const sparkle = 0.5 + Math.sin(sunflowerFrame * 0.064 + 1.5) * 0.5;
+  const intensities = fireworksBands.map((band, index) => 0.16 + sway * 0.2 + (index % 2) * sparkle * 0.1);
+  drawSunflowerScene(canvasContext, width, height, 0.12 + sway * 0.18, 0.13 + sway * 0.12, 0.16 + sparkle * 0.22, intensities);
+
+  if (visualizerSelect.value === "sunflowersmiles" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleLightning() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -6356,6 +6932,11 @@ function resizeCanvas() {
   asteroidShots = [];
   asteroidSaucers = [];
   asteroidBursts = [];
+  interzoneFigures = [];
+  interzoneDrops = [];
+  interzoneWisps = [];
+  sunflowerFaces = [];
+  sunflowerInsects = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -6454,6 +7035,8 @@ visualizerSelect.addEventListener("change", () => {
     eyevisions: "Eye Visions frequency visualisation",
     lightning: "Lightning frequency visualisation",
     asteroids: "Playable Asteroids music visualisation",
+    interzoneoracles: "Interzone Oracles frequency visualisation",
+    sunflowersmiles: "Sunflower Smiles frequency visualisation",
   };
 
   visualizer.setAttribute(
@@ -6499,6 +7082,11 @@ handCount.addEventListener("input", () => {
   asteroidShots = [];
   asteroidSaucers = [];
   asteroidBursts = [];
+  interzoneFigures = [];
+  interzoneDrops = [];
+  interzoneWisps = [];
+  sunflowerFaces = [];
+  sunflowerInsects = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
