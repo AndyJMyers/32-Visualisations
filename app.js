@@ -96,7 +96,20 @@ let interzoneWisps = [];
 let sunflowerFrame = 0;
 let sunflowerFaces = [];
 let sunflowerInsects = [];
+let roseFrame = 0;
+let roseUnits = [];
+let rosePetals = [];
+let roseSlashes = [];
+let turtleFrame = 0;
+let pilotFish = null;
+let riverFish = [];
+let riverTurtles = [];
+let riverRipples = [];
+let cathedralFrame = 0;
+let cathedralFigures = [];
+let cathedralSparks = [];
 let stagePulse = null;
+let fullscreenInfoPulse = null;
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -347,6 +360,22 @@ const formOptionsByVisualizer = {
     ["morning", "Morning meadow"],
     ["sunset", "Peach sunset"],
   ],
+  warofroses: [
+    ["openfield", "Open field"],
+    ["pincer", "Pincer"],
+    ["crownmelee", "Crown melee"],
+    ["verona", "Verona lovers"],
+  ],
+  turtleriver: [
+    ["meander", "Meander"],
+    ["rapids", "Rapids"],
+    ["moonbank", "Moonlit banks"],
+  ],
+  cathedralorganism: [
+    ["gothic", "Gothic"],
+    ["byzantine", "Byzantine"],
+    ["ruinedabbey", "Ruined abbey"],
+  ],
 };
 
 const standardThemeOptions = [
@@ -457,6 +486,103 @@ function drawStagePulse(canvasContext) {
   canvasContext.font = `800 ${fontSize * pulse}px "Segoe UI", system-ui, sans-serif`;
   canvasContext.fillText(stagePulse.text, width * 0.5, height * 0.52, maxWidth);
   canvasContext.restore();
+}
+
+function currentTrackDisplayName() {
+  if (currentIndex >= 0 && tracks[currentIndex]) {
+    return trackDisplayTitle(tracks[currentIndex]);
+  }
+  const text = currentTrack.textContent.trim();
+  return text || "No track loaded";
+}
+
+function pulseFullscreenInfo() {
+  const player = document.querySelector(".player");
+  if (!player.classList.contains("visual-fullscreen")) {
+    return;
+  }
+
+  fullscreenInfoPulse = {
+    startedAt: performance.now(),
+    duration: 3300,
+    track: currentTrackDisplayName(),
+    visual: visualizerDisplayName(),
+  };
+
+  if (!animationId) {
+    drawIdleVisualizer();
+  }
+}
+
+function drawFullscreenInfo(canvasContext) {
+  if (!fullscreenInfoPulse) {
+    return;
+  }
+
+  const now = performance.now();
+  const progress = (now - fullscreenInfoPulse.startedAt) / fullscreenInfoPulse.duration;
+  if (progress >= 1) {
+    fullscreenInfoPulse = null;
+    return;
+  }
+
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const alpha = Math.sin((1 - progress) * Math.PI * 0.5);
+  const pulse = 1 + Math.sin(progress * Math.PI * 5) * 0.055;
+  const trackHue = (48 + progress * 40) % 360;
+  const visualHue = (184 + progress * 64) % 360;
+  const contrastHue = (visualHue + 168) % 360;
+  const trackSize = Math.max(19, Math.min(width * 0.044, height * 0.105));
+  const visualSize = Math.max(16, trackSize * 0.7);
+  const labelSize = Math.max(11, trackSize * 0.28);
+  const maxWidth = width * 0.86;
+
+  canvasContext.save();
+  canvasContext.setTransform(1, 0, 0, 1, 0, 0);
+  canvasContext.globalAlpha = alpha;
+  canvasContext.textAlign = "center";
+  canvasContext.textBaseline = "middle";
+
+  canvasContext.fillStyle = `rgba(0, 0, 0, ${0.28 * alpha})`;
+  canvasContext.fillRect(width * 0.07, height * 0.3, width * 0.86, height * 0.38);
+
+  const visualGradient = canvasContext.createLinearGradient(width * 0.18, 0, width * 0.82, 0);
+  visualGradient.addColorStop(0, hsla(visualHue, 100, 66, 0.95));
+  visualGradient.addColorStop(0.5, "rgba(255, 255, 255, 0.94)");
+  visualGradient.addColorStop(1, hsla(contrastHue, 100, 62, 0.95));
+
+  const trackGradient = canvasContext.createLinearGradient(width * 0.18, 0, width * 0.82, 0);
+  trackGradient.addColorStop(0, hsla(trackHue, 100, 66, 0.95));
+  trackGradient.addColorStop(0.5, "rgba(255, 255, 255, 0.96)");
+  trackGradient.addColorStop(1, hsla((trackHue + 178) % 360, 100, 62, 0.95));
+
+  canvasContext.shadowBlur = trackSize * 0.44;
+  canvasContext.shadowColor = hsla(contrastHue, 100, 58, 0.76);
+  canvasContext.fillStyle = hsla(visualHue, 100, 72, 0.82);
+  canvasContext.font = `700 ${labelSize}px "Segoe UI", system-ui, sans-serif`;
+  canvasContext.fillText("Visual", width * 0.5, height * 0.39, maxWidth);
+  canvasContext.fillStyle = visualGradient;
+  canvasContext.font = `800 ${visualSize * pulse}px "Segoe UI", system-ui, sans-serif`;
+  canvasContext.fillText(fullscreenInfoPulse.visual, width * 0.5, height * 0.46, maxWidth);
+
+  canvasContext.shadowColor = hsla(trackHue, 100, 58, 0.76);
+  canvasContext.fillStyle = hsla((trackHue + 178) % 360, 100, 72, 0.82);
+  canvasContext.font = `700 ${labelSize}px "Segoe UI", system-ui, sans-serif`;
+  canvasContext.fillText("Track", width * 0.5, height * 0.55, maxWidth);
+  canvasContext.fillStyle = trackGradient;
+  canvasContext.font = `800 ${trackSize * pulse}px "Segoe UI", system-ui, sans-serif`;
+  canvasContext.fillText(fullscreenInfoPulse.track, width * 0.5, height * 0.62, maxWidth);
+  canvasContext.restore();
+
+  if (!animationId && fullscreenInfoPulse) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (fullscreenInfoPulse) {
+        drawIdleVisualizer();
+      }
+    });
+  }
 }
 
 function setStatus(status) {
@@ -616,6 +742,7 @@ function syncVisualizerControls() {
   const speedLabel = fireworkSpeed.closest("label");
   const reachLabel = handSize.closest("label");
   const dischargeLabel = eyeDischargeSelect.closest("label");
+  const themeLabel = themeSelect.closest("label");
   const armsLabel = handCount.closest("label");
   const graspLabel = handGrasp.closest("label");
 
@@ -638,25 +765,27 @@ function syncVisualizerControls() {
   const isMissileCommand = visualizer === "lightning" && fireworkFormSelect.value === "missilecommand";
   syncSauronMoodControl(isSauron);
   document.querySelector("#visualizer").classList.toggle("missile-targeting", isMissileCommand);
+  themeLabel.hidden = visualizer === "warofroses";
   peakLabel.hidden = visualizer !== "equalizer";
   speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = isSauron || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles"].includes(visualizer);
+  reachLabel.hidden = isSauron || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles", "warofroses", "turtleriver", "cathedralorganism"].includes(visualizer);
   dischargeLabel.hidden = !isSauron;
-  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles"].includes(visualizer);
+  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles", "warofroses", "turtleriver", "cathedralorganism"].includes(visualizer);
+  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles", "warofroses", "turtleriver", "cathedralorganism"].includes(visualizer);
+  setControlLabel(themeSelect, visualizer === "cathedralorganism" ? "Glass" : visualizer === "turtleriver" ? "Spectrum" : themeLabel.hidden ? "Colour" : "Colour");
 
   setControlLabel(
     fireworkSpeed,
-    visualizer === "sunflowersmiles" ? "Breeze" : visualizer === "interzoneoracles" ? "Pulse" : visualizer === "asteroids" ? "Game tempo" : visualizer === "lightning" ? "Strike rate" : visualizer === "eyevisions" ? "Blink rate" : visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
+    visualizer === "cathedralorganism" ? "Breath" : visualizer === "turtleriver" ? "Grievance" : visualizer === "warofroses" ? "March" : visualizer === "sunflowersmiles" ? "Breeze" : visualizer === "interzoneoracles" ? "Pulse" : visualizer === "asteroids" ? "Game tempo" : visualizer === "lightning" ? "Strike rate" : visualizer === "eyevisions" ? "Blink rate" : visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
   );
-  setControlLabel(handSize, visualizer === "sunflowersmiles" ? "Bloom size" : visualizer === "interzoneoracles" ? "Stature" : visualizer === "asteroids" ? "Rock scale" : visualizer === "lightning" ? "Bolt size" : visualizer === "eyevisions" ? "Lashes" : visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
+  setControlLabel(handSize, visualizer === "cathedralorganism" ? "Flex" : visualizer === "turtleriver" ? "Hunger" : visualizer === "warofroses" ? "Bloom scale" : visualizer === "sunflowersmiles" ? "Bloom size" : visualizer === "interzoneoracles" ? "Stature" : visualizer === "asteroids" ? "Rock scale" : visualizer === "lightning" ? "Bolt size" : visualizer === "eyevisions" ? "Lashes" : visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
   setControlLabel(
     handCount,
-    visualizer === "sunflowersmiles" ? "Flowers" : visualizer === "interzoneoracles" ? "Chorus" : visualizer === "asteroids" ? "Rock density" : visualizer === "lightning" ? "Afterglow" : visualizer === "eyevisions" ? "Flecks" : visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
+    visualizer === "cathedralorganism" ? "Procession" : visualizer === "turtleriver" ? "Turtles" : visualizer === "warofroses" ? "Numbers" : visualizer === "sunflowersmiles" ? "Flowers" : visualizer === "interzoneoracles" ? "Chorus" : visualizer === "asteroids" ? "Rock density" : visualizer === "lightning" ? "Afterglow" : visualizer === "eyevisions" ? "Flecks" : visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
   );
   setControlLabel(
     handGrasp,
-    visualizer === "sunflowersmiles" ? "Insects" : visualizer === "interzoneoracles" ? "Exudation" : visualizer === "asteroids" ? "Saucer threat" : visualizer === "lightning" ? "Snaking" : visualizer === "eyevisions" ? "Gaze" : visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
+    visualizer === "cathedralorganism" ? "Sentience" : visualizer === "turtleriver" ? "Munchiness" : visualizer === "warofroses" ? "Belligerence" : visualizer === "sunflowersmiles" ? "Insects" : visualizer === "interzoneoracles" ? "Exudation" : visualizer === "asteroids" ? "Saucer threat" : visualizer === "lightning" ? "Snaking" : visualizer === "eyevisions" ? "Gaze" : visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
   );
 }
 
@@ -768,6 +897,18 @@ function restartVisualizer() {
   sunflowerFrame = 0;
   sunflowerFaces = [];
   sunflowerInsects = [];
+  roseFrame = 0;
+  roseUnits = [];
+  rosePetals = [];
+  roseSlashes = [];
+  turtleFrame = 0;
+  pilotFish = null;
+  riverFish = [];
+  riverTurtles = [];
+  riverRipples = [];
+  cathedralFrame = 0;
+  cathedralFigures = [];
+  cathedralSparks = [];
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -1083,7 +1224,13 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "sunflowersmiles") {
+      if (visualizerSelect.value === "cathedralorganism") {
+        drawCathedralOrganismFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "turtleriver") {
+        drawTurtleRiverFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "warofroses") {
+        drawWarOfRosesFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "sunflowersmiles") {
         drawSunflowerSmilesFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "interzoneoracles") {
         drawInterzoneOraclesFrame(canvasContext, buffer);
@@ -1129,6 +1276,7 @@ function drawVisualizer() {
         drawEqualizerFrame(canvasContext, buffer);
       }
       drawStagePulse(canvasContext);
+      drawFullscreenInfo(canvasContext);
     } catch (error) {
       console.warn("Visualizer frame skipped", error);
     }
@@ -5078,6 +5226,1202 @@ function drawSunflowerSmilesFrame(canvasContext, buffer) {
   drawSunflowerScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
 }
 
+function setupRoseUnits(width, height) {
+  const perSide = Math.max(3, Math.min(14, handCountValueNumber()));
+  if (roseUnits.length === perSide * 2) return;
+  const makeUnit = (side, index) => ({
+    side,
+    index,
+    x: width * (0.12 + Math.random() * 0.76),
+    y: height * (0.34 + Math.random() * 0.5),
+    homeX: width * (0.12 + Math.random() * 0.76),
+    homeY: height * (0.34 + Math.random() * 0.5),
+    driftX: width * (0.12 + Math.random() * 0.76),
+    driftY: height * (0.34 + Math.random() * 0.5),
+    sprout: Math.random(),
+    vx: 0,
+    vy: 0,
+    phase: Math.random() * Math.PI * 2,
+    mettle: 0.15 + Math.random() * 0.2,
+    affection: Math.random(),
+    impact: 0,
+  });
+  roseUnits = [
+    ...Array.from({ length: perSide }, (_, index) => makeUnit("lancaster", index)),
+    ...Array.from({ length: perSide }, (_, index) => makeUnit("york", index)),
+  ];
+}
+
+function roseColour(side, alpha = 1) {
+  return side === "lancaster" ? `rgba(186, 18, 42, ${alpha})` : `rgba(245, 244, 231, ${alpha})`;
+}
+
+function roseAccent(side, alpha = 1) {
+  return side === "lancaster" ? `rgba(255, 84, 92, ${alpha})` : `rgba(170, 174, 164, ${alpha})`;
+}
+
+function roseTarget(unit, width, height, bassEnergy, midsEnergy) {
+  const mode = fireworkFormSelect.value;
+  const perSide = roseUnits.length / 2;
+  const rank = unit.index / Math.max(1, perSide - 1);
+  const sideSign = unit.side === "lancaster" ? 1 : -1;
+  const lane = Math.sin(unit.phase + roseFrame * 0.006) * 0.5 + 0.5;
+  const rove = Math.sin(roseFrame * 0.011 + unit.phase * 1.7);
+  if (mode === "verona") {
+    const beloved = roseUnits.find((candidate) => candidate.side !== unit.side && candidate.index === unit.index)
+      || roseUnits.find((candidate) => candidate.side !== unit.side);
+    const orbit = roseFrame * 0.015 + unit.phase;
+    if (beloved) {
+      return {
+        x: beloved.x + Math.cos(orbit) * width * (0.045 + unit.affection * 0.035 + bassEnergy * 0.025),
+        y: beloved.y + Math.sin(orbit) * height * (0.055 + unit.affection * 0.035 + midsEnergy * 0.02),
+      };
+    }
+  }
+  if (mode === "pincer") {
+    const flank = unit.index % 2 === 0 ? -1 : 1;
+    return {
+      x: width * (0.32 + lane * 0.36 + sideSign * flank * (0.04 + bassEnergy * 0.04)),
+      y: height * (0.28 + rank * 0.58 + flank * (0.08 + midsEnergy * 0.05)),
+    };
+  }
+  if (mode === "crownmelee") {
+    const angle = rank * Math.PI * 2 + (unit.side === "lancaster" ? 0 : Math.PI) + roseFrame * (0.006 + bassEnergy * 0.01);
+    return {
+      x: width * 0.5 + Math.cos(angle) * width * (0.2 + bassEnergy * 0.08 + unit.affection * 0.06),
+      y: height * 0.55 + Math.sin(angle) * height * (0.24 + midsEnergy * 0.05),
+    };
+  }
+  return {
+    x: unit.homeX + rove * width * (0.08 + bassEnergy * 0.07) + sideSign * Math.sin(roseFrame * 0.007 + rank * 5) * width * 0.035,
+    y: unit.homeY + Math.cos(roseFrame * 0.01 + unit.phase) * height * (0.045 + midsEnergy * 0.06),
+  };
+}
+
+function drawRoseBattlefield(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const mode = fireworkFormSelect.value;
+  const sky = canvasContext.createLinearGradient(0, 0, 0, height);
+  sky.addColorStop(0, mode === "verona" ? "#f6d8dd" : "#d7d3cb");
+  sky.addColorStop(0.52, mode === "verona" ? "#dec6b7" : "#b8b7aa");
+  sky.addColorStop(1, "#58684b");
+  canvasContext.fillStyle = sky;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.fillStyle = `rgba(255, 255, 255, ${0.04 + trebleEnergy * 0.06})`;
+  for (let mist = 0; mist < 6; mist += 1) {
+    const y = height * (0.16 + mist * 0.1);
+    canvasContext.beginPath();
+    canvasContext.ellipse((roseFrame * (0.22 + mist * 0.04) + mist * width * 0.19) % (width * 1.2) - width * 0.1, y, width * 0.24, height * 0.035, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  canvasContext.fillStyle = mode === "verona" ? "#3f6d43" : "#303a2f";
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, height);
+  canvasContext.lineTo(0, height * 0.72);
+  for (let point = 0; point <= 10; point += 1) {
+    canvasContext.lineTo(width * point / 10, height * (0.7 + Math.sin(point * 1.3 + roseFrame * 0.006) * 0.035 + bassEnergy * 0.025));
+  }
+  canvasContext.lineTo(width, height);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(0, 0, 0, 0.18)";
+  canvasContext.fillRect(0, height * 0.84, width, height * 0.16);
+  if (mode === "verona") {
+    canvasContext.fillStyle = "rgba(255, 255, 255, 0.16)";
+    for (let balcony = 0; balcony < 2; balcony += 1) {
+      const x = width * (balcony === 0 ? 0.12 : 0.77);
+      const y = height * 0.26;
+      canvasContext.fillRect(x, y, width * 0.11, height * 0.18);
+      canvasContext.fillStyle = "rgba(60, 45, 42, 0.28)";
+      canvasContext.fillRect(x - width * 0.01, y + height * 0.16, width * 0.13, height * 0.018);
+      canvasContext.fillStyle = "rgba(255, 255, 255, 0.16)";
+    }
+  }
+  canvasContext.strokeStyle = `rgba(245, 244, 231, ${0.06 + trebleEnergy * 0.08})`;
+  canvasContext.lineWidth = 1;
+  for (let line = 0; line < 5; line += 1) {
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, height * (0.48 + line * 0.09));
+    canvasContext.quadraticCurveTo(width * 0.5, height * (0.46 + line * 0.09 + bassEnergy * 0.03), width, height * (0.48 + line * 0.09));
+    canvasContext.stroke();
+  }
+}
+
+function drawHeraldicRose(canvasContext, side, x, y, radius, rotation, intensity) {
+  canvasContext.save();
+  canvasContext.translate(x, y);
+  canvasContext.rotate(rotation);
+  const primary = roseColour(side, 0.96);
+  const edge = roseAccent(side, 0.92);
+  for (let petal = 0; petal < 10; petal += 1) {
+    const angle = petal / 10 * Math.PI * 2;
+    canvasContext.save();
+    canvasContext.rotate(angle);
+    canvasContext.fillStyle = petal % 2 === 0 ? primary : edge;
+    canvasContext.beginPath();
+    canvasContext.ellipse(0, -radius * 0.58, radius * (0.26 + intensity * 0.04), radius * 0.62, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.restore();
+  }
+  canvasContext.fillStyle = side === "lancaster" ? "rgba(85, 8, 20, 0.9)" : "rgba(92, 92, 84, 0.9)";
+  canvasContext.beginPath();
+  canvasContext.arc(0, 0, radius * 0.3, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.fillStyle = "rgba(229, 196, 92, 0.88)";
+  canvasContext.beginPath();
+  canvasContext.arc(0, 0, radius * 0.11, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+}
+
+function drawRoseUnit(canvasContext, unit, intensity, bassEnergy, width, height) {
+  const scale = handSizeMultiplier();
+  const radius = Math.min(width, height) * (0.026 + intensity * 0.012) * scale;
+  const bob = Math.sin(roseFrame * (0.04 + intensity * 0.03) + unit.phase) * radius * (0.2 + bassEnergy);
+  const flagHeight = radius * (2.2 + intensity * 0.7);
+
+  canvasContext.strokeStyle = "rgba(36, 31, 27, 0.78)";
+  canvasContext.lineWidth = Math.max(1, radius * 0.13);
+  canvasContext.beginPath();
+  canvasContext.moveTo(unit.x, unit.y + radius * 1.8);
+  canvasContext.lineTo(unit.x, unit.y - flagHeight);
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = roseColour(unit.side, 0.82);
+  canvasContext.beginPath();
+  canvasContext.moveTo(unit.x, unit.y - flagHeight);
+  canvasContext.lineTo(unit.x + (unit.side === "lancaster" ? 1 : -1) * radius * 1.7, unit.y - flagHeight * (0.84 + intensity * 0.08));
+  canvasContext.lineTo(unit.x, unit.y - flagHeight * 0.68);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.globalAlpha = 0.45;
+  canvasContext.fillStyle = "rgba(0, 0, 0, 0.5)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(unit.x, unit.y + radius * 1.95, radius * 1.5, radius * 0.34, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.globalAlpha = 1;
+
+  drawHeraldicRose(canvasContext, unit.side, unit.x, unit.y + bob, radius * (1 + unit.impact * 0.12), roseFrame * 0.015 + unit.phase, intensity + unit.impact * 0.4);
+
+  unit.impact *= 0.88;
+}
+
+function throwRosePetals(x, y, side, force) {
+  const count = 4 + Math.round(force * 18);
+  for (let index = 0; index < count; index += 1) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.8 + Math.random() * (2.8 + force * 3);
+    rosePetals.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.5,
+      side,
+      life: 1,
+      size: 2 + Math.random() * 4 + force * 3,
+      spin: (Math.random() - 0.5) * 0.2,
+      angle: Math.random() * Math.PI * 2,
+    });
+  }
+}
+
+function sproutRoseBloom(width, height, side, force) {
+  rosePetals.push({
+    x: width * (0.08 + Math.random() * 0.84),
+    y: height * (0.3 + Math.random() * 0.56),
+    vx: (Math.random() - 0.5) * (0.6 + force),
+    vy: -0.1 - Math.random() * 0.7,
+    side,
+    life: 1.35,
+    size: Math.min(width, height) * (0.014 + Math.random() * 0.024 + force * 0.018) * handSizeMultiplier(),
+    spin: (Math.random() - 0.5) * 0.06,
+    angle: Math.random() * Math.PI * 2,
+    bloom: true,
+  });
+}
+
+function throwRoseJuice(x, y, side, force) {
+  const count = 8 + Math.round(force * 36);
+  for (let drop = 0; drop < count; drop += 1) {
+    const angle = -Math.PI * 0.88 + Math.random() * Math.PI * 1.76;
+    const speed = 1.4 + Math.random() * (3.8 + force * 8.5);
+    rosePetals.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - force * 0.8,
+      side,
+      life: 0.9 + Math.random() * 0.5,
+      size: 2 + Math.random() * (4 + force * 5),
+      spin: (Math.random() - 0.5) * 0.08,
+      angle: Math.random() * Math.PI * 2,
+      juice: true,
+    });
+  }
+  if (force > 0.72) {
+    for (let bloom = 0; bloom < 3 + Math.floor(force * 5); bloom += 1) {
+      rosePetals.push({
+        x: x + (Math.random() - 0.5) * force * 70,
+        y: y + (Math.random() - 0.5) * force * 52,
+        vx: (Math.random() - 0.5) * force * 5,
+        vy: -Math.random() * force * 4,
+        side,
+        life: 1.1,
+        size: 5 + Math.random() * (8 + force * 14),
+        spin: (Math.random() - 0.5) * 0.18,
+        angle: Math.random() * Math.PI * 2,
+        juice: true,
+      });
+    }
+  }
+}
+
+function slashRoseSword(x, y, side, force) {
+  const direction = side === "lancaster" ? 1 : -1;
+  const count = force > 0.82 ? 2 + Math.floor(force * 2) : 1;
+  for (let slash = 0; slash < count; slash += 1) {
+    roseSlashes.push({
+      x: x + (Math.random() - 0.5) * force * 34,
+      y: y + (Math.random() - 0.5) * force * 28,
+      side,
+      angle: (direction > 0 ? -0.52 : Math.PI + 0.52) + (Math.random() - 0.5) * (0.5 + force * 0.45),
+      span: 0.62 + Math.random() * (0.62 + force * 0.72),
+      radius: 22 + force * 82 + Math.random() * 54,
+      life: 1.15,
+    });
+  }
+}
+
+function drawRosePetals(canvasContext, width, height, bassEnergy) {
+  rosePetals = rosePetals.filter((petal) => petal.life > 0.02 && petal.y < height + 40);
+  rosePetals.forEach((petal) => {
+    petal.x += petal.vx;
+    petal.y += petal.vy;
+    petal.vx *= 0.987;
+    petal.vy += 0.035 + bassEnergy * 0.06;
+    petal.angle += petal.spin;
+    petal.life *= 0.982;
+    canvasContext.save();
+    canvasContext.translate(petal.x, petal.y);
+    canvasContext.rotate(petal.angle);
+    if (petal.bloom) {
+      drawHeraldicRose(canvasContext, petal.side, 0, 0, petal.size * Math.min(1, petal.life), 0, 0.32 + bassEnergy);
+    } else if (petal.juice) {
+      canvasContext.fillStyle = roseColour(petal.side, Math.min(0.92, petal.life));
+      canvasContext.beginPath();
+      canvasContext.ellipse(0, 0, petal.size * 1.4, petal.size * 0.62, 0, 0, Math.PI * 2);
+      canvasContext.fill();
+      canvasContext.fillStyle = roseAccent(petal.side, petal.life * 0.45);
+      canvasContext.beginPath();
+      canvasContext.arc(petal.size * 0.12, -petal.size * 0.1, petal.size * 0.28, 0, Math.PI * 2);
+      canvasContext.fill();
+    } else {
+      canvasContext.fillStyle = roseColour(petal.side, petal.life * 0.88);
+      canvasContext.beginPath();
+      canvasContext.ellipse(0, 0, petal.size, petal.size * 0.42, 0, 0, Math.PI * 2);
+      canvasContext.fill();
+    }
+    canvasContext.restore();
+  });
+}
+
+function drawRoseSlashes(canvasContext) {
+  roseSlashes = roseSlashes.filter((slash) => slash.life > 0.03);
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  roseSlashes.forEach((slash) => {
+    slash.life *= 0.86;
+    canvasContext.strokeStyle = `rgba(255, 255, 244, ${slash.life * 0.88})`;
+    canvasContext.lineWidth = 1.4 + slash.life * 3.2;
+    canvasContext.lineCap = "round";
+    canvasContext.beginPath();
+    canvasContext.arc(slash.x, slash.y, slash.radius, slash.angle - slash.span * 0.5, slash.angle + slash.span * 0.5);
+    canvasContext.stroke();
+    canvasContext.strokeStyle = `rgba(255, 255, 255, ${slash.life * 0.45})`;
+    canvasContext.lineWidth = 1.1;
+    canvasContext.beginPath();
+    canvasContext.arc(slash.x, slash.y, slash.radius * 1.12, slash.angle - slash.span * 0.42, slash.angle + slash.span * 0.42);
+    canvasContext.stroke();
+    canvasContext.strokeStyle = roseColour(slash.side, slash.life * 0.42);
+    canvasContext.lineWidth = 5 + slash.life * 7;
+    canvasContext.beginPath();
+    canvasContext.arc(slash.x, slash.y, slash.radius * 0.94, slash.angle - slash.span * 0.35, slash.angle + slash.span * 0.35);
+    canvasContext.stroke();
+  });
+  canvasContext.restore();
+}
+
+function launchRosePageant(width, height, force) {
+  const side = Math.random() < 0.5 ? "lancaster" : "york";
+  const y = height * (0.34 + Math.random() * 0.5);
+  const x = width * (0.15 + Math.random() * 0.7);
+  for (let slash = 0; slash < 4 + Math.floor(force * 6); slash += 1) {
+    slashRoseSword(x + (Math.random() - 0.5) * width * 0.46, y + (Math.random() - 0.5) * height * 0.28, side, force + Math.random() * 0.35);
+  }
+  for (let burst = 0; burst < 3 + Math.floor(force * 4); burst += 1) {
+    const burstSide = burst % 2 === 0 ? side : (side === "lancaster" ? "york" : "lancaster");
+    const bx = width * (0.08 + Math.random() * 0.84);
+    const by = height * (0.28 + Math.random() * 0.58);
+    throwRoseJuice(bx, by, burstSide, force + Math.random() * 0.35);
+    sproutRoseBloom(width, height, burstSide, force + Math.random() * 0.22);
+  }
+}
+
+function drawWarOfRosesScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  const march = fireworkSpeedMultiplier();
+  const belligerence = handGraspAmount();
+  const mode = fireworkFormSelect.value;
+  roseFrame += march * (0.72 + midsEnergy * 0.62);
+  setupRoseUnits(width, height);
+  drawRoseBattlefield(canvasContext, width, height, bassEnergy, trebleEnergy);
+  if (Math.random() < (0.014 + bassEnergy * 0.05 + trebleEnergy * 0.025) * march && rosePetals.length < 180) {
+    sproutRoseBloom(width, height, Math.random() < 0.5 ? "lancaster" : "york", 0.2 + bassEnergy + trebleEnergy * 0.35);
+  }
+  if (belligerence > 0.42 && Math.random() < (belligerence - 0.36) * (0.012 + bassEnergy * 0.04 + midsEnergy * 0.025) * march) {
+    launchRosePageant(width, height, belligerence + bassEnergy * 0.65 + trebleEnergy * 0.25);
+  }
+
+  roseUnits.forEach((unit, index) => {
+    const target = roseTarget(unit, width, height, bassEnergy, midsEnergy);
+    const intensity = intensities[index % intensities.length];
+    if (Math.random() < 0.004 * march + intensity * 0.01) {
+      unit.homeX = width * (0.1 + Math.random() * 0.8);
+      unit.homeY = height * (0.3 + Math.random() * 0.55);
+    }
+    const urgency = (0.006 + intensity * 0.015 + belligerence * 0.014) * march;
+    unit.vx += (target.x - unit.x) * urgency;
+    unit.vy += (target.y - unit.y) * urgency;
+    unit.vx += Math.sin(roseFrame * 0.027 + unit.phase) * (0.035 + belligerence * 0.11 + intensity * 0.08);
+    unit.vy += Math.cos(roseFrame * 0.024 + unit.phase) * (0.028 + belligerence * 0.07 + midsEnergy * 0.07);
+    if (mode === "verona") {
+      unit.vx += Math.sin(roseFrame * 0.04 + unit.phase * 2) * 0.18;
+      unit.vy += Math.cos(roseFrame * 0.035 + unit.phase * 2) * 0.14;
+    }
+    unit.vx *= 0.9;
+    unit.vy *= 0.9;
+    unit.x += unit.vx;
+    unit.y += unit.vy;
+    if (unit.x < width * 0.04 || unit.x > width * 0.96) unit.vx *= -0.8;
+    if (unit.y < height * 0.24 || unit.y > height * 0.9) unit.vy *= -0.8;
+    unit.x = Math.max(width * 0.035, Math.min(width * 0.965, unit.x));
+    unit.y = Math.max(height * 0.22, Math.min(height * 0.92, unit.y));
+    unit.mettle = unit.mettle * 0.86 + intensity * 0.14;
+  });
+
+  const lancaster = roseUnits.filter((unit) => unit.side === "lancaster");
+  const york = roseUnits.filter((unit) => unit.side === "york");
+  lancaster.forEach((red) => {
+    york.forEach((white) => {
+      const distance = Math.hypot(red.x - white.x, red.y - white.y);
+      const threshold = Math.min(width, height) * (0.06 + handSizeMultiplier() * 0.018 + (mode === "verona" ? 0.035 : 0));
+      const clashChance = (belligerence * 0.025 + bassEnergy * 0.025 + red.mettle * 0.012 + white.mettle * 0.012 + (mode === "verona" ? 0.025 : 0)) * march;
+      if (distance < threshold && Math.random() < clashChance) {
+        red.impact = Math.min(1, red.impact + 0.8);
+        white.impact = Math.min(1, white.impact + 0.8);
+        const side = Math.random() < 0.5 ? "lancaster" : "york";
+        const clashX = (red.x + white.x) * 0.5;
+        const clashY = (red.y + white.y) * 0.5;
+        const force = bassEnergy + belligerence;
+        throwRosePetals(clashX, clashY, side, force);
+        if (Math.random() < belligerence * (0.65 + bassEnergy * 0.45)) {
+          slashRoseSword(clashX, clashY, side, force);
+          throwRoseJuice(clashX, clashY, side, force);
+        }
+        if (mode === "verona" || Math.random() < 0.28 + trebleEnergy * 0.24) {
+          sproutRoseBloom(width, height, Math.random() < 0.5 ? red.side : white.side, bassEnergy + trebleEnergy + belligerence);
+        }
+      }
+    });
+  });
+
+  roseUnits
+    .slice()
+    .sort((a, b) => a.y - b.y)
+    .forEach((unit, index) => drawRoseUnit(canvasContext, unit, intensities[index % intensities.length], bassEnergy, width, height));
+  drawRosePetals(canvasContext, width, height, bassEnergy);
+  drawRoseSlashes(canvasContext);
+}
+
+function drawWarOfRosesFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.36);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 54), 1.34);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.44);
+  const intensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.4));
+  drawWarOfRosesScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
+}
+
+function turtleSpectrumHue(progress, intensity) {
+  const spectrum = themeSelect.value;
+  if (spectrum === "ice") return 185 + progress * 72 + intensity * 24;
+  if (spectrum === "ember") return 18 + progress * 42 + intensity * 22;
+  if (spectrum === "pressure") return 320 - progress * 220 + intensity * 60;
+  if (spectrum === "spectrum") return (280 - progress * 260 + intensity * 90 + 360) % 360;
+  return 118 + progress * 64 + intensity * 24;
+}
+
+function setupPilotFish(width, height) {
+  if (pilotFish) return;
+  pilotFish = {
+    pilot: true,
+    x: width * 0.5,
+    y: height * 0.5,
+    vx: 0,
+    vy: 0,
+    angle: 0,
+    wiggle: Math.random() * Math.PI * 2,
+    sizeScale: 1.1,
+    hueShift: 0.72,
+    kind: "pilot",
+    startled: 0,
+    life: 1,
+  };
+}
+
+function spawnRiverFish(width, height, index = riverFish.length) {
+  const bounds = riverBounds(width, height, height * 0.2);
+  riverFish.push({
+    pilot: false,
+    x: bounds.left + Math.random() * (bounds.right - bounds.left),
+    y: height * (0.08 + Math.random() * 0.86),
+    vx: (Math.random() - 0.5) * 2.2,
+    vy: 0.4 + Math.random() * 1.8,
+    angle: Math.random() * Math.PI * 2,
+    wiggle: Math.random() * Math.PI * 2,
+    sizeScale: 0.45 + Math.random() * 0.95,
+    hueShift: Math.random(),
+    kind: index % 4 === 0 ? "dart" : index % 4 === 1 ? "round" : index % 4 === 2 ? "stripe" : "silver",
+    startled: 0,
+    life: 1,
+    phase: Math.random() * Math.PI * 2,
+  });
+}
+
+function setupRiverFish(width, height) {
+  const desired = Math.max(5, Math.min(26, Math.round(handCountValueNumber() * 1.7)));
+  while (riverFish.length < desired) {
+    spawnRiverFish(width, height);
+  }
+  if (riverFish.length > desired) {
+    riverFish.splice(0, riverFish.length - desired);
+  }
+}
+
+function setupRiverTurtles(width, height) {
+  const desired = Math.max(3, Math.min(14, handCountValueNumber()));
+  if (riverTurtles.length === desired) return;
+  const moods = ["smug", "furious", "nervous", "sleepy", "grand"];
+  riverTurtles = Array.from({ length: desired }, (_, index) => {
+    const progress = desired === 1 ? 0.5 : index / (desired - 1);
+    const stagger = ((index * 37) % 100) / 100;
+    const y = height * (0.1 + progress * 0.8);
+    const bounds = riverBounds(width, height, y);
+    const lane = 0.14 + ((stagger + (index % 3) * 0.19) % 0.72);
+    const side = lane < 0.5 ? -1 : 1;
+    const x = bounds.left + (bounds.right - bounds.left) * lane;
+    return {
+      index,
+      side,
+      x,
+      y,
+      homeX: x,
+      homeY: y,
+      lane,
+      laneDrift: (Math.random() - 0.5) * 0.16,
+      phase: Math.random() * Math.PI * 2,
+      angle: side < 0 ? 0.2 : Math.PI - 0.2,
+      grievance: 0.15 + Math.random() * 0.24,
+      mood: moods[index % moods.length],
+      sizeScale: 0.86 + Math.random() * 0.34,
+      shellPattern: index % 3,
+      eyeBias: Math.random() * 0.5,
+      behaviour: index % 4 === 0 ? "ambush" : index % 4 === 1 ? "chase" : index % 4 === 2 ? "patrol" : "snapper",
+      targetFish: null,
+      targetUntil: 0,
+      jaw: 0,
+      lunge: 0,
+      ripple: 0,
+    };
+  });
+}
+
+function riverBounds(width, height, y) {
+  const t = y / height;
+  const wobble = Math.sin(t * Math.PI * 3 + turtleFrame * 0.006) * width * 0.035;
+  const left = width * (0.18 + Math.sin(t * Math.PI * 1.7) * 0.045) + wobble;
+  const right = width * (0.82 + Math.cos(t * Math.PI * 1.5) * 0.045) + wobble;
+  return { left, right };
+}
+
+function clampToRiver(entity, width, height, margin, bounce = true) {
+  const bounds = riverBounds(width, height, entity.y);
+  const minX = bounds.left + margin;
+  const maxX = bounds.right - margin;
+  if (entity.x < minX) {
+    entity.x = minX;
+    if (bounce) entity.vx = Math.abs(entity.vx || 0) * 0.72;
+  }
+  if (entity.x > maxX) {
+    entity.x = maxX;
+    if (bounce) entity.vx = -Math.abs(entity.vx || 0) * 0.72;
+  }
+}
+
+function wrapAngle(angle) {
+  return Math.atan2(Math.sin(angle), Math.cos(angle));
+}
+
+function easeAngle(current, target, amount) {
+  return current + wrapAngle(target - current) * amount;
+}
+
+function drawRiverBankDetails(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const scene = fireworkFormSelect.value;
+  const flowerHues = scene === "moonbank" ? [212, 278, 318] : scene === "rapids" ? [44, 92, 184] : [48, 322, 286, 12];
+  canvasContext.save();
+  for (let side = 0; side < 2; side += 1) {
+    for (let i = 0; i < 28; i += 1) {
+      const y = ((i * 89 + side * 47 + Math.sin(turtleFrame * 0.004 + i) * 9) % 100) / 100 * height;
+      const bounds = riverBounds(width, height, y);
+      const bankEdge = side === 0 ? bounds.left : bounds.right;
+      const direction = side === 0 ? -1 : 1;
+      const drift = Math.sin(i * 12.989 + side * 78.23) * 0.5 + 0.5;
+      const x = bankEdge + direction * (width * (0.025 + drift * 0.115));
+      const scale = Math.min(width, height) * (0.006 + (i % 5) * 0.0015);
+      if (i % 4 === 0) {
+        canvasContext.fillStyle = scene === "moonbank" ? "rgba(170, 180, 194, 0.66)" : "rgba(116, 109, 92, 0.72)";
+        canvasContext.beginPath();
+        canvasContext.ellipse(x, y, scale * 2.4, scale * 1.35, Math.sin(i) * 0.7, 0, Math.PI * 2);
+        canvasContext.fill();
+        canvasContext.fillStyle = "rgba(255, 255, 255, 0.12)";
+        canvasContext.beginPath();
+        canvasContext.ellipse(x - scale * 0.45, y - scale * 0.25, scale * 0.65, scale * 0.32, -0.4, 0, Math.PI * 2);
+        canvasContext.fill();
+      } else if (i % 4 === 1) {
+        const hue = flowerHues[i % flowerHues.length] + trebleEnergy * 36;
+        canvasContext.strokeStyle = "rgba(43, 82, 39, 0.8)";
+        canvasContext.lineWidth = Math.max(1, scale * 0.28);
+        canvasContext.beginPath();
+        canvasContext.moveTo(x, y + scale * 2.8);
+        canvasContext.quadraticCurveTo(x + direction * scale * 0.8, y + scale * 0.8, x, y);
+        canvasContext.stroke();
+        for (let petal = 0; petal < 5; petal += 1) {
+          const angle = petal / 5 * Math.PI * 2 + turtleFrame * 0.012;
+          canvasContext.fillStyle = hsla(hue, 84, 66 + bassEnergy * 10, 0.78);
+          canvasContext.beginPath();
+          canvasContext.ellipse(x + Math.cos(angle) * scale, y + Math.sin(angle) * scale, scale * 0.82, scale * 0.42, angle, 0, Math.PI * 2);
+          canvasContext.fill();
+        }
+        canvasContext.fillStyle = "rgba(255, 234, 130, 0.9)";
+        canvasContext.beginPath();
+        canvasContext.arc(x, y, scale * 0.42, 0, Math.PI * 2);
+        canvasContext.fill();
+      } else {
+        canvasContext.strokeStyle = scene === "moonbank" ? "rgba(103, 139, 126, 0.58)" : "rgba(92, 143, 75, 0.64)";
+        canvasContext.lineWidth = Math.max(1, scale * 0.42);
+        for (let blade = 0; blade < 4; blade += 1) {
+          const lean = direction * (0.3 + blade * 0.16) + Math.sin(turtleFrame * 0.016 + i + blade) * 0.22;
+          canvasContext.beginPath();
+          canvasContext.moveTo(x, y + scale * 2);
+          canvasContext.quadraticCurveTo(x + lean * scale * 2, y - scale * 0.8, x + lean * scale * 2.5, y - scale * (2.3 + bassEnergy * 1.4));
+          canvasContext.stroke();
+        }
+      }
+    }
+  }
+  canvasContext.restore();
+}
+
+function drawTurtleRiverWorld(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const scene = fireworkFormSelect.value;
+  const bank = scene === "moonbank" ? "#172d26" : scene === "rapids" ? "#436638" : "#31552f";
+  const waterTop = scene === "moonbank" ? "#092234" : scene === "rapids" ? "#147780" : "#166b70";
+  const waterLow = scene === "moonbank" ? "#06121f" : scene === "rapids" ? "#6ed5d5" : "#1fa8a8";
+  canvasContext.fillStyle = bank;
+  canvasContext.fillRect(0, 0, width, height);
+  drawRiverBankDetails(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  canvasContext.beginPath();
+  for (let step = 0; step <= 36; step += 1) {
+    const y = height * step / 36;
+    const bounds = riverBounds(width, height, y);
+    if (step === 0) canvasContext.moveTo(bounds.left, y);
+    else canvasContext.lineTo(bounds.left, y);
+  }
+  for (let step = 36; step >= 0; step -= 1) {
+    const y = height * step / 36;
+    const bounds = riverBounds(width, height, y);
+    canvasContext.lineTo(bounds.right, y);
+  }
+  canvasContext.closePath();
+  const water = canvasContext.createLinearGradient(0, 0, 0, height);
+  water.addColorStop(0, waterTop);
+  water.addColorStop(0.55, "#0f5967");
+  water.addColorStop(1, waterLow);
+  canvasContext.fillStyle = water;
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = `rgba(230, 255, 250, ${0.16 + trebleEnergy * 0.22})`;
+  canvasContext.lineWidth = 1.2;
+  for (let stream = 0; stream < 22; stream += 1) {
+    const y = (stream * height * 0.075 + turtleFrame * (0.45 + bassEnergy * 1.2)) % height;
+    const bounds = riverBounds(width, height, y);
+    const x = bounds.left + (bounds.right - bounds.left) * ((stream * 37) % 100) / 100;
+    canvasContext.beginPath();
+    canvasContext.moveTo(x - width * 0.035, y);
+    canvasContext.quadraticCurveTo(x, y + height * 0.012, x + width * 0.055, y + height * 0.004);
+    canvasContext.stroke();
+  }
+}
+
+function drawPilotFish(canvasContext, fish, width, height, trebleEnergy) {
+  const size = Math.min(width, height) * 0.035 * (fish.sizeScale || 1);
+  fish.angle = Math.atan2(fish.vy, fish.vx || 1);
+  const hue = turtleSpectrumHue(fish.hueShift ?? 0.72, trebleEnergy);
+  canvasContext.save();
+  canvasContext.translate(fish.x, fish.y);
+  canvasContext.rotate(fish.angle);
+  const wiggle = Math.sin(turtleFrame * 0.14 + fish.wiggle) * size * 0.22;
+  canvasContext.fillStyle = hsla(hue, fish.kind === "silver" ? 34 : 84, fish.kind === "silver" ? 72 : 58 + fish.startled * 16, fish.pilot ? 0.98 : 0.82);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, size * (fish.kind === "round" ? 1.1 : 1.45), size * (fish.kind === "dart" ? 0.48 : 0.66), 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.fillStyle = hsla(hue + 34, 90, 68, 0.92);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 1.24, 0);
+  canvasContext.lineTo(-size * 2.05, -size * 0.72 + wiggle);
+  canvasContext.lineTo(-size * 1.82, size * 0.62 + wiggle);
+  canvasContext.closePath();
+  canvasContext.fill();
+  if (fish.kind === "stripe") {
+    canvasContext.strokeStyle = "rgba(255, 255, 255, 0.55)";
+    canvasContext.lineWidth = Math.max(1, size * 0.08);
+    for (let stripe = -1; stripe <= 1; stripe += 1) {
+      canvasContext.beginPath();
+      canvasContext.moveTo(stripe * size * 0.32, -size * 0.48);
+      canvasContext.lineTo(stripe * size * 0.12, size * 0.48);
+      canvasContext.stroke();
+    }
+  }
+  canvasContext.fillStyle = "rgba(255,255,255,0.9)";
+  canvasContext.beginPath();
+  canvasContext.arc(size * 0.72, -size * 0.18, size * 0.17, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.fillStyle = "rgba(5,10,12,0.92)";
+  canvasContext.beginPath();
+  canvasContext.arc(size * 0.77, -size * 0.16, size * 0.07, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+}
+
+function drawSnappingTurtle(canvasContext, turtle, width, height, intensity, bassEnergy) {
+  const hunger = handSizeMultiplier();
+  const munchiness = handGraspAmount();
+  const size = Math.min(width, height) * (0.035 + hunger * 0.018 + intensity * 0.012) * (turtle.sizeScale || 1);
+  const hue = turtleSpectrumHue(turtle.index / Math.max(1, riverTurtles.length - 1), intensity);
+  const angle = turtle.angle ?? (pilotFish ? Math.atan2(pilotFish.y - turtle.y, pilotFish.x - turtle.x) : 0);
+  const jaw = Math.max(turtle.jaw, Math.sin(turtleFrame * 0.12 + turtle.phase) * 0.2 + munchiness * intensity);
+  const paddle = Math.sin(turtleFrame * (0.11 + intensity * 0.09) + turtle.phase);
+  const blink = Math.max(0.15, Math.sin(turtleFrame * 0.025 + turtle.phase + turtle.eyeBias) > 0.94 ? 0.25 : 1);
+  const headLift = turtle.mood === "grand" ? -size * 0.08 : turtle.mood === "sleepy" ? size * 0.06 : 0;
+  canvasContext.save();
+  canvasContext.translate(turtle.x, turtle.y);
+  canvasContext.rotate(angle);
+
+  canvasContext.fillStyle = hsla(hue + 8, 36, 20 + intensity * 11, 0.94);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 1.12, 0);
+  canvasContext.lineTo(-size * 1.94, -size * 0.28 + paddle * size * 0.06);
+  canvasContext.lineTo(-size * 1.72, size * 0.3 + paddle * size * 0.08);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  const legPositions = [
+    [-0.58, -0.66, -1],
+    [0.56, -0.62, 1],
+    [-0.58, 0.66, 1],
+    [0.55, 0.62, -1],
+  ];
+  legPositions.forEach(([lx, ly, offset], legIndex) => {
+    const kick = Math.sin(turtleFrame * (0.13 + intensity * 0.1) + turtle.phase + legIndex * 1.7) * offset;
+    canvasContext.save();
+    canvasContext.translate(size * lx, size * ly);
+    canvasContext.rotate(kick * 0.48);
+    canvasContext.fillStyle = hsla(hue + 18, 38, 25 + intensity * 16, 0.9);
+    canvasContext.beginPath();
+    canvasContext.ellipse(0, 0, size * 0.34, size * 0.16, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.restore();
+  });
+
+  canvasContext.fillStyle = hsla(hue, 42, 24 + intensity * 16, 0.96);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, size * 1.25, size * 0.9, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.strokeStyle = hsla(hue + 28, 56, 48, 0.7);
+  canvasContext.lineWidth = 2;
+  canvasContext.stroke();
+  canvasContext.strokeStyle = hsla(hue + 46, 58, 50 + intensity * 14, 0.32 + bassEnergy * 0.28);
+  canvasContext.lineWidth = Math.max(1, size * 0.055);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, size * 0.82, size * 0.56, 0, 0, Math.PI * 2);
+  canvasContext.stroke();
+  for (let seam = -1; seam <= 1; seam += 1) {
+    canvasContext.beginPath();
+    if (turtle.shellPattern === 0) {
+      canvasContext.moveTo(-size * 0.72, seam * size * 0.22);
+      canvasContext.quadraticCurveTo(0, seam * size * 0.44, size * 0.72, seam * size * 0.22);
+    } else if (turtle.shellPattern === 1) {
+      canvasContext.moveTo(seam * size * 0.24, -size * 0.54);
+      canvasContext.quadraticCurveTo(seam * size * 0.42, 0, seam * size * 0.24, size * 0.54);
+    } else {
+      canvasContext.moveTo(-size * 0.58, seam * size * 0.34);
+      canvasContext.lineTo(size * 0.58, -seam * size * 0.34);
+    }
+    canvasContext.stroke();
+  }
+
+  canvasContext.fillStyle = hsla(hue + 20, 45, 28 + bassEnergy * 20, 0.96);
+  canvasContext.beginPath();
+  canvasContext.ellipse(size * 1.15, headLift, size * 0.55, size * 0.42, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.strokeStyle = `rgba(250, 250, 220, ${0.6 + jaw * 0.28})`;
+  canvasContext.lineWidth = Math.max(1, size * 0.09);
+  canvasContext.beginPath();
+  canvasContext.moveTo(size * 1.45, headLift - size * (0.12 + jaw * 0.32));
+  canvasContext.lineTo(size * (1.92 + jaw * 0.55), headLift - size * (0.36 + jaw * 0.35));
+  canvasContext.moveTo(size * 1.45, headLift + size * (0.12 + jaw * 0.32));
+  canvasContext.lineTo(size * (1.92 + jaw * 0.55), headLift + size * (0.36 + jaw * 0.35));
+  canvasContext.stroke();
+
+  const eyeY = turtle.mood === "nervous" ? -size * 0.24 : -size * 0.2;
+  canvasContext.fillStyle = turtle.mood === "furious" ? "rgba(255, 236, 190, 0.96)" : "rgba(245, 255, 236, 0.9)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(size * 1.34, headLift + eyeY, size * 0.11, size * 0.08 * blink, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.fillStyle = turtle.mood === "sleepy" ? "rgba(20, 30, 20, 0.65)" : "rgba(0, 0, 0, 0.88)";
+  canvasContext.beginPath();
+  canvasContext.arc(size * (1.37 + jaw * 0.03), headLift + eyeY, size * 0.045, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.strokeStyle = turtle.mood === "furious" ? "rgba(45, 12, 8, 0.9)" : "rgba(9, 22, 15, 0.72)";
+  canvasContext.lineWidth = Math.max(1, size * 0.055);
+  canvasContext.beginPath();
+  const browTilt = turtle.mood === "furious" ? 0.18 : turtle.mood === "smug" ? -0.12 : turtle.mood === "nervous" ? 0.06 : 0;
+  canvasContext.moveTo(size * 1.22, headLift + eyeY - size * (0.16 + browTilt));
+  canvasContext.lineTo(size * 1.5, headLift + eyeY - size * (0.1 - browTilt));
+  canvasContext.stroke();
+  canvasContext.restore();
+}
+
+function drawRiverRipples(canvasContext) {
+  riverRipples = riverRipples.filter((ripple) => ripple.life > 0.02);
+  riverRipples.forEach((ripple) => {
+    ripple.life *= 0.94;
+    ripple.radius += ripple.growth;
+    canvasContext.strokeStyle = hsla(ripple.hue, 86, 72, ripple.life * 0.5);
+    canvasContext.lineWidth = Math.max(1, ripple.life * 3);
+    canvasContext.beginPath();
+    canvasContext.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+    canvasContext.stroke();
+  });
+}
+
+function allRiverFish() {
+  return [pilotFish, ...riverFish].filter(Boolean);
+}
+
+function nearestFish(turtle, fishList) {
+  return fishList.reduce((nearest, fish) => {
+    const distance = Math.hypot(turtle.x - fish.x, turtle.y - fish.y);
+    if (!nearest || distance < nearest.distance) {
+      return { fish, distance };
+    }
+    return nearest;
+  }, null);
+}
+
+function updateShoalFish(width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  riverFish = riverFish.filter((fish) => fish.life > 0.02);
+  setupRiverFish(width, height);
+  riverFish.forEach((fish, index) => {
+    const swim = 0.7 + fish.sizeScale * 0.6 + trebleEnergy * 1.4;
+    fish.vx += Math.sin(turtleFrame * 0.035 + fish.phase) * 0.06 + (Math.random() - 0.5) * 0.04;
+    fish.vy += 0.025 + bassEnergy * 0.06 + Math.cos(turtleFrame * 0.026 + fish.phase) * 0.04;
+    if (index % 5 === 0 && pilotFish) {
+      fish.vx += (pilotFish.x - fish.x) * 0.0008;
+      fish.vy += (pilotFish.y - fish.y) * 0.0006;
+    }
+    fish.vx *= 0.96;
+    fish.vy *= 0.965;
+    fish.x += fish.vx * swim;
+    fish.y += fish.vy * swim;
+    clampToRiver(fish, width, height, Math.min(width, height) * (0.028 + fish.sizeScale * 0.018));
+    if (fish.y > height * 0.96) {
+      fish.y = height * 0.06;
+      const resetBounds = riverBounds(width, height, fish.y);
+      fish.x = resetBounds.left + Math.random() * Math.max(20, resetBounds.right - resetBounds.left);
+      clampToRiver(fish, width, height, Math.min(width, height) * (0.028 + fish.sizeScale * 0.018), false);
+    }
+    if (fish.y < height * 0.04) fish.vy = Math.abs(fish.vy);
+    fish.startled *= 0.86;
+  });
+}
+
+function drawTurtleRiverScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  const grievance = fireworkSpeedMultiplier();
+  const hunger = handSizeMultiplier();
+  const munchiness = handGraspAmount();
+  turtleFrame += grievance * (0.8 + midsEnergy * 0.6);
+  setupPilotFish(width, height);
+  setupRiverTurtles(width, height);
+  updateShoalFish(width, height, bassEnergy, midsEnergy, trebleEnergy);
+
+  const acceleration = 0.22 + trebleEnergy * 0.12;
+  if (asteroidKeys.has("KeyA")) pilotFish.vx -= acceleration;
+  if (asteroidKeys.has("KeyD")) pilotFish.vx += acceleration;
+  if (asteroidKeys.has("KeyW")) pilotFish.vy -= acceleration;
+  if (asteroidKeys.has("KeyS")) pilotFish.vy += acceleration;
+  pilotFish.vx *= 0.94;
+  pilotFish.vy *= 0.94;
+  pilotFish.y += (0.32 + bassEnergy * 1.4) * grievance;
+  pilotFish.x += pilotFish.vx;
+  pilotFish.y += pilotFish.vy;
+  clampToRiver(pilotFish, width, height, Math.min(width, height) * 0.062);
+  if (pilotFish.y > height * 0.94) pilotFish.y = height * 0.08;
+  if (pilotFish.y < height * 0.06) pilotFish.y = height * 0.92;
+  clampToRiver(pilotFish, width, height, Math.min(width, height) * 0.062);
+  pilotFish.startled *= 0.88;
+  const fishList = allRiverFish();
+
+  riverTurtles.forEach((turtle, index) => {
+    const intensity = intensities[index % intensities.length];
+    const patrolBias = turtle.behaviour === "patrol" ? 0.88 : turtle.behaviour === "ambush" ? 0.34 : 0.08;
+    if (turtleFrame > turtle.targetUntil || (turtle.targetFish && turtle.targetFish.life <= 0.02)) {
+      const nearest = nearestFish(turtle, fishList);
+      turtle.targetFish = Math.random() < patrolBias ? null : (nearest?.fish || pilotFish);
+      turtle.targetUntil = turtleFrame + 22 + Math.random() * 44 + (turtle.behaviour === "patrol" ? 36 : 0);
+    }
+    const targetFish = turtle.targetFish;
+    const bankBounds = riverBounds(width, height, turtle.y);
+    const homeBounds = riverBounds(width, height, turtle.homeY);
+    const laneTarget = Math.max(0.12, Math.min(0.88, turtle.lane + Math.sin(turtleFrame * 0.012 + turtle.phase) * (0.08 + turtle.laneDrift)));
+    let targetX = homeBounds.left + (homeBounds.right - homeBounds.left) * laneTarget;
+    let targetY = turtle.homeY + Math.cos(turtleFrame * 0.018 + turtle.phase) * height * (0.055 + intensity * 0.04);
+    if (targetFish && turtle.behaviour !== "ambush") {
+      const attackOffset = Math.sin(turtleFrame * 0.018 + turtle.phase) * width * (0.025 + (1 - munchiness) * 0.035);
+      targetX = targetFish.x + attackOffset + (turtle.side * -1) * width * (0.02 + (1 - munchiness) * 0.04);
+      targetY = targetFish.y + Math.sin(turtleFrame * 0.022 + turtle.phase) * height * (0.08 + index % 3 * 0.025);
+    } else if (targetFish && turtle.behaviour === "ambush") {
+      targetX = targetFish.x * 0.35 + (turtle.side < 0 ? bankBounds.left + 30 : bankBounds.right - 30) * 0.65;
+      targetY = targetFish.y + Math.sin(turtleFrame * 0.015 + turtle.phase) * height * 0.06;
+    }
+    turtle.grievance = turtle.grievance * 0.88 + intensity * 0.12;
+    const behaviourBoost = turtle.behaviour === "chase" ? 1.55 : turtle.behaviour === "snapper" ? 1.25 : turtle.behaviour === "ambush" ? 0.78 : 0.55;
+    turtle.x += (targetX - turtle.x) * (0.002 + grievance * 0.002 + turtle.grievance * 0.012) * behaviourBoost;
+    turtle.y += (targetY - turtle.y) * (0.004 + hunger * 0.002 + munchiness * 0.008) * behaviourBoost;
+    turtle.x += Math.sin(turtleFrame * 0.035 + turtle.phase) * (0.4 + grievance * 0.35);
+    riverTurtles.forEach((other, otherIndex) => {
+      if (otherIndex === index) return;
+      const distance = Math.hypot(turtle.x - other.x, turtle.y - other.y);
+      const spread = Math.min(width, height) * (0.095 + hunger * 0.02);
+      if (distance > 0 && distance < spread) {
+        const push = (spread - distance) / spread * (0.5 + intensity * 0.7);
+        turtle.x += (turtle.x - other.x) / distance * push;
+        turtle.y += (turtle.y - other.y) / distance * push * 0.7;
+      }
+    });
+    const desiredAngle = Math.atan2((targetFish?.y || targetY) - turtle.y, (targetFish?.x || targetX) - turtle.x);
+    turtle.angle = easeAngle(turtle.angle ?? desiredAngle, desiredAngle, 0.045 + intensity * 0.055 + grievance * 0.02);
+    turtle.y = Math.max(height * 0.08, Math.min(height * 0.92, turtle.y));
+    clampToRiver(turtle, width, height, Math.min(width, height) * (0.076 + hunger * 0.034), false);
+    const liveTarget = nearestFish(turtle, allRiverFish());
+    const snapFish = liveTarget?.fish || pilotFish;
+    const distance = liveTarget?.distance ?? Math.hypot(turtle.x - pilotFish.x, turtle.y - pilotFish.y);
+    const snapRange = Math.min(width, height) * (0.055 + hunger * 0.022 + munchiness * 0.036);
+    if (distance < snapRange && Math.random() < (0.04 + munchiness * 0.18 + bassEnergy * 0.1) * grievance) {
+      turtle.jaw = 1;
+      snapFish.startled = 1;
+      snapFish.vx += (snapFish.x - turtle.x) / Math.max(1, distance) * (5 + munchiness * 4);
+      snapFish.vy += (snapFish.y - turtle.y) / Math.max(1, distance) * (4 + hunger * 3);
+      if (!snapFish.pilot && Math.random() < munchiness * 0.72 + hunger * 0.08) {
+        snapFish.life = 0;
+        riverRipples.push({ x: snapFish.x, y: snapFish.y, radius: 5, growth: 5 + munchiness * 8, life: 1.1, hue: turtleSpectrumHue(snapFish.hueShift, intensity) });
+      } else if (snapFish.pilot && Math.random() < munchiness * 0.24) {
+        snapFish.x = width * 0.5;
+        snapFish.y = height * 0.1;
+        riverRipples.push({ x: turtle.x, y: turtle.y, radius: 10, growth: 5 + munchiness * 7, life: 1.2, hue: turtleSpectrumHue(index / riverTurtles.length, intensity) });
+      }
+      riverRipples.push({ x: snapFish.x, y: snapFish.y, radius: 6, growth: 3 + munchiness * 5, life: 1, hue: turtleSpectrumHue(index / riverTurtles.length, intensity) });
+    }
+    turtle.jaw *= 0.78;
+  });
+
+  drawTurtleRiverWorld(canvasContext, width, height, bassEnergy, trebleEnergy);
+  drawRiverRipples(canvasContext);
+  riverTurtles.forEach((turtle, index) => drawSnappingTurtle(canvasContext, turtle, width, height, intensities[index % intensities.length], bassEnergy));
+  riverFish.forEach((fish) => drawPilotFish(canvasContext, fish, width, height, trebleEnergy));
+  drawPilotFish(canvasContext, pilotFish, width, height, trebleEnergy);
+}
+
+function drawTurtleRiverFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.34);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 54), 1.32);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.42);
+  const intensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.38));
+  drawTurtleRiverScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
+}
+
+function cathedralHue(progress, intensity) {
+  const glass = themeSelect.value;
+  if (glass === "ice") return 190 + progress * 72 + intensity * 34;
+  if (glass === "ember") return 12 + progress * 48 + intensity * 28;
+  if (glass === "pressure") return 330 - progress * 250 + intensity * 78;
+  if (glass === "spectrum") return (286 - progress * 286 + intensity * 96 + 360) % 360;
+  return 150 + progress * 82 + intensity * 28;
+}
+
+function setupCathedralFigures(width, height) {
+  const desired = Math.max(5, Math.min(28, handCountValueNumber() * 2));
+  while (cathedralFigures.length < desired) {
+    const index = cathedralFigures.length;
+    cathedralFigures.push({
+      x: width * (0.18 + Math.random() * 0.64),
+      y: height * (0.64 + Math.random() * 0.26),
+      lane: 0.2 + Math.random() * 0.6,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.28 + Math.random() * 0.82,
+      heightScale: 0.65 + Math.random() * 0.8,
+      hueShift: index / Math.max(1, desired - 1),
+      sway: Math.random() * Math.PI * 2,
+    });
+  }
+  if (cathedralFigures.length > desired) {
+    cathedralFigures.splice(desired);
+  }
+}
+
+function drawCathedralWindow(canvasContext, x, y, radius, petals, intensity, bassEnergy) {
+  canvasContext.save();
+  canvasContext.translate(x, y);
+  canvasContext.globalCompositeOperation = "lighter";
+  for (let ring = 0; ring < 3; ring += 1) {
+    const ringRadius = radius * (0.38 + ring * 0.25);
+    const count = petals + ring * 4;
+    for (let petal = 0; petal < count; petal += 1) {
+      const angle = petal / count * Math.PI * 2 + cathedralFrame * 0.004 * (ring + 1);
+      const hue = cathedralHue((petal + ring) / count, intensity);
+      canvasContext.fillStyle = hsla(hue, 92, 54 + intensity * 22, 0.22 + intensity * 0.28);
+      canvasContext.beginPath();
+      canvasContext.moveTo(Math.cos(angle) * ringRadius * 0.28, Math.sin(angle) * ringRadius * 0.28);
+      canvasContext.ellipse(Math.cos(angle) * ringRadius, Math.sin(angle) * ringRadius, radius * 0.13, radius * (0.28 + bassEnergy * 0.18), angle, 0, Math.PI * 2);
+      canvasContext.fill();
+    }
+  }
+  canvasContext.globalCompositeOperation = "source-over";
+  canvasContext.strokeStyle = "rgba(238, 222, 190, 0.48)";
+  canvasContext.lineWidth = Math.max(1, radius * 0.035);
+  canvasContext.beginPath();
+  canvasContext.arc(0, 0, radius, 0, Math.PI * 2);
+  canvasContext.stroke();
+  canvasContext.beginPath();
+  canvasContext.arc(0, 0, radius * 0.22, 0, Math.PI * 2);
+  canvasContext.stroke();
+  canvasContext.restore();
+}
+
+function drawCathedralFigure(canvasContext, figure, width, height, intensity, trebleEnergy) {
+  const depth = (figure.y - height * 0.58) / Math.max(1, height * 0.34);
+  const size = Math.min(width, height) * (0.018 + depth * 0.026) * figure.heightScale;
+  const hue = cathedralHue(figure.hueShift, intensity + trebleEnergy * 0.5);
+  const sway = Math.sin(cathedralFrame * 0.035 + figure.sway) * size * (0.18 + intensity * 0.35);
+  canvasContext.save();
+  canvasContext.translate(figure.x + sway, figure.y);
+  canvasContext.globalCompositeOperation = "lighter";
+  const aura = canvasContext.createRadialGradient(0, -size * 0.8, 0, 0, -size * 0.8, size * 2.8);
+  aura.addColorStop(0, hsla(hue, 96, 64, 0.16 + intensity * 0.22));
+  aura.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = aura;
+  canvasContext.fillRect(-size * 3, -size * 4, size * 6, size * 6);
+  canvasContext.globalCompositeOperation = "source-over";
+  canvasContext.fillStyle = hsla(hue, 88, 70, 0.74 + intensity * 0.18);
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 1.36, size * 0.36, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -size * 1.06);
+  canvasContext.quadraticCurveTo(size * 0.72, -size * 0.16, size * 0.48, size * 1.18);
+  canvasContext.lineTo(-size * 0.5, size * 1.18);
+  canvasContext.quadraticCurveTo(-size * 0.72, -size * 0.16, 0, -size * 1.06);
+  canvasContext.fill();
+  canvasContext.restore();
+}
+
+function drawCathedralOrganismScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  const architecture = fireworkFormSelect.value;
+  const breath = fireworkSpeedMultiplier();
+  const flex = handSizeMultiplier();
+  const sentience = handGraspAmount();
+  cathedralFrame += breath * (0.82 + bassEnergy * 0.9 + midsEnergy * 0.34);
+  setupCathedralFigures(width, height);
+
+  const inhale = Math.sin(cathedralFrame * 0.035) * (0.5 + bassEnergy * 0.9) * flex;
+  const livingLean = Math.sin(cathedralFrame * 0.018 + midsEnergy * 2) * width * 0.018 * sentience;
+  const gloom = canvasContext.createLinearGradient(0, 0, 0, height);
+  gloom.addColorStop(0, architecture === "ruinedabbey" ? "#110c15" : architecture === "byzantine" ? "#17101e" : "#080a12");
+  gloom.addColorStop(0.5, architecture === "byzantine" ? "#24172a" : "#0d1320");
+  gloom.addColorStop(1, "#020306");
+  canvasContext.fillStyle = gloom;
+  canvasContext.fillRect(0, 0, width, height);
+
+  const vanishingY = height * (0.36 + bassEnergy * 0.04);
+  const aisle = canvasContext.createLinearGradient(0, height * 0.45, 0, height);
+  aisle.addColorStop(0, "rgba(58, 44, 52, 0.18)");
+  aisle.addColorStop(1, "rgba(190, 126, 62, 0.2)");
+  canvasContext.fillStyle = aisle;
+  canvasContext.beginPath();
+  canvasContext.moveTo(width * 0.43, vanishingY);
+  canvasContext.lineTo(width * 0.57, vanishingY);
+  canvasContext.lineTo(width * 0.78, height);
+  canvasContext.lineTo(width * 0.22, height);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  for (let side = -1; side <= 1; side += 2) {
+    for (let i = 0; i < 7; i += 1) {
+      const depth = i / 6;
+      const baseX = width * (0.5 + side * (0.12 + depth * 0.31));
+      const baseY = height * (0.38 + depth * 0.54);
+      const archHeight = height * (0.34 - depth * 0.14) * (1 + inhale * 0.045);
+      const archWidth = width * (0.12 + depth * 0.03) * (1 - inhale * 0.026);
+      const x = baseX + side * livingLean * (0.3 + depth);
+      const hue = cathedralHue(depth, intensities[i % intensities.length]);
+      canvasContext.strokeStyle = hsla(hue, 54, architecture === "ruinedabbey" ? 48 : 58, 0.26 + intensities[i % intensities.length] * 0.32);
+      canvasContext.lineWidth = Math.max(2, width * (0.008 + depth * 0.012));
+      canvasContext.beginPath();
+      canvasContext.moveTo(x - side * archWidth * 0.48, baseY);
+      canvasContext.bezierCurveTo(
+        x - side * archWidth * 0.7,
+        baseY - archHeight * 0.58,
+        width * 0.5 + side * livingLean * 0.12,
+        baseY - archHeight,
+        width * 0.5,
+        baseY - archHeight * (0.96 + sentience * 0.05),
+      );
+      canvasContext.bezierCurveTo(
+        width * 0.5 - side * livingLean * 0.12,
+        baseY - archHeight,
+        width - (x - side * archWidth * 0.48),
+        baseY - archHeight * 0.58,
+        width - (x - side * archWidth * 0.48),
+        baseY,
+      );
+      canvasContext.stroke();
+    }
+  }
+
+  const windowIntensity = Math.max(...intensities);
+  drawCathedralWindow(canvasContext, width * 0.5 + livingLean * 0.2, height * 0.23 + inhale * height * 0.012, Math.min(width, height) * (0.14 + flex * 0.018 + bassEnergy * 0.025), architecture === "byzantine" ? 18 : 14, windowIntensity, bassEnergy);
+
+  const panelCount = architecture === "ruinedabbey" ? 9 : 12;
+  for (let panel = 0; panel < panelCount; panel += 1) {
+    const side = panel % 2 === 0 ? -1 : 1;
+    const row = Math.floor(panel / 2);
+    const x = width * (0.18 + row * 0.07 + (side > 0 ? 0.5 : 0));
+    const y = height * (0.2 + (row % 4) * 0.105);
+    const w = width * 0.055;
+    const h = height * 0.12;
+    const intensity = intensities[panel % intensities.length];
+    const hue = cathedralHue(panel / panelCount, intensity);
+    canvasContext.fillStyle = hsla(hue, 88, 48 + intensity * 25, 0.14 + intensity * 0.28);
+    canvasContext.beginPath();
+    canvasContext.moveTo(x, y + h);
+    canvasContext.lineTo(x, y + h * 0.28);
+    canvasContext.quadraticCurveTo(x + w * 0.5, y - h * 0.22, x + w, y + h * 0.28);
+    canvasContext.lineTo(x + w, y + h);
+    canvasContext.closePath();
+    canvasContext.fill();
+    canvasContext.strokeStyle = "rgba(238, 222, 190, 0.28)";
+    canvasContext.lineWidth = 1.2;
+    canvasContext.stroke();
+  }
+
+  for (let candle = 0; candle < 42; candle += 1) {
+    const side = candle % 2 === 0 ? -1 : 1;
+    const depth = (candle % 21) / 20;
+    const x = width * (0.5 + side * (0.1 + depth * 0.31));
+    const y = height * (0.54 + depth * 0.4);
+    const flame = Math.sin(cathedralFrame * (0.09 + trebleEnergy * 0.14) + candle) * 0.5 + 0.5;
+    const size = Math.min(width, height) * (0.004 + depth * 0.008);
+    canvasContext.fillStyle = "rgba(226, 204, 168, 0.48)";
+    canvasContext.fillRect(x - size * 0.18, y, size * 0.36, size * 3.4);
+    canvasContext.fillStyle = hsla(38 + flame * 20, 100, 58 + trebleEnergy * 18, 0.52 + flame * 0.34);
+    canvasContext.beginPath();
+    canvasContext.ellipse(x + Math.sin(cathedralFrame * 0.11 + candle) * size * 0.25, y - size * 0.5, size * (0.8 + trebleEnergy), size * (1.5 + flame), 0, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  cathedralFigures.forEach((figure, index) => {
+    const intensity = intensities[index % intensities.length];
+    figure.x += Math.sin(cathedralFrame * 0.012 + figure.phase) * figure.speed * (0.12 + midsEnergy * 0.7);
+    figure.y += Math.cos(cathedralFrame * 0.01 + figure.phase) * figure.speed * 0.09;
+    if (figure.x < width * 0.18) figure.x = width * 0.78;
+    if (figure.x > width * 0.82) figure.x = width * 0.22;
+    drawCathedralFigure(canvasContext, figure, width, height, intensity, trebleEnergy);
+  });
+
+  if (Math.random() < (0.06 + trebleEnergy * 0.2 + sentience * 0.12) * breath && cathedralSparks.length < 90) {
+    cathedralSparks.push({
+      x: width * (0.18 + Math.random() * 0.64),
+      y: height * (0.18 + Math.random() * 0.7),
+      vx: (Math.random() - 0.5) * 0.45,
+      vy: -0.25 - Math.random() * 0.7,
+      life: 1,
+      hue: cathedralHue(Math.random(), trebleEnergy),
+    });
+  }
+  cathedralSparks = cathedralSparks.filter((spark) => spark.life > 0.03);
+  cathedralSparks.forEach((spark) => {
+    spark.x += spark.vx + Math.sin(cathedralFrame * 0.02 + spark.y) * 0.18 * sentience;
+    spark.y += spark.vy;
+    spark.life *= 0.965;
+    canvasContext.fillStyle = hsla(spark.hue, 94, 68, spark.life * 0.58);
+    canvasContext.beginPath();
+    canvasContext.arc(spark.x, spark.y, Math.min(width, height) * 0.004 * spark.life, 0, Math.PI * 2);
+    canvasContext.fill();
+  });
+
+  if (sentience > 0.52) {
+    canvasContext.strokeStyle = `rgba(255, 245, 218, ${(sentience - 0.45) * 0.18 + bassEnergy * 0.08})`;
+    canvasContext.lineWidth = Math.max(1, width * 0.002);
+    for (let nerve = 0; nerve < 16; nerve += 1) {
+      const y = height * (0.2 + nerve * 0.045);
+      canvasContext.beginPath();
+      canvasContext.moveTo(width * 0.22, y);
+      canvasContext.bezierCurveTo(width * 0.38, y + Math.sin(cathedralFrame * 0.026 + nerve) * height * 0.04, width * 0.62, y - Math.cos(cathedralFrame * 0.022 + nerve) * height * 0.035, width * 0.78, y);
+      canvasContext.stroke();
+    }
+  }
+}
+
+function drawCathedralOrganismFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 9), 1.34);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 58), 1.28);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 62, 112), 1.38);
+  const intensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.34));
+  drawCathedralOrganismScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -6356,7 +7700,13 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "sunflowersmiles") {
+  if (visualizerSelect.value === "cathedralorganism") {
+    drawIdleCathedralOrganism();
+  } else if (visualizerSelect.value === "turtleriver") {
+    drawIdleTurtleRiver();
+  } else if (visualizerSelect.value === "warofroses") {
+    drawIdleWarOfRoses();
+  } else if (visualizerSelect.value === "sunflowersmiles") {
     drawIdleSunflowerSmiles();
   } else if (visualizerSelect.value === "interzoneoracles") {
     drawIdleInterzoneOracles();
@@ -6402,6 +7752,7 @@ function drawIdleVisualizer() {
     drawIdleEqualizer();
   }
   drawStagePulse(canvasContext);
+  drawFullscreenInfo(canvasContext);
 }
 
 function drawIdleArrowStorm() {
@@ -6823,6 +8174,63 @@ function drawIdleSunflowerSmiles() {
   }
 }
 
+function drawIdleWarOfRoses() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(roseFrame * 0.035) * 0.5;
+  const shimmer = 0.5 + Math.sin(roseFrame * 0.061 + 1.2) * 0.5;
+  const intensities = fireworksBands.map((band, index) => 0.12 + pulse * 0.18 + (index % 2) * shimmer * 0.09);
+  drawWarOfRosesScene(canvasContext, width, height, 0.12 + pulse * 0.16, 0.12 + shimmer * 0.16, 0.13 + (1 - pulse) * 0.18, intensities);
+
+  if (visualizerSelect.value === "warofroses" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
+function drawIdleTurtleRiver() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(turtleFrame * 0.036) * 0.5;
+  const glint = 0.5 + Math.sin(turtleFrame * 0.065 + 1.1) * 0.5;
+  const intensities = fireworksBands.map((band, index) => 0.12 + pulse * 0.16 + (index % 2) * glint * 0.1);
+  drawTurtleRiverScene(canvasContext, width, height, 0.12 + pulse * 0.18, 0.12 + glint * 0.14, 0.14 + (1 - pulse) * 0.18, intensities);
+
+  if (visualizerSelect.value === "turtleriver" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
+function drawIdleCathedralOrganism() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(cathedralFrame * 0.035) * 0.5;
+  const shimmer = 0.5 + Math.sin(cathedralFrame * 0.061 + 0.8) * 0.5;
+  const intensities = fireworksBands.map((band, index) => 0.18 + pulse * 0.18 + (index % 2) * shimmer * 0.12);
+  drawCathedralOrganismScene(canvasContext, width, height, 0.16 + pulse * 0.2, 0.15 + shimmer * 0.16, 0.15 + (1 - pulse) * 0.2, intensities);
+
+  if (visualizerSelect.value === "cathedralorganism" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleLightning() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -6937,6 +8345,16 @@ function resizeCanvas() {
   interzoneWisps = [];
   sunflowerFaces = [];
   sunflowerInsects = [];
+  roseUnits = [];
+  rosePetals = [];
+  roseSlashes = [];
+  pilotFish = null;
+  riverFish = [];
+  riverTurtles = [];
+  riverRipples = [];
+  cathedralFrame = 0;
+  cathedralFigures = [];
+  cathedralSparks = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -6976,6 +8394,7 @@ themeSelect.addEventListener("change", () => {
 
 window.addEventListener("pointermove", (event) => {
   const bounds = visualizer.getBoundingClientRect();
+  pulseFullscreenInfo();
   if (!bounds.width || !bounds.height) {
     return;
   }
@@ -7037,6 +8456,9 @@ visualizerSelect.addEventListener("change", () => {
     asteroids: "Playable Asteroids music visualisation",
     interzoneoracles: "Interzone Oracles frequency visualisation",
     sunflowersmiles: "Sunflower Smiles frequency visualisation",
+    warofroses: "War of the Roses frequency visualisation",
+    turtleriver: "Pilot fish in snapping turtle river visualisation",
+    cathedralorganism: "Living stained glass cathedral music visualisation",
   };
 
   visualizer.setAttribute(
@@ -7044,6 +8466,15 @@ visualizerSelect.addEventListener("change", () => {
     visualizerLabels[visualizerSelect.value] || visualizerLabels.equalizer,
   );
   syncVisualizerControls();
+  if (visualizerSelect.value === "cathedralorganism") {
+    fireworkSpeed.value = fireworkSpeed.max;
+    handSize.value = handSize.max;
+    handCount.value = handCount.max;
+    handGrasp.value = handGrasp.max;
+    themeSelect.value = "spectrum";
+    updateFireworkSpeedLabel();
+    updateHandControlLabels();
+  }
   restartVisualizer();
 });
 
@@ -7087,6 +8518,16 @@ handCount.addEventListener("input", () => {
   interzoneWisps = [];
   sunflowerFaces = [];
   sunflowerInsects = [];
+  roseUnits = [];
+  rosePetals = [];
+  roseSlashes = [];
+  pilotFish = null;
+  riverFish = [];
+  riverTurtles = [];
+  riverRipples = [];
+  cathedralFrame = 0;
+  cathedralFigures = [];
+  cathedralSparks = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
@@ -7172,6 +8613,18 @@ function handleGlobalKey(event) {
   if (lowerKey === "t") {
     event.preventDefault();
     roarTipusTiger();
+    return;
+  }
+
+  if (visualizerSelect.value === "turtleriver" && ["KeyA", "KeyD", "KeyW", "KeyS"].includes(code)) {
+    event.preventDefault();
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+    asteroidKeys.add(code);
+    if (!animationId) {
+      drawIdleVisualizer();
+    }
     return;
   }
 
