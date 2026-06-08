@@ -112,6 +112,7 @@ let hypnoticFrame = 0;
 let hypnoticFigures = [];
 let hypnoticMonsters = [];
 let hypnoticBlobs = [];
+let kaleidoscopeFrame = 0;
 let stagePulse = null;
 let fullscreenInfoPulse = null;
 let spectrumPad = {
@@ -527,6 +528,21 @@ const visualizerConfigs = {
       ["liquid", "Liquid panic"],
       ["prismatic", "Prismatic fever"],
       ["nocturne", "Nocturne"],
+    ],
+  },
+  kaleidoscope: {
+    ariaLabel: "Kaleidoscope frequency visualisation",
+    controls: { theme: false, size: true, count: true, grasp: true },
+    labels: { form: "Octagon", speed: "Pulse", size: "Morph", count: "Mirrors", grasp: "Trip" },
+    forms: [
+      ["vivid", "Drink Me vivid"],
+      ["woodland", "Woodland hush"],
+      ["garden", "Garden glass"],
+      ["psychedelia", "Gonzo psychedelia"],
+      ["tea", "Mad tea party"],
+      ["cheshire", "Cheshire violet"],
+      ["absinthe", "Absinthe meadow"],
+      ["midnight", "Midnight rabbit"],
     ],
   },
 };
@@ -1137,6 +1153,7 @@ function restartVisualizer() {
   hypnoticFigures = [];
   hypnoticMonsters = [];
   hypnoticBlobs = [];
+  kaleidoscopeFrame = 0;
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -1452,7 +1469,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "hypnoticflight") {
+      if (visualizerSelect.value === "kaleidoscope") {
+        drawKaleidoscopeFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "hypnoticflight") {
         drawHypnoticFlightFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "cathedralorganism") {
         drawCathedralOrganismFrame(canvasContext, buffer);
@@ -6960,6 +6979,262 @@ function drawHypnoticFlightFrame(canvasContext, buffer) {
   drawHypnoticFlightScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
 }
 
+const kaleidoscopePalettes = {
+  vivid: [
+    [184, 100, 58],
+    [310, 100, 62],
+    [42, 100, 58],
+    [116, 92, 52],
+    [232, 100, 64],
+  ],
+  woodland: [
+    [92, 42, 42],
+    [124, 38, 34],
+    [38, 48, 48],
+    [154, 32, 42],
+    [18, 38, 45],
+  ],
+  garden: [
+    [330, 72, 62],
+    [112, 58, 48],
+    [52, 78, 62],
+    [186, 54, 58],
+    [12, 64, 58],
+  ],
+  psychedelia: [
+    [288, 100, 58],
+    [32, 100, 56],
+    [172, 100, 50],
+    [236, 100, 62],
+    [86, 100, 54],
+  ],
+  tea: [
+    [18, 84, 54],
+    [198, 88, 58],
+    [48, 92, 62],
+    [316, 74, 60],
+    [132, 58, 48],
+  ],
+  cheshire: [
+    [282, 82, 48],
+    [318, 88, 62],
+    [210, 78, 58],
+    [168, 68, 54],
+    [24, 72, 58],
+  ],
+  absinthe: [
+    [74, 92, 58],
+    [112, 84, 46],
+    [162, 68, 48],
+    [46, 70, 62],
+    [286, 54, 58],
+  ],
+  midnight: [
+    [230, 78, 32],
+    [266, 70, 42],
+    [194, 84, 46],
+    [318, 72, 52],
+    [52, 82, 64],
+  ],
+};
+
+const kaleidoscopePaletteOrder = [
+  "vivid",
+  "woodland",
+  "garden",
+  "psychedelia",
+  "tea",
+  "cheshire",
+  "absinthe",
+  "midnight",
+];
+
+function kaleidoscopePalette() {
+  return kaleidoscopePalettes[fireworkFormSelect.value] || kaleidoscopePalettes.vivid;
+}
+
+function kaleidoscopePaletteIndex() {
+  return Math.max(0, kaleidoscopePaletteOrder.indexOf(fireworkFormSelect.value));
+}
+
+function kaleidoscopeColour(palette, index, intensity = 0, alpha = 1, hueShift = 0) {
+  const colour = palette[index % palette.length];
+  return hsla(
+    colour[0] + hueShift + intensity * 54,
+    clampNumber(colour[1] + intensity * 12, 0, 100),
+    clampNumber(colour[2] + intensity * 16, 0, 100),
+    alpha,
+  );
+}
+
+function drawKaleidoscopeOctagon(canvasContext, width, height, palette, bassEnergy, trebleEnergy) {
+  const radius = Math.max(34, Math.min(width, height) * 0.075);
+  const x = width - radius * 1.55;
+  const y = radius * 1.55;
+  const selected = kaleidoscopePaletteIndex();
+
+  canvasContext.save();
+  canvasContext.translate(x, y);
+  canvasContext.globalCompositeOperation = "source-over";
+  canvasContext.shadowBlur = 14 + trebleEnergy * 18;
+  canvasContext.shadowColor = kaleidoscopeColour(palette, selected, trebleEnergy, 0.7);
+
+  for (let wedge = 0; wedge < 8; wedge += 1) {
+    const start = -Math.PI / 2 + wedge * Math.PI / 4;
+    const end = start + Math.PI / 4;
+    const optionPalette = kaleidoscopePalettes[kaleidoscopePaletteOrder[wedge]];
+    const selectedPulse = wedge === selected ? 1 + bassEnergy * 0.22 : 0.82;
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, 0);
+    canvasContext.lineTo(Math.cos(start) * radius * selectedPulse, Math.sin(start) * radius * selectedPulse);
+    canvasContext.lineTo(Math.cos(end) * radius * selectedPulse, Math.sin(end) * radius * selectedPulse);
+    canvasContext.closePath();
+    canvasContext.fillStyle = kaleidoscopeColour(optionPalette, wedge, trebleEnergy, wedge === selected ? 0.95 : 0.54);
+    canvasContext.fill();
+  }
+
+  canvasContext.lineWidth = Math.max(2, radius * 0.055);
+  canvasContext.strokeStyle = kaleidoscopeColour(palette, selected + 2, bassEnergy, 0.86);
+  canvasContext.beginPath();
+  for (let point = 0; point < 8; point += 1) {
+    const angle = -Math.PI / 2 + point * Math.PI / 4;
+    const px = Math.cos(angle) * radius * (1.02 + bassEnergy * 0.05);
+    const py = Math.sin(angle) * radius * (1.02 + bassEnergy * 0.05);
+    if (point === 0) canvasContext.moveTo(px, py);
+    else canvasContext.lineTo(px, py);
+  }
+  canvasContext.closePath();
+  canvasContext.stroke();
+  canvasContext.restore();
+}
+
+function drawKaleidoscopeWedge(canvasContext, radius, palette, segment, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  const morph = handSizeMultiplier();
+  const trip = handGraspAmount();
+  const localPulse = intensities[segment % intensities.length] || 0.18;
+  const hueShift = kaleidoscopeFrame * (0.45 + trip * 0.7) + segment * (6 + trip * 8);
+
+  for (let ring = 0; ring < 7; ring += 1) {
+    const amount = (ring + 1) / 7;
+    const wobble = Math.sin(kaleidoscopeFrame * (0.026 + ring * 0.002) + segment * 0.7 + ring) * morph * 0.12;
+    const x = radius * amount * (0.24 + wobble + localPulse * 0.08);
+    const y = Math.sin(kaleidoscopeFrame * 0.032 + ring * 1.7 + segment) * radius * (0.018 + trip * 0.028 + midsEnergy * 0.04);
+    const petalLength = radius * (0.065 + amount * 0.048 + bassEnergy * 0.06) * morph;
+    const petalWidth = radius * (0.016 + trebleEnergy * 0.028 + trip * 0.018);
+
+    canvasContext.save();
+    canvasContext.translate(x, y);
+    canvasContext.rotate(Math.sin(kaleidoscopeFrame * 0.018 + ring + segment) * 0.9);
+    canvasContext.fillStyle = kaleidoscopeColour(palette, ring + segment, localPulse, 0.2 + localPulse * 0.42, hueShift);
+    canvasContext.strokeStyle = kaleidoscopeColour(palette, ring + segment + 2, trebleEnergy, 0.24 + trip * 0.36, hueShift);
+    canvasContext.lineWidth = Math.max(1, radius * 0.0035);
+    canvasContext.beginPath();
+    canvasContext.ellipse(0, 0, petalLength, petalWidth, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.stroke();
+
+    if (ring % 2 === 0) {
+      canvasContext.fillStyle = kaleidoscopeColour(palette, ring + 3, trebleEnergy, 0.18 + trebleEnergy * 0.22, hueShift + 70);
+      canvasContext.beginPath();
+      canvasContext.arc(petalLength * 0.46, 0, petalWidth * (0.72 + trip), 0, Math.PI * 2);
+      canvasContext.fill();
+    }
+    canvasContext.restore();
+  }
+
+  canvasContext.strokeStyle = kaleidoscopeColour(palette, segment + 1, midsEnergy, 0.18 + midsEnergy * 0.34, hueShift);
+  canvasContext.lineWidth = Math.max(1, radius * (0.004 + trip * 0.004));
+  canvasContext.beginPath();
+  for (let step = 0; step <= 34; step += 1) {
+    const amount = step / 34;
+    const x = radius * amount * 0.95;
+    const y = Math.sin(amount * Math.PI * (3 + trip * 5) + kaleidoscopeFrame * 0.04 + segment) * radius * (0.014 + midsEnergy * 0.042);
+    if (step === 0) canvasContext.moveTo(x, y);
+    else canvasContext.lineTo(x, y);
+  }
+  canvasContext.stroke();
+}
+
+function drawKaleidoscopeScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  const palette = kaleidoscopePalette();
+  const pulse = fireworkSpeedMultiplier();
+  const trip = handGraspAmount();
+  const morph = handSizeMultiplier();
+  const segmentCount = Math.max(8, Math.min(32, handCountValueNumber() * 2));
+  const radius = Math.hypot(width, height) * 0.58;
+  const centerX = width / 2 + Math.sin(kaleidoscopeFrame * 0.009) * width * 0.035 * trip;
+  const centerY = height / 2 + Math.cos(kaleidoscopeFrame * 0.008) * height * 0.035 * trip;
+
+  kaleidoscopeFrame += pulse * (0.72 + bassEnergy * 0.88 + trebleEnergy * 0.32);
+
+  const background = canvasContext.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+  background.addColorStop(0, kaleidoscopeColour(palette, 0, trebleEnergy, 0.94, kaleidoscopeFrame * 0.2));
+  background.addColorStop(0.48, kaleidoscopeColour(palette, 2, midsEnergy, 0.92, -kaleidoscopeFrame * 0.12));
+  background.addColorStop(1, kaleidoscopeColour(palette, 4, bassEnergy, 0.98, kaleidoscopeFrame * 0.08));
+  canvasContext.fillStyle = background;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.save();
+  canvasContext.translate(centerX, centerY);
+  canvasContext.rotate(kaleidoscopeFrame * 0.0025 * (0.5 + trip));
+  canvasContext.globalCompositeOperation = "lighter";
+  canvasContext.shadowBlur = 12 + trebleEnergy * 24 + trip * 18;
+  canvasContext.shadowColor = kaleidoscopeColour(palette, 3, trebleEnergy, 0.72);
+
+  const angleStep = Math.PI * 2 / segmentCount;
+  for (let segment = 0; segment < segmentCount; segment += 1) {
+    canvasContext.save();
+    canvasContext.rotate(segment * angleStep);
+    if (segment % 2) canvasContext.scale(1, -1);
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, 0);
+    canvasContext.lineTo(Math.cos(-angleStep * 0.52) * radius, Math.sin(-angleStep * 0.52) * radius);
+    canvasContext.lineTo(Math.cos(angleStep * 0.52) * radius, Math.sin(angleStep * 0.52) * radius);
+    canvasContext.closePath();
+    canvasContext.clip();
+    drawKaleidoscopeWedge(canvasContext, radius, palette, segment, bassEnergy, midsEnergy, trebleEnergy, intensities);
+    canvasContext.restore();
+  }
+
+  canvasContext.globalCompositeOperation = "source-over";
+  for (let ring = 0; ring < 9; ring += 1) {
+    const amount = (ring + 1) / 9;
+    const ringRadius = radius * amount * (0.08 + morph * 0.09 + bassEnergy * 0.04);
+    canvasContext.strokeStyle = kaleidoscopeColour(palette, ring + 1, intensities[ring % intensities.length] || 0.2, 0.08 + trip * 0.045);
+    canvasContext.lineWidth = Math.max(1, radius * 0.003);
+    canvasContext.beginPath();
+    canvasContext.arc(0, 0, ringRadius, 0, Math.PI * 2);
+    canvasContext.stroke();
+  }
+  canvasContext.restore();
+
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  const aperture = Math.min(width, height) * (0.04 + bassEnergy * 0.035 + trip * 0.025);
+  const core = canvasContext.createRadialGradient(centerX, centerY, 0, centerX, centerY, aperture * 3.2);
+  core.addColorStop(0, "rgba(255, 255, 255, 0.72)");
+  core.addColorStop(0.35, kaleidoscopeColour(palette, 1, trebleEnergy, 0.34));
+  core.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = core;
+  canvasContext.beginPath();
+  canvasContext.arc(centerX, centerY, aperture * 3.2, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+
+  drawKaleidoscopeOctagon(canvasContext, width, height, palette, bassEnergy, trebleEnergy);
+}
+
+function drawKaleidoscopeFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 10), 1.34);
+  const midsEnergy = pressureResponse(averageBand(buffer, 14, 58), 1.32);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 62, 118), 1.42);
+  const intensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.34));
+  drawKaleidoscopeScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -8238,7 +8513,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "hypnoticflight") {
+  if (visualizerSelect.value === "kaleidoscope") {
+    drawIdleKaleidoscope();
+  } else if (visualizerSelect.value === "hypnoticflight") {
     drawIdleHypnoticFlight();
   } else if (visualizerSelect.value === "cathedralorganism") {
     drawIdleCathedralOrganism();
@@ -8771,6 +9048,36 @@ function drawIdleCathedralOrganism() {
   }
 }
 
+function drawIdleKaleidoscope() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(kaleidoscopeFrame * 0.045) * 0.5;
+  const shimmer = 0.5 + Math.sin(kaleidoscopeFrame * 0.071 + 1.2) * 0.5;
+  const intensities = fireworksBands.map((band, index) => (
+    0.12 + pulse * 0.18 + shimmer * 0.1 + (index % 3) * 0.035
+  ));
+
+  drawKaleidoscopeScene(
+    canvasContext,
+    width,
+    height,
+    0.14 + pulse * 0.22,
+    0.12 + shimmer * 0.2,
+    0.16 + (1 - pulse) * 0.26,
+    intensities,
+  );
+
+  if (visualizerSelect.value === "kaleidoscope" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleHypnoticFlight() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -8921,6 +9228,7 @@ function resizeCanvas() {
   hypnoticFigures = [];
   hypnoticMonsters = [];
   hypnoticBlobs = [];
+  kaleidoscopeFrame = 0;
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -9067,6 +9375,7 @@ handCount.addEventListener("input", () => {
   hypnoticFigures = [];
   hypnoticMonsters = [];
   hypnoticBlobs = [];
+  kaleidoscopeFrame = 0;
   if (!animationId) {
     drawIdleVisualizer();
   }
