@@ -324,6 +324,7 @@ const defaultVisualizerControls = {
 };
 
 const defaultVisualizerLabels = {
+  form: "Form",
   theme: "Colour",
   speed: "Speed",
   size: "Reach",
@@ -377,12 +378,11 @@ const visualizerConfigs = {
   glitterfall: {
     ariaLabel: "Glitter Fall frequency visualisation",
     controls: { size: true, count: true, grasp: true },
-    labels: { speed: "Fall rate", size: "Scale", count: "Density", grasp: "Gust" },
+    labels: { form: "Weather", speed: "Fall pace", size: "Large glitter", count: "Amount", grasp: "Blizzard" },
     forms: [
-      ["rain", "Rain"],
-      ["hail", "Hail"],
-      ["snow", "Snow"],
-      ["confetti", "Confetti"],
+      ["snowfall", "Snowfall"],
+      ["mixed", "Mixed glitter"],
+      ["blizzard", "Blizzard"],
     ],
   },
   butterflyhost: {
@@ -834,7 +834,18 @@ function handGraspAmount() {
   return Number(handGrasp.value) || 0;
 }
 
+function glitterLargeShare() {
+  return clampNumber((handSizeMultiplier() - 0.55) / 1.25, 0, 1);
+}
+
 function updateHandControlLabels() {
+  if (visualizerSelect.value === "glitterfall") {
+    handSizeValue.textContent = `${Math.round(glitterLargeShare() * 100)}%`;
+    handCountValue.textContent = String(handCountValueNumber());
+    handGraspValue.textContent = `${Math.round(handGraspAmount() * 100)}%`;
+    return;
+  }
+
   handSizeValue.textContent = `${handSizeMultiplier().toFixed(2)}x`;
   handCountValue.textContent = String(handCountValueNumber());
   handGraspValue.textContent = `${Math.round(handGraspAmount() * 100)}%`;
@@ -933,6 +944,7 @@ function syncVisualizerControls() {
   const graspLabel = handGrasp.closest("label");
 
   formLabel.hidden = formOptions.length === 0;
+  setControlLabel(fireworkFormSelect, labels.form);
   if (formOptions.length > 0) {
     fireworkFormSelect.replaceChildren(...formOptions.map(([value, label]) => {
       const option = document.createElement("option");
@@ -2271,35 +2283,88 @@ function glitterHue(bandIndex, intensity) {
   return 150 + progress * 78 + intensity * 18;
 }
 
-function spawnGlitterParticle(bandIndex, intensity, width, height) {
-  const form = fireworkFormSelect.value;
-  const scale = handSizeMultiplier();
-  const fallRate = fireworkSpeedMultiplier();
-  const gust = handGraspAmount();
+function glitterWeatherMode() {
+  return fireworkFormSelect.value === "blizzard"
+    ? "blizzard"
+    : fireworkFormSelect.value === "mixed"
+      ? "mixed"
+      : "snowfall";
+}
+
+function glitterBlizzardForce() {
+  const mode = glitterWeatherMode();
+  const control = handGraspAmount();
+  if (mode === "blizzard") return 0.52 + control * 0.48;
+  if (mode === "mixed") return control * 0.55;
+  return control * 0.22;
+}
+
+function glitterTargetParticleCount(mode = glitterWeatherMode()) {
   const density = handCountValueNumber() / 6;
-  const isHail = form === "hail";
-  const isSnow = form === "snow";
-  const isRain = form === "rain";
-  const baseSize = isHail ? 4.8 : isSnow ? 3.4 : isRain ? 2.1 : 3.2;
-  const length = isRain ? 14 + intensity * 34 : baseSize * (1.8 + intensity * 2.6);
+  const blizzard = glitterBlizzardForce();
+  if (mode === "blizzard") return Math.round(190 + density * 180 + blizzard * 170);
+  if (mode === "mixed") return Math.round(150 + density * 130 + blizzard * 90);
+  return Math.round(130 + density * 115 + blizzard * 55);
+}
+
+function spawnGlitterParticle(bandIndex, intensity, width, height, seedFullDepth = false) {
+  const form = glitterWeatherMode();
+  const largeShare = glitterLargeShare();
+  const fallRate = fireworkSpeedMultiplier();
+  const blizzard = glitterBlizzardForce();
+  const density = handCountValueNumber() / 6;
+  const isBlizzard = form === "blizzard";
+  const isMixed = form === "mixed";
+  const isLarge = Math.random() < largeShare;
+  const sizeClass = isLarge ? 1.8 + Math.random() * 1.35 : 0.55 + Math.random() * 0.65;
+  const baseSize = (isMixed ? 3 : 2.7) * sizeClass;
+  const length = baseSize * (1.6 + intensity * 2.4 + blizzard * 0.8);
+  const driftDirection = isBlizzard ? (Math.random() < 0.62 ? 1 : -1) : Math.random() < 0.5 ? 1 : -1;
 
   glitterParticles.push({
     x: Math.random() * width,
-    y: -height * (0.04 + Math.random() * 0.2),
-    vx: (Math.random() - 0.5) * (0.35 + gust * 2.6 + intensity * 1.4),
-    vy: (isSnow ? 0.55 : isHail ? 3.4 : isRain ? 4.4 : 1.8) * (0.65 + intensity * 1.2) * fallRate,
-    size: baseSize * scale * glitterBands[bandIndex].weight * (0.7 + intensity * 1.35 + Math.random() * 0.4),
-    length: length * scale,
+    y: seedFullDepth ? Math.random() * height : -height * (0.04 + Math.random() * (isBlizzard ? 0.42 : 0.22)),
+    vx: driftDirection * (0.08 + Math.random() * 0.42 + blizzard * (1.8 + intensity * 2.4)),
+    vy: (isBlizzard ? 1.55 : isMixed ? 0.95 : 0.38) * (0.42 + intensity * 0.74) * (0.55 + fallRate * 0.48),
+    size: baseSize * glitterBands[bandIndex].weight * (0.72 + intensity * 1.25),
+    length,
     hue: glitterHue(bandIndex, intensity),
-    alpha: 0.72 + Math.random() * 0.28,
-    spin: (Math.random() - 0.5) * (0.05 + intensity * 0.18 + gust * 0.14),
+    alpha: 0.6 + Math.random() * 0.36,
+    spin: (Math.random() - 0.5) * (0.022 + intensity * 0.13 + blizzard * 0.22),
     angle: Math.random() * Math.PI * 2,
     life: 1,
     bandIndex,
     form,
     twinkle: Math.random() * Math.PI * 2,
     density,
+    sizeClass,
+    large: isLarge,
   });
+}
+
+function seedGlitterField(width, height, targetCount, bassEnergy = 0.18, trebleEnergy = 0.24) {
+  if (glitterParticles.length >= targetCount) return;
+
+  const missing = targetCount - glitterParticles.length;
+  const batch = Math.min(missing, glitterWeatherMode() === "blizzard" ? 90 : 70);
+  for (let index = 0; index < batch; index += 1) {
+    const bandIndex = Math.floor(Math.random() * glitterBands.length);
+    const intensity = 0.12 + Math.random() * 0.18 + (bandIndex < 3 ? bassEnergy * 0.18 : trebleEnergy * 0.16);
+    spawnGlitterParticle(bandIndex, intensity, width, height, true);
+  }
+}
+
+function recycleGlitterParticle(particle, width, height, fromTop = true) {
+  const bandIndex = Math.floor(Math.random() * glitterBands.length);
+  const intensity = 0.12 + Math.random() * 0.26;
+  const replacementStart = glitterParticles.length;
+  spawnGlitterParticle(bandIndex, intensity, width, height, !fromTop);
+  const replacement = glitterParticles.pop();
+  glitterParticles.length = replacementStart;
+  Object.assign(particle, replacement);
+  if (fromTop) {
+    particle.y = -particle.length * (1 + Math.random() * 8);
+  }
 }
 
 function drawGlitterBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
@@ -2324,31 +2389,21 @@ function drawGlitterParticle(canvasContext, particle, bassEnergy, trebleEnergy) 
   canvasContext.translate(particle.x, particle.y);
   canvasContext.rotate(particle.angle);
 
-  if (particle.form === "rain") {
-    canvasContext.strokeStyle = hsla(hue, 92, 68, alpha);
-    canvasContext.lineWidth = Math.max(1, particle.size * 0.44);
-    canvasContext.beginPath();
-    canvasContext.moveTo(0, -particle.length * 0.55);
-    canvasContext.lineTo(0, particle.length * 0.55);
-    canvasContext.stroke();
-  } else if (particle.form === "hail") {
-    const gradient = canvasContext.createRadialGradient(0, 0, particle.size * 0.1, 0, 0, particle.size * 1.45);
-    gradient.addColorStop(0, hsla(hue + 30, 88, 86, alpha));
-    gradient.addColorStop(0.68, hsla(hue, 82, 58, alpha * 0.64));
-    gradient.addColorStop(1, hsla(hue - 40, 74, 32, alpha * 0.08));
-    canvasContext.fillStyle = gradient;
-    canvasContext.beginPath();
-    canvasContext.arc(0, 0, particle.size * (1 + bassEnergy * 0.3), 0, Math.PI * 2);
-    canvasContext.fill();
-  } else if (particle.form === "snow") {
+  if (particle.form === "snowfall" || particle.form === "blizzard") {
     canvasContext.strokeStyle = hsla(hue, 82, 82, alpha);
-    canvasContext.lineWidth = Math.max(1, particle.size * 0.18);
+    canvasContext.lineWidth = Math.max(1, particle.size * (particle.large ? 0.13 : 0.18));
     for (let arm = 0; arm < 6; arm += 1) {
       const angle = (Math.PI * 2 * arm) / 6;
       canvasContext.beginPath();
       canvasContext.moveTo(Math.cos(angle) * particle.size * 0.2, Math.sin(angle) * particle.size * 0.2);
       canvasContext.lineTo(Math.cos(angle) * particle.size * 1.6, Math.sin(angle) * particle.size * 1.6);
       canvasContext.stroke();
+    }
+    if (particle.large) {
+      canvasContext.fillStyle = hsla(hue + 28, 96, 88, alpha * 0.36);
+      canvasContext.beginPath();
+      canvasContext.arc(0, 0, particle.size * 0.42, 0, Math.PI * 2);
+      canvasContext.fill();
     }
   } else {
     canvasContext.fillStyle = hsla(hue, 94, 62 + sparkle * 24, alpha);
@@ -2371,44 +2426,52 @@ function drawGlitterParticle(canvasContext, particle, bassEnergy, trebleEnergy) 
 function drawGlitterFallFrame(canvasContext, buffer) {
   const width = visualizer.width;
   const height = visualizer.height;
+  const mode = glitterWeatherMode();
   const fallRate = fireworkSpeedMultiplier();
   const density = handCountValueNumber() / 6;
-  const gust = handGraspAmount();
+  const blizzard = glitterBlizzardForce();
 
   analyser.getByteFrequencyData(buffer);
-  glitterFrame += fallRate;
+  glitterFrame += fallRate * (mode === "blizzard" ? 1.26 : 0.62 + blizzard * 0.25);
   const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.34);
   const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.48);
 
   drawGlitterBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+  seedGlitterField(width, height, glitterTargetParticleCount(mode), bassEnergy, trebleEnergy);
 
   glitterBands.forEach((band, bandIndex) => {
     const intensity = pressureResponse(averageBand(buffer, band.start, band.end), 1.42);
-    const chance = (0.025 + intensity * 0.16 + trebleEnergy * 0.025 + bassEnergy * 0.018) * density * fallRate;
-    if (Math.random() < chance) {
-      const count = 1 + Math.floor((density - 0.35) * (intensity + 0.2) * 2.4);
+    const weatherBoost = mode === "blizzard" ? 1.8 + blizzard * 2.2 : mode === "mixed" ? 1.08 + blizzard * 0.8 : 0.52 + blizzard * 0.35;
+    const chance = (0.018 + intensity * 0.13 + trebleEnergy * 0.02 + bassEnergy * 0.015) * density * fallRate * weatherBoost;
+    if (glitterParticles.length < glitterTargetParticleCount(mode) + 40 && Math.random() < chance) {
+      const count = 1 + Math.floor((density - 0.35) * (intensity + 0.2) * (mode === "blizzard" ? 5.2 : 2));
       for (let index = 0; index < count; index += 1) {
         spawnGlitterParticle(bandIndex, intensity, width, height);
       }
     }
   });
 
-  glitterParticles = glitterParticles.filter((particle) => particle.life > 0.02 && particle.y < height + particle.length + 30);
+  glitterParticles = glitterParticles.filter((particle) => particle.life > 0.02);
   glitterParticles.forEach((particle) => {
     const band = glitterBands[particle.bandIndex] || glitterBands[0];
     const bandEnergy = pressureResponse(averageBand(buffer, band.start, band.end), 1.34);
     const flutter = Math.sin(glitterFrame * (0.03 + bandEnergy * 0.04) + particle.twinkle);
-    particle.x += (particle.vx + flutter * (0.3 + gust * 2.4)) * fallRate;
-    particle.y += particle.vy * (0.58 + fallRate * 0.48 + bandEnergy * 0.24);
-    particle.vx += Math.sin(glitterFrame * 0.011 + particle.twinkle) * gust * 0.045;
+    const stormPush = blizzard * (mode === "blizzard" ? 3.1 : 1.25);
+    particle.x += (particle.vx + flutter * (0.24 + stormPush)) * (0.72 + fallRate * 0.35);
+    particle.y += particle.vy * (mode === "blizzard" ? 0.85 + fallRate * 0.42 + bandEnergy * 0.35 : 0.34 + fallRate * 0.32 + bandEnergy * 0.16);
+    if (particle.x < -particle.length) particle.x = width + particle.length;
+    if (particle.x > width + particle.length) particle.x = -particle.length;
+    if (particle.y > height + particle.length + 30) recycleGlitterParticle(particle, width, height);
+    particle.vx += Math.sin(glitterFrame * 0.011 + particle.twinkle) * blizzard * 0.075;
     particle.angle += particle.spin * (0.6 + fallRate + bandEnergy);
-    particle.life -= particle.form === "snow" ? 0.0015 : 0.0025 + bandEnergy * 0.0018;
+    particle.life -= mode === "snowfall" ? 0.001 : 0.0018 + bandEnergy * 0.0015;
     drawGlitterParticle(canvasContext, particle, bassEnergy, trebleEnergy);
   });
 
-  const maxParticles = Math.round(120 + density * 120);
+  const maxParticles = glitterTargetParticleCount(mode) + 80;
   if (glitterParticles.length > maxParticles) {
-    glitterParticles.splice(0, glitterParticles.length - maxParticles);
+    glitterParticles.sort((a, b) => b.y - a.y);
+    glitterParticles.splice(maxParticles);
   }
 }
 
@@ -8367,23 +8430,23 @@ function drawIdleGlitterFall() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
   const height = visualizer.height;
+  const mode = glitterWeatherMode();
+  const blizzard = glitterBlizzardForce();
 
-  glitterFrame += 1;
+  glitterFrame += mode === "blizzard" ? 1.2 : 0.55 + blizzard * 0.35;
   drawGlitterBackground(canvasContext, width, height, 0.18, 0.24);
 
-  if (glitterParticles.length < 64) {
-    for (let index = 0; index < 12; index += 1) {
-      spawnGlitterParticle(index % glitterBands.length, 0.16 + (index % 4) * 0.04, width, height);
-      glitterParticles[glitterParticles.length - 1].y = Math.random() * height;
-    }
-  }
+  seedGlitterField(width, height, glitterTargetParticleCount(mode), 0.18, 0.24);
 
-  glitterParticles = glitterParticles.filter((particle) => particle.life > 0.02 && particle.y < height + particle.length + 30);
+  glitterParticles = glitterParticles.filter((particle) => particle.life > 0.02);
   glitterParticles.forEach((particle) => {
-    particle.x += particle.vx + Math.sin(glitterFrame * 0.026 + particle.twinkle) * (0.4 + handGraspAmount() * 1.7);
-    particle.y += particle.vy * 0.55;
+    particle.x += particle.vx + Math.sin(glitterFrame * 0.026 + particle.twinkle) * (0.35 + blizzard * 2.2);
+    particle.y += particle.vy * (mode === "blizzard" ? 0.75 : 0.38);
+    if (particle.x < -particle.length) particle.x = width + particle.length;
+    if (particle.x > width + particle.length) particle.x = -particle.length;
+    if (particle.y > height + particle.length + 30) recycleGlitterParticle(particle, width, height);
     particle.angle += particle.spin;
-    particle.life -= 0.001;
+    particle.life -= mode === "blizzard" ? 0.0015 : 0.0008;
     drawGlitterParticle(canvasContext, particle, 0.16, 0.22);
   });
 }
@@ -8957,6 +9020,12 @@ eyeDischargeSelect.addEventListener("change", () => {
 
 handSize.addEventListener("input", () => {
   updateHandControlLabels();
+  if (visualizerSelect.value === "glitterfall") {
+    glitterParticles = [];
+    if (!animationId) {
+      drawIdleVisualizer();
+    }
+  }
 });
 
 handCount.addEventListener("input", () => {
