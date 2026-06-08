@@ -113,6 +113,8 @@ let hypnoticFigures = [];
 let hypnoticMonsters = [];
 let hypnoticBlobs = [];
 let kaleidoscopeFrame = 0;
+let bobGardenFrame = 0;
+let bobGardenBugs = [];
 let stagePulse = null;
 let fullscreenInfoPulse = null;
 let spectrumPad = {
@@ -543,6 +545,21 @@ const visualizerConfigs = {
       ["cheshire", "Cheshire violet"],
       ["absinthe", "Absinthe meadow"],
       ["midnight", "Midnight rabbit"],
+    ],
+  },
+  bobrossgarden: {
+    ariaLabel: "Bob Ross Positive garden visualisation",
+    controls: { theme: false, size: true, count: true, grasp: true },
+    labels: { form: "Roulette", speed: "Spin", size: "Growth", count: "Plantings", grasp: "Buzz" },
+    forms: [
+      ["peas", "Mange tout & peas"],
+      ["kitchen", "Potatoes & tomatoes"],
+      ["alliums", "Garlic chilli onions"],
+      ["mushrooms", "Psilocybin & parsnips"],
+      ["herbal", "Marihuana & marjoram"],
+      ["squash", "Pumpkins & sage"],
+      ["berries", "Strawberry & basil"],
+      ["roots", "Beetroot & borage"],
     ],
   },
 };
@@ -1154,6 +1171,8 @@ function restartVisualizer() {
   hypnoticMonsters = [];
   hypnoticBlobs = [];
   kaleidoscopeFrame = 0;
+  bobGardenFrame = 0;
+  bobGardenBugs = [];
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -1469,7 +1488,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "kaleidoscope") {
+      if (visualizerSelect.value === "bobrossgarden") {
+        drawBobRossGardenFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "kaleidoscope") {
         drawKaleidoscopeFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "hypnoticflight") {
         drawHypnoticFlightFrame(canvasContext, buffer);
@@ -7235,6 +7256,571 @@ function drawKaleidoscopeFrame(canvasContext, buffer) {
   drawKaleidoscopeScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
 }
 
+const bobRossGardenChoices = {
+  peas: {
+    sky: 330,
+    soil: 34,
+    crops: ["mangeTout", "floweringPea", "sweetPea"],
+  },
+  kitchen: {
+    sky: 22,
+    soil: 24,
+    crops: ["potato", "garlic", "chilli", "onion", "tomato"],
+  },
+  alliums: {
+    sky: 48,
+    soil: 28,
+    crops: ["garlic", "onion", "chilli", "marjoram"],
+  },
+  mushrooms: {
+    sky: 286,
+    soil: 22,
+    crops: ["mushroom", "parsnip", "borage"],
+  },
+  herbal: {
+    sky: 144,
+    soil: 32,
+    crops: ["hemp", "marjoram", "tomato"],
+  },
+  squash: {
+    sky: 36,
+    soil: 30,
+    crops: ["pumpkin", "sage", "floweringPea"],
+  },
+  berries: {
+    sky: 338,
+    soil: 26,
+    crops: ["strawberry", "basil", "sweetPea"],
+  },
+  roots: {
+    sky: 312,
+    soil: 20,
+    crops: ["beetroot", "borage", "parsnip", "garlic"],
+  },
+};
+
+const bobRossRouletteOrder = ["peas", "kitchen", "alliums", "mushrooms", "herbal", "squash", "berries", "roots"];
+
+function bobRossChoice() {
+  return bobRossGardenChoices[fireworkFormSelect.value] || bobRossGardenChoices.peas;
+}
+
+function bobRossChoiceIndex() {
+  return Math.max(0, bobRossRouletteOrder.indexOf(fireworkFormSelect.value));
+}
+
+function bobRossRouletteState(width, height, bassEnergy, trebleEnergy) {
+  const pocketCount = 48;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const outerRadius = Math.hypot(width, height) * 0.72;
+  const innerRadius = Math.min(width, height) * 0.36;
+  const wheelRotation = bobGardenFrame * (0.024 + fireworkSpeedMultiplier() * 0.018);
+  const ballAngle = -bobGardenFrame * (0.075 + fireworkSpeedMultiplier() * 0.014 + trebleEnergy * 0.025)
+    + Math.sin(bobGardenFrame * 0.019) * 0.34
+    - bassEnergy * 0.65;
+  const relative = ((ballAngle - wheelRotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+  const pocket = Math.floor(relative / (Math.PI * 2) * pocketCount) % pocketCount;
+  const sector = Math.floor(pocket / (pocketCount / bobRossRouletteOrder.length)) % bobRossRouletteOrder.length;
+  const number = ((pocket * 17 + 7) % pocketCount) + 1;
+  const redPocket = pocket % 3 !== 0;
+
+  return {
+    pocketCount,
+    pocket,
+    sector,
+    number,
+    redPocket,
+    centerX,
+    centerY,
+    outerRadius,
+    innerRadius,
+    wheelRotation,
+    ballAngle,
+    ballRadius: innerRadius + (outerRadius - innerRadius) * 0.22,
+    hueShift: sector * 31 + number * 3,
+    growthBoost: 0.82 + (number % 13) / 18 + bassEnergy * 0.32,
+    insectBoost: 0.75 + (number % 9) / 10 + trebleEnergy * 0.55,
+    earthlyDelight: (redPocket ? 0.22 : 0.45) + (number % 7) * 0.045,
+  };
+}
+
+function drawBobRossRouletteFrame(canvasContext, width, height, choice, bassEnergy, trebleEnergy, state) {
+  const {
+    pocketCount,
+    pocket,
+    number,
+    redPocket,
+    centerX,
+    centerY,
+    outerRadius,
+    innerRadius,
+    wheelRotation,
+    ballAngle,
+    ballRadius,
+  } = state;
+  const pocketAngle = Math.PI * 2 / pocketCount;
+
+  canvasContext.save();
+  canvasContext.fillStyle = "rgba(14, 7, 12, 0.98)";
+  canvasContext.fillRect(0, 0, width, height);
+  canvasContext.translate(centerX, centerY);
+  canvasContext.rotate(wheelRotation);
+  canvasContext.shadowBlur = 28 + trebleEnergy * 24;
+  canvasContext.shadowColor = hsla(choice.sky + state.hueShift, 86, 62, 0.52);
+
+  for (let index = 0; index < pocketCount; index += 1) {
+    const start = index * pocketAngle - Math.PI / 2;
+    const end = start + pocketAngle * 0.96;
+    const sector = Math.floor(index / (pocketCount / bobRossRouletteOrder.length)) % bobRossRouletteOrder.length;
+    const garden = bobRossGardenChoices[bobRossRouletteOrder[sector]];
+    const active = index === pocket;
+    const red = index % 3 !== 0;
+    const dark = index % 6 === 0;
+    const outer = active ? outerRadius * (1.008 + bassEnergy * 0.01) : outerRadius;
+    const inner = innerRadius * (active ? 0.965 : 1);
+
+    canvasContext.beginPath();
+    canvasContext.arc(0, 0, outer, start, end);
+    canvasContext.arc(0, 0, inner, end, start, true);
+    canvasContext.closePath();
+    canvasContext.fillStyle = active
+      ? hsla(garden.sky + state.hueShift, 95, 62 + bassEnergy * 16, 0.98)
+      : dark
+        ? "rgba(18, 13, 17, 0.96)"
+        : red
+          ? hsla(garden.sky + sector * 9, 76, 38 + (index % 4) * 4, 0.96)
+          : hsla(garden.soil + sector * 11, 66, 28 + (index % 5) * 3, 0.96);
+    canvasContext.fill();
+    canvasContext.strokeStyle = active ? "rgba(255, 251, 218, 0.9)" : "rgba(255, 235, 190, 0.22)";
+    canvasContext.lineWidth = active ? Math.max(2, outerRadius * 0.003) : 1;
+    canvasContext.stroke();
+
+    canvasContext.save();
+    canvasContext.rotate(start + pocketAngle * 0.48);
+    canvasContext.translate(0, inner + (outer - inner) * 0.54);
+    canvasContext.rotate(Math.PI / 2);
+    canvasContext.font = `${Math.max(9, outerRadius * 0.018)}px system-ui`;
+    canvasContext.textAlign = "center";
+    canvasContext.textBaseline = "middle";
+    canvasContext.fillStyle = active ? "rgba(255, 255, 238, 0.98)" : "rgba(255, 244, 218, 0.72)";
+    canvasContext.fillText(String(((index * 17 + 7) % pocketCount) + 1), 0, 0);
+    canvasContext.restore();
+  }
+
+  for (let ring = 0; ring < 5; ring += 1) {
+    const radius = innerRadius + (outerRadius - innerRadius) * (ring / 4);
+    canvasContext.strokeStyle = ring === 0 || ring === 4 ? "rgba(255, 238, 184, 0.72)" : "rgba(255, 238, 184, 0.22)";
+    canvasContext.lineWidth = Math.max(1, outerRadius * (ring === 0 || ring === 4 ? 0.006 : 0.002));
+    canvasContext.beginPath();
+    canvasContext.arc(0, 0, radius, 0, Math.PI * 2);
+    canvasContext.stroke();
+  }
+
+  for (let tick = 0; tick < pocketCount * 2; tick += 1) {
+    const angle = tick / (pocketCount * 2) * Math.PI * 2;
+    const length = tick % 2 === 0 ? outerRadius * 0.04 : outerRadius * 0.022;
+    canvasContext.strokeStyle = tick % 2 === 0 ? "rgba(255, 246, 210, 0.68)" : "rgba(255, 246, 210, 0.3)";
+    canvasContext.lineWidth = tick % 2 === 0 ? 2 : 1;
+    canvasContext.beginPath();
+    canvasContext.moveTo(Math.cos(angle) * (outerRadius - length), Math.sin(angle) * (outerRadius - length));
+    canvasContext.lineTo(Math.cos(angle) * outerRadius, Math.sin(angle) * outerRadius);
+    canvasContext.stroke();
+  }
+
+  canvasContext.restore();
+
+  canvasContext.save();
+  canvasContext.translate(centerX, centerY);
+  const bx = Math.cos(ballAngle - Math.PI / 2) * ballRadius;
+  const by = Math.sin(ballAngle - Math.PI / 2) * ballRadius;
+  const ballSize = Math.max(8, Math.min(width, height) * 0.018);
+  const ballGlow = canvasContext.createRadialGradient(bx - ballSize * 0.35, by - ballSize * 0.35, 0, bx, by, ballSize * 1.8);
+  ballGlow.addColorStop(0, "rgba(255, 255, 255, 1)");
+  ballGlow.addColorStop(0.42, redPocket ? "rgba(255, 218, 210, 0.96)" : "rgba(215, 255, 220, 0.96)");
+  ballGlow.addColorStop(1, "rgba(35, 18, 12, 0.18)");
+  canvasContext.shadowBlur = 22 + bassEnergy * 18;
+  canvasContext.shadowColor = redPocket ? "rgba(255, 75, 55, 0.75)" : "rgba(80, 255, 155, 0.75)";
+  canvasContext.fillStyle = ballGlow;
+  canvasContext.beginPath();
+  canvasContext.arc(bx, by, ballSize, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+
+  canvasContext.save();
+  canvasContext.fillStyle = "rgba(255, 244, 215, 0.9)";
+  canvasContext.strokeStyle = "rgba(40, 18, 12, 0.65)";
+  canvasContext.lineWidth = 2;
+  canvasContext.beginPath();
+  canvasContext.moveTo(centerX, centerY - innerRadius * 1.04);
+  canvasContext.lineTo(centerX - innerRadius * 0.06, centerY - innerRadius * 1.18);
+  canvasContext.lineTo(centerX + innerRadius * 0.06, centerY - innerRadius * 1.18);
+  canvasContext.closePath();
+  canvasContext.fill();
+  canvasContext.stroke();
+  canvasContext.font = `${Math.max(13, innerRadius * 0.07)}px system-ui`;
+  canvasContext.textAlign = "center";
+  canvasContext.textBaseline = "middle";
+  canvasContext.fillStyle = redPocket ? "rgba(255, 215, 210, 0.94)" : "rgba(210, 255, 224, 0.94)";
+  canvasContext.fillText(`${redPocket ? "RED" : "GREEN"} ${number}`, centerX, centerY + innerRadius * 0.86);
+  canvasContext.restore();
+}
+
+function drawHappyCloud(canvasContext, x, y, scale, drift) {
+  canvasContext.save();
+  canvasContext.translate(x, y + Math.sin(bobGardenFrame * 0.018 + drift) * scale * 2);
+  canvasContext.fillStyle = "rgba(255, 246, 250, 0.78)";
+  for (let puff = 0; puff < 6; puff += 1) {
+    const px = (puff - 2.5) * scale * 0.34;
+    const py = Math.sin(puff + drift) * scale * 0.07;
+    canvasContext.beginPath();
+    canvasContext.ellipse(px, py, scale * (0.28 + (puff % 2) * 0.08), scale * 0.18, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+  canvasContext.restore();
+}
+
+function drawHappyTree(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  const x = width * 0.82;
+  const ground = height * 0.74;
+  const size = Math.min(width, height) * (0.18 + handSizeMultiplier() * 0.035);
+  const sway = Math.sin(bobGardenFrame * 0.025) * (0.08 + midsEnergy * 0.12);
+
+  canvasContext.save();
+  canvasContext.translate(x, ground);
+  canvasContext.rotate(sway);
+  canvasContext.lineCap = "round";
+  canvasContext.lineJoin = "round";
+  canvasContext.strokeStyle = hsla(28, 54, 28, 0.95);
+  canvasContext.lineWidth = size * 0.14;
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, 0);
+  canvasContext.bezierCurveTo(-size * 0.08, -size * 0.32, size * 0.1, -size * 0.64, 0, -size);
+  canvasContext.stroke();
+
+  for (let branch = 0; branch < 7; branch += 1) {
+    const side = branch % 2 ? 1 : -1;
+    const by = -size * (0.28 + branch * 0.09);
+    canvasContext.strokeStyle = hsla(34, 48, 30, 0.82);
+    canvasContext.lineWidth = size * (0.035 + branch * 0.003);
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, by);
+    canvasContext.quadraticCurveTo(side * size * 0.12, by - size * 0.08, side * size * (0.24 + branch * 0.02), by - size * (0.14 + trebleEnergy * 0.08));
+    canvasContext.stroke();
+  }
+
+  for (let cluster = 0; cluster < 15; cluster += 1) {
+    const angle = cluster / 15 * Math.PI * 2;
+    const radius = size * (0.22 + (cluster % 5) * 0.045);
+    const lx = Math.cos(angle) * radius * 0.78;
+    const ly = -size * 0.78 + Math.sin(angle) * radius * 0.58;
+    canvasContext.fillStyle = hsla(105 + cluster * 5 + trebleEnergy * 28, 58, 36 + bassEnergy * 18, 0.86);
+    canvasContext.beginPath();
+    canvasContext.ellipse(lx, ly, size * (0.18 + bassEnergy * 0.04), size * (0.14 + midsEnergy * 0.05), angle * 0.4, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  canvasContext.fillStyle = "rgba(255, 235, 205, 0.82)";
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, -size * 0.48, size * 0.1, size * 0.13, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.fillStyle = "rgba(43, 25, 17, 0.82)";
+  [-1, 1].forEach((side) => {
+    canvasContext.beginPath();
+    canvasContext.arc(side * size * 0.035, -size * 0.5, size * 0.012, 0, Math.PI * 2);
+    canvasContext.fill();
+  });
+  canvasContext.strokeStyle = hsla(345, 82, 48, 0.75 + bassEnergy * 0.2);
+  canvasContext.lineWidth = Math.max(1, size * 0.012);
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 0.47, size * 0.045, 0.08, Math.PI - 0.08);
+  canvasContext.stroke();
+
+  canvasContext.restore();
+
+  canvasContext.save();
+  canvasContext.translate(width * 0.9, height * 0.74);
+  canvasContext.rotate(Math.sin(bobGardenFrame * 0.04) * 0.12);
+  canvasContext.fillStyle = hsla(64 + trebleEnergy * 30, 78, 58, 0.9);
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 0.2, size * 0.055, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.strokeStyle = hsla(42, 56, 30, 0.86);
+  canvasContext.lineWidth = Math.max(2, size * 0.018);
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -size * 0.15);
+  canvasContext.lineTo(0, 0);
+  canvasContext.stroke();
+  canvasContext.strokeStyle = hsla(105, 60, 36, 0.8);
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -size * 0.08);
+  canvasContext.quadraticCurveTo(-size * 0.08, -size * 0.16, -size * 0.16, -size * 0.1);
+  canvasContext.moveTo(0, -size * 0.08);
+  canvasContext.quadraticCurveTo(size * 0.08, -size * 0.16, size * 0.16, -size * 0.1);
+  canvasContext.stroke();
+  canvasContext.restore();
+}
+
+function drawGardenCrop(canvasContext, kind, x, y, scale, intensity, hueShift) {
+  canvasContext.save();
+  canvasContext.translate(x, y);
+  canvasContext.lineCap = "round";
+  const sway = Math.sin(bobGardenFrame * 0.04 + x * 0.01 + hueShift) * scale * (0.12 + intensity * 0.18);
+
+  const stem = (heightFactor = 1, hue = 112) => {
+    canvasContext.strokeStyle = hsla(hue + hueShift, 64, 34 + intensity * 18, 0.9);
+    canvasContext.lineWidth = Math.max(1, scale * 0.06);
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, 0);
+    canvasContext.quadraticCurveTo(sway, -scale * 0.45 * heightFactor, sway * 0.4, -scale * heightFactor);
+    canvasContext.stroke();
+  };
+
+  if (kind === "mangeTout" || kind === "floweringPea" || kind === "sweetPea") {
+    stem(1.45, 126);
+    for (let pod = 0; pod < 4; pod += 1) {
+      const side = pod % 2 ? 1 : -1;
+      const py = -scale * (0.35 + pod * 0.23);
+      canvasContext.fillStyle = kind === "floweringPea" ? hsla(320 + pod * 18, 72, 62, 0.92) : hsla(118 + pod * 8, 64, 45, 0.9);
+      canvasContext.beginPath();
+      canvasContext.ellipse(side * scale * 0.18 + sway * 0.35, py, scale * 0.18, scale * 0.07, side * 0.4, 0, Math.PI * 2);
+      canvasContext.fill();
+    }
+  } else if (kind === "potato") {
+    stem(0.85, 100);
+    canvasContext.fillStyle = hsla(36, 48, 52, 0.92);
+    canvasContext.beginPath();
+    canvasContext.ellipse(-scale * 0.05, scale * 0.05, scale * 0.22, scale * 0.14, 0.2, 0, Math.PI * 2);
+    canvasContext.fill();
+  } else if (kind === "garlic" || kind === "onion" || kind === "parsnip" || kind === "beetroot") {
+    stem(0.75 + intensity * 0.3, kind === "beetroot" ? 132 : 106);
+    const hue = kind === "beetroot" ? 326 : kind === "parsnip" ? 46 : kind === "garlic" ? 52 : 22;
+    canvasContext.fillStyle = hsla(hue, kind === "garlic" ? 38 : 68, kind === "garlic" ? 72 : 54, 0.92);
+    canvasContext.beginPath();
+    canvasContext.ellipse(0, scale * 0.04, scale * 0.16, scale * 0.2, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+  } else if (kind === "chilli" || kind === "tomato" || kind === "strawberry") {
+    stem(1.05, 116);
+    const hue = kind === "chilli" ? 358 : kind === "tomato" ? 8 : 344;
+    canvasContext.fillStyle = hsla(hue + intensity * 20, 90, 48 + intensity * 14, 0.94);
+    canvasContext.beginPath();
+    if (kind === "chilli") {
+      canvasContext.ellipse(sway * 0.6, -scale * 0.58, scale * 0.09, scale * 0.28, 0.18, 0, Math.PI * 2);
+    } else {
+      canvasContext.arc(sway * 0.5, -scale * 0.58, scale * (kind === "tomato" ? 0.18 : 0.14), 0, Math.PI * 2);
+    }
+    canvasContext.fill();
+  } else if (kind === "mushroom") {
+    canvasContext.fillStyle = hsla(38, 38, 72, 0.9);
+    canvasContext.fillRect(-scale * 0.05, -scale * 0.22, scale * 0.1, scale * 0.25);
+    canvasContext.fillStyle = hsla(292 + intensity * 50, 72, 58, 0.88);
+    canvasContext.beginPath();
+    canvasContext.ellipse(0, -scale * 0.27, scale * 0.26, scale * 0.15, 0, Math.PI, Math.PI * 2);
+    canvasContext.fill();
+  } else if (kind === "hemp" || kind === "marjoram" || kind === "sage" || kind === "basil" || kind === "borage") {
+    stem(kind === "hemp" ? 1.35 : 0.95, kind === "hemp" ? 128 : 104);
+    const leaves = kind === "hemp" ? 7 : 5;
+    for (let leaf = 0; leaf < leaves; leaf += 1) {
+      const angle = -Math.PI / 2 + (leaf - (leaves - 1) / 2) * 0.36;
+      const length = scale * (kind === "hemp" ? 0.34 : 0.22);
+      canvasContext.fillStyle = hsla(kind === "borage" ? 210 : 118 + leaf * 4, 58 + intensity * 24, 36 + intensity * 18, 0.88);
+      canvasContext.beginPath();
+      canvasContext.ellipse(Math.cos(angle) * length * 0.4 + sway * 0.3, -scale * 0.62 + Math.sin(angle) * length * 0.35, length * 0.42, scale * 0.055, angle, 0, Math.PI * 2);
+      canvasContext.fill();
+    }
+    if (kind === "borage") {
+      canvasContext.fillStyle = hsla(218, 82, 62, 0.9);
+      canvasContext.beginPath();
+      canvasContext.arc(sway * 0.4, -scale * 0.95, scale * 0.11, 0, Math.PI * 2);
+      canvasContext.fill();
+    }
+  } else if (kind === "pumpkin") {
+    stem(0.65, 106);
+    canvasContext.fillStyle = hsla(30 + intensity * 18, 92, 52, 0.95);
+    canvasContext.beginPath();
+    canvasContext.ellipse(0, -scale * 0.06, scale * 0.27, scale * 0.19, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.strokeStyle = hsla(22, 72, 38, 0.5);
+    for (let rib = -1; rib <= 1; rib += 1) {
+      canvasContext.beginPath();
+      canvasContext.moveTo(rib * scale * 0.08, -scale * 0.23);
+      canvasContext.quadraticCurveTo(rib * scale * 0.14, -scale * 0.06, rib * scale * 0.08, scale * 0.1);
+      canvasContext.stroke();
+    }
+  }
+
+  canvasContext.restore();
+}
+
+function setupBobGardenBugs(width, height) {
+  const target = Math.max(6, Math.min(26, handCountValueNumber() + 8));
+  while (bobGardenBugs.length < target) {
+    bobGardenBugs.push({
+      x: Math.random() * width,
+      y: height * (0.28 + Math.random() * 0.45),
+      phase: Math.random() * Math.PI * 2,
+      hue: 34 + Math.random() * 260,
+      speed: 0.45 + Math.random() * 1.1,
+      size: 0.6 + Math.random() * 0.9,
+    });
+  }
+  if (bobGardenBugs.length > target) bobGardenBugs.splice(target);
+}
+
+function drawBobGardenBug(canvasContext, bug, width, height, trebleEnergy) {
+  const buzz = handGraspAmount();
+  bug.x += Math.sin(bobGardenFrame * 0.022 * bug.speed + bug.phase) * (0.45 + buzz * 1.6);
+  bug.y += Math.cos(bobGardenFrame * 0.034 * bug.speed + bug.phase) * (0.26 + trebleEnergy * 1.2);
+  bug.x = (bug.x + width) % width;
+  bug.y = clampNumber(bug.y, height * 0.18, height * 0.78);
+
+  const size = Math.min(width, height) * 0.012 * bug.size;
+  const wing = Math.sin(bobGardenFrame * (0.22 + trebleEnergy * 0.18) + bug.phase);
+  canvasContext.save();
+  canvasContext.translate(bug.x, bug.y);
+  canvasContext.rotate(Math.sin(bobGardenFrame * 0.02 + bug.phase) * 0.4);
+  canvasContext.fillStyle = hsla(bug.hue, 78, 58 + trebleEnergy * 18, 0.86);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, size * 0.65, size * 0.42, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.fillStyle = "rgba(255, 255, 245, 0.38)";
+  [-1, 1].forEach((side) => {
+    canvasContext.beginPath();
+    canvasContext.ellipse(side * size * 0.44, -size * 0.2, size * 0.52, size * (0.18 + Math.abs(wing) * 0.24), side * 0.45, 0, Math.PI * 2);
+    canvasContext.fill();
+  });
+  canvasContext.fillStyle = "rgba(30, 24, 20, 0.78)";
+  canvasContext.beginPath();
+  canvasContext.arc(size * 0.22, -size * 0.05, size * 0.07, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+}
+
+function drawBobRossGardenScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  const choice = bobRossChoice();
+  bobGardenFrame += fireworkSpeedMultiplier() * (0.58 + bassEnergy * 0.44 + trebleEnergy * 0.2);
+  const roulette = bobRossRouletteState(width, height, bassEnergy, trebleEnergy);
+  const landedChoice = bobRossGardenChoices[bobRossRouletteOrder[roulette.sector]];
+  const activeChoice = {
+    sky: choice.sky + roulette.hueShift * 0.26,
+    soil: choice.soil + roulette.sector * 3,
+    crops: [...choice.crops, landedChoice.crops[roulette.number % landedChoice.crops.length]],
+  };
+  const growth = handSizeMultiplier() * roulette.growthBoost;
+  const plantings = handCountValueNumber();
+  const buzz = handGraspAmount() * roulette.insectBoost;
+
+  drawBobRossRouletteFrame(canvasContext, width, height, activeChoice, bassEnergy, trebleEnergy, roulette);
+
+  canvasContext.save();
+  canvasContext.beginPath();
+  canvasContext.ellipse(
+    roulette.centerX,
+    roulette.centerY,
+    roulette.innerRadius * 0.9,
+    roulette.innerRadius * 0.74,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  canvasContext.clip();
+
+  const sky = canvasContext.createLinearGradient(0, 0, 0, height);
+  sky.addColorStop(0, hsla(activeChoice.sky, 78 + roulette.earthlyDelight * 16, 78, 0.98));
+  sky.addColorStop(0.48, hsla(activeChoice.sky + 34 + roulette.number, 62, 68 - roulette.earthlyDelight * 8, 0.96));
+  sky.addColorStop(1, hsla(112 + midsEnergy * 28 + roulette.hueShift * 0.12, 48, 42, 0.98));
+  canvasContext.fillStyle = sky;
+  canvasContext.fillRect(0, 0, width, height);
+
+  for (let ray = 0; ray < 13; ray += 1) {
+    const x = width * (0.12 + ray * 0.07);
+    const top = height * (0.12 + Math.sin(ray + bobGardenFrame * 0.01) * 0.04);
+    canvasContext.strokeStyle = hsla(activeChoice.sky + ray * 18, 76, 72, 0.035 + roulette.earthlyDelight * 0.035);
+    canvasContext.lineWidth = Math.max(1, width * 0.018);
+    canvasContext.beginPath();
+    canvasContext.moveTo(width * 0.5, height * 0.08);
+    canvasContext.lineTo(x, top + height * 0.48);
+    canvasContext.stroke();
+  }
+
+  drawHappyCloud(canvasContext, width * 0.36, height * 0.16, Math.min(width, height) * 0.18, roulette.number);
+  drawHappyCloud(canvasContext, width * 0.68, height * 0.23, Math.min(width, height) * 0.13, roulette.sector);
+
+  const pond = canvasContext.createRadialGradient(width * 0.58, height * 0.82, 0, width * 0.58, height * 0.82, width * 0.32);
+  pond.addColorStop(0, hsla(190 + trebleEnergy * 40 + roulette.hueShift * 0.2, 70, 58, 0.38));
+  pond.addColorStop(1, "rgba(25, 90, 65, 0)");
+  canvasContext.fillStyle = pond;
+  canvasContext.beginPath();
+  canvasContext.ellipse(width * 0.58, height * 0.82, width * 0.3, height * 0.09, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.fillStyle = hsla(activeChoice.soil, 52 + roulette.earthlyDelight * 20, 25, 0.92);
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, height * 0.62);
+  canvasContext.bezierCurveTo(width * 0.25, height * 0.56, width * 0.58, height * 0.68, width, height * 0.58);
+  canvasContext.lineTo(width, height);
+  canvasContext.lineTo(0, height);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  for (let row = 0; row < 4; row += 1) {
+    const y = height * (0.66 + row * 0.075);
+    canvasContext.strokeStyle = hsla(activeChoice.soil + 8 + roulette.number * 0.5, 42, 18 + row * 3, 0.32);
+    canvasContext.lineWidth = Math.max(2, height * 0.008);
+    canvasContext.beginPath();
+    canvasContext.moveTo(width * 0.05, y);
+    canvasContext.quadraticCurveTo(width * 0.46, y - height * 0.04, width * 0.94, y + height * 0.02);
+    canvasContext.stroke();
+  }
+
+  const cropCount = Math.max(18, Math.round(plantings * (8 + roulette.earthlyDelight * 2)));
+  for (let index = 0; index < cropCount; index += 1) {
+    const row = index % 4;
+    const slot = Math.floor(index / 4);
+    const t = (slot + 0.5) / Math.ceil(cropCount / 4);
+    const x = width * (0.08 + t * 0.72) + Math.sin(index * 2.1) * width * 0.012;
+    const y = height * (0.67 + row * 0.075) + Math.cos(index * 1.7) * height * 0.008;
+    const kind = activeChoice.crops[index % activeChoice.crops.length];
+    const intensity = intensities[index % intensities.length] || 0.18;
+    const scale = Math.min(width, height) * (0.021 + row * 0.0038) * growth * (0.85 + intensity * 0.45);
+    drawGardenCrop(canvasContext, kind, x, y, scale, intensity, index * 7 + roulette.hueShift);
+  }
+
+  drawHappyTree(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+  setupBobGardenBugs(width, height);
+  bobGardenBugs.forEach((bug) => drawBobGardenBug(canvasContext, bug, width, height, trebleEnergy + buzz * 0.25));
+  canvasContext.restore();
+
+  canvasContext.save();
+  canvasContext.strokeStyle = "rgba(255, 245, 210, 0.72)";
+  canvasContext.lineWidth = Math.max(2, roulette.innerRadius * 0.018);
+  canvasContext.shadowBlur = 18;
+  canvasContext.shadowColor = hsla(activeChoice.sky, 90, 72, 0.52);
+  canvasContext.beginPath();
+  canvasContext.ellipse(
+    roulette.centerX,
+    roulette.centerY,
+    roulette.innerRadius * 0.9,
+    roulette.innerRadius * 0.74,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  canvasContext.stroke();
+  canvasContext.restore();
+}
+
+function drawBobRossGardenFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 10), 1.28);
+  const midsEnergy = pressureResponse(averageBand(buffer, 14, 58), 1.28);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 62, 118), 1.38);
+  const intensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.28));
+  drawBobRossGardenScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -8513,7 +9099,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "kaleidoscope") {
+  if (visualizerSelect.value === "bobrossgarden") {
+    drawIdleBobRossGarden();
+  } else if (visualizerSelect.value === "kaleidoscope") {
     drawIdleKaleidoscope();
   } else if (visualizerSelect.value === "hypnoticflight") {
     drawIdleHypnoticFlight();
@@ -9078,6 +9666,34 @@ function drawIdleKaleidoscope() {
   }
 }
 
+function drawIdleBobRossGarden() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(bobGardenFrame * 0.04) * 0.5;
+  const shimmer = 0.5 + Math.sin(bobGardenFrame * 0.063 + 1.8) * 0.5;
+  const intensities = fireworksBands.map((band, index) => 0.12 + pulse * 0.16 + shimmer * 0.08 + (index % 4) * 0.025);
+
+  drawBobRossGardenScene(
+    canvasContext,
+    width,
+    height,
+    0.14 + pulse * 0.2,
+    0.12 + shimmer * 0.18,
+    0.16 + (1 - pulse) * 0.2,
+    intensities,
+  );
+
+  if (visualizerSelect.value === "bobrossgarden" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleHypnoticFlight() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -9229,6 +9845,8 @@ function resizeCanvas() {
   hypnoticMonsters = [];
   hypnoticBlobs = [];
   kaleidoscopeFrame = 0;
+  bobGardenFrame = 0;
+  bobGardenBugs = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -9376,6 +9994,8 @@ handCount.addEventListener("input", () => {
   hypnoticMonsters = [];
   hypnoticBlobs = [];
   kaleidoscopeFrame = 0;
+  bobGardenFrame = 0;
+  bobGardenBugs = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
