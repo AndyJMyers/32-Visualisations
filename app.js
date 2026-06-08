@@ -108,8 +108,16 @@ let riverRipples = [];
 let cathedralFrame = 0;
 let cathedralFigures = [];
 let cathedralSparks = [];
+let hypnoticFrame = 0;
+let hypnoticFigures = [];
+let hypnoticMonsters = [];
+let hypnoticBlobs = [];
 let stagePulse = null;
 let fullscreenInfoPulse = null;
+let spectrumPad = {
+  smilesDecadence: 0,
+  psychedeliaInsanity: 0,
+};
 let moodState = {
   energy: 0,
   brightness: 0,
@@ -306,76 +314,221 @@ const tigerBands = [
   { start: 71, end: 112, move: "roar" },
 ];
 
-const formOptionsByVisualizer = {
-  fireworks: [
-    ["hydra", "Hydra"],
-    ["woman", "Woman"],
-    ["lion", "Lion rampant"],
-  ],
-  arrowstorm: [
-    ["woodland", "Woodland"],
-    ["williamtell", "William Tell"],
-    ["fort", "Wooden fort"],
-  ],
-  glitterfall: [
-    ["rain", "Rain"],
-    ["hail", "Hail"],
-    ["snow", "Snow"],
-    ["confetti", "Confetti"],
-  ],
-  knifethunk: [
-    ["timber", "Timber wall"],
-    ["carnival", "Carnival wheels"],
-    ["foundry", "Tin foundry"],
-  ],
-  goddesskisses: [
-    ["seduction", "Seduction"],
-    ["haka", "Haka"],
-    ["bloodruby", "Blood ruby"],
-  ],
-  eyevisions: [
-    ["sauron", "Sauron's eye"],
-    ["snake", "Snake eyes"],
-    ["cat", "Cat's eyes"],
-    ["dog", "Dog's eyes"],
-    ["deer", "Deer eyes"],
-    ["filmstar", "Italian film star"],
-  ],
-  lightning: [
-    ["storm", "Storm"],
-    ["missilecommand", "Missile Command"],
-  ],
-  asteroids: [
-    ["deepfield", "Deep field"],
-    ["arcade", "Arcade neon"],
-    ["redalert", "Red alert"],
-  ],
-  interzoneoracles: [
-    ["salon", "Salon"],
-    ["procession", "Procession"],
-    ["withdrawal", "Withdrawal"],
-  ],
-  sunflowersmiles: [
-    ["pinkpond", "Powder-pink pond"],
-    ["morning", "Morning meadow"],
-    ["sunset", "Peach sunset"],
-  ],
-  warofroses: [
-    ["openfield", "Open field"],
-    ["pincer", "Pincer"],
-    ["crownmelee", "Crown melee"],
-    ["verona", "Verona lovers"],
-  ],
-  turtleriver: [
-    ["meander", "Meander"],
-    ["rapids", "Rapids"],
-    ["moonbank", "Moonlit banks"],
-  ],
-  cathedralorganism: [
-    ["gothic", "Gothic"],
-    ["byzantine", "Byzantine"],
-    ["ruinedabbey", "Ruined abbey"],
-  ],
+const defaultVisualizerControls = {
+  theme: true,
+  peak: false,
+  speed: true,
+  size: false,
+  count: false,
+  grasp: false,
+};
+
+const defaultVisualizerLabels = {
+  theme: "Colour",
+  speed: "Speed",
+  size: "Reach",
+  count: "Arms",
+  grasp: "Grasp",
+};
+
+const visualizerConfigs = {
+  equalizer: {
+    ariaLabel: "Graphic equaliser visualisation",
+    controls: { peak: true, speed: false },
+  },
+  fireworks: {
+    ariaLabel: "Frequency fireworks visualisation",
+    forms: [
+      ["hydra", "Hydra"],
+      ["woman", "Woman"],
+      ["lion", "Lion rampant"],
+    ],
+  },
+  pacdance: {
+    ariaLabel: "Pac Dance frequency visualisation",
+  },
+  branchhands: {
+    ariaLabel: "Branch Hands frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+  },
+  swampbubbles: {
+    ariaLabel: "Swamp Bubbles frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Current", size: "Scale", count: "Population", grasp: "Pressure" },
+  },
+  arrowstorm: {
+    ariaLabel: "Arrow Storm frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    forms: [
+      ["woodland", "Woodland"],
+      ["williamtell", "William Tell"],
+      ["fort", "Wooden fort"],
+    ],
+  },
+  cephalopod: {
+    ariaLabel: "Cephalopod Mind frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+  },
+  discojive: {
+    ariaLabel: "Disco Jive frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Tempo", size: "Scale", count: "Couples", grasp: "Flair" },
+  },
+  glitterfall: {
+    ariaLabel: "Glitter Fall frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Fall rate", size: "Scale", count: "Density", grasp: "Gust" },
+    forms: [
+      ["rain", "Rain"],
+      ["hail", "Hail"],
+      ["snow", "Snow"],
+      ["confetti", "Confetti"],
+    ],
+  },
+  butterflyhost: {
+    ariaLabel: "Butterfly Host frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Tempo", size: "Scale", count: "Host", grasp: "Flutter" },
+  },
+  knifethunk: {
+    ariaLabel: "Knife Thunk frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Throw rate", size: "Scale", count: "Targets", grasp: "Force" },
+    forms: [
+      ["timber", "Timber wall"],
+      ["carnival", "Carnival wheels"],
+      ["foundry", "Tin foundry"],
+    ],
+  },
+  octopusocclusion: {
+    ariaLabel: "Octopus Occlusion frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Tempo", size: "Scale", count: "Octopi", grasp: "Mood" },
+  },
+  lizardlouche: {
+    ariaLabel: "Lizard Louche frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Tempo", size: "Scale", count: "Lizards", grasp: "Mood" },
+  },
+  goddesskisses: {
+    ariaLabel: "Goddess Kisses frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Kiss rate", size: "Scale", count: "Kisses", grasp: "Pout" },
+    forms: [
+      ["seduction", "Seduction"],
+      ["haka", "Haka"],
+      ["bloodruby", "Blood ruby"],
+    ],
+  },
+  climbinggarden: {
+    ariaLabel: "Climbing Garden frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Tempo", size: "Range", count: "Shoots", grasp: "Bloom" },
+  },
+  tipustiger: {
+    ariaLabel: "Tipu's Tiger frequency visualisation",
+    controls: { size: true, grasp: true },
+    labels: { speed: "Tempo", size: "Zoom", grasp: "Gore" },
+  },
+  mandelbrot: {
+    ariaLabel: "Mandelbrot Set frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Introspection", size: "Magnify", count: "Detail", grasp: "Warp" },
+  },
+  eyevisions: {
+    ariaLabel: "Eye Visions frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Blink rate", size: "Lashes", count: "Flecks", grasp: "Gaze" },
+    forms: [
+      ["sauron", "Sauron's eye"],
+      ["snake", "Snake eyes"],
+      ["cat", "Cat's eyes"],
+      ["dog", "Dog's eyes"],
+      ["deer", "Deer eyes"],
+      ["filmstar", "Italian film star"],
+    ],
+  },
+  lightning: {
+    ariaLabel: "Lightning frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Strike rate", size: "Bolt size", count: "Afterglow", grasp: "Snaking" },
+    forms: [
+      ["storm", "Storm"],
+      ["missilecommand", "Missile Command"],
+    ],
+  },
+  asteroids: {
+    ariaLabel: "Playable Asteroids music visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Game tempo", size: "Rock scale", count: "Rock density", grasp: "Saucer threat" },
+    forms: [
+      ["deepfield", "Deep field"],
+      ["arcade", "Arcade neon"],
+      ["redalert", "Red alert"],
+    ],
+  },
+  interzoneoracles: {
+    ariaLabel: "Interzone Oracles frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Pulse", size: "Stature", count: "Chorus", grasp: "Exudation" },
+    forms: [
+      ["salon", "Salon"],
+      ["procession", "Procession"],
+      ["withdrawal", "Withdrawal"],
+    ],
+  },
+  sunflowersmiles: {
+    ariaLabel: "Sunflower Smiles frequency visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Breeze", size: "Bloom size", count: "Flowers", grasp: "Insects" },
+    forms: [
+      ["pinkpond", "Powder-pink pond"],
+      ["morning", "Morning meadow"],
+      ["sunset", "Peach sunset"],
+    ],
+  },
+  warofroses: {
+    ariaLabel: "War of the Roses frequency visualisation",
+    controls: { theme: false, size: true, count: true, grasp: true },
+    labels: { speed: "March", size: "Bloom scale", count: "Numbers", grasp: "Belligerence" },
+    forms: [
+      ["openfield", "Open field"],
+      ["pincer", "Pincer"],
+      ["crownmelee", "Crown melee"],
+      ["verona", "Verona lovers"],
+    ],
+  },
+  turtleriver: {
+    ariaLabel: "Pilot fish in snapping turtle river visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { theme: "Spectrum", speed: "Grievance", size: "Hunger", count: "Turtles", grasp: "Munchiness" },
+    forms: [
+      ["meander", "Meander"],
+      ["rapids", "Rapids"],
+      ["moonbank", "Moonlit banks"],
+    ],
+  },
+  cathedralorganism: {
+    ariaLabel: "Living stained glass cathedral music visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { theme: "Glass", speed: "Breath", size: "Flex", count: "Procession", grasp: "Sentience" },
+    defaults: { speed: "max", size: "max", count: "max", grasp: "max", theme: "spectrum" },
+    forms: [
+      ["gothic", "Gothic"],
+      ["byzantine", "Byzantine"],
+      ["ruinedabbey", "Ruined abbey"],
+    ],
+  },
+  hypnoticflight: {
+    ariaLabel: "Hypnotic melting figures fleeing monsters music visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { theme: "Dream", speed: "Pulse", size: "Melt", count: "Runaways", grasp: "Dread" },
+    forms: [
+      ["liquid", "Liquid panic"],
+      ["prismatic", "Prismatic fever"],
+      ["nocturne", "Nocturne"],
+    ],
+  },
 };
 
 const standardThemeOptions = [
@@ -733,9 +886,42 @@ function syncSauronMoodControl(active) {
   }
 }
 
+function visualizerConfig(value = visualizerSelect.value) {
+  return visualizerConfigs[value] || visualizerConfigs.equalizer;
+}
+
+function controlConfig(config) {
+  return { ...defaultVisualizerControls, ...(config.controls || {}) };
+}
+
+function controlLabels(config) {
+  return { ...defaultVisualizerLabels, ...(config.labels || {}) };
+}
+
+function applyVisualizerDefaults(config) {
+  const defaults = config.defaults || {};
+  const setRange = (control, value) => {
+    if (!value) return;
+    control.value = value === "max" ? control.max : value === "min" ? control.min : value;
+  };
+
+  setRange(fireworkSpeed, defaults.speed);
+  setRange(handSize, defaults.size);
+  setRange(handCount, defaults.count);
+  setRange(handGrasp, defaults.grasp);
+  if (defaults.theme) {
+    themeSelect.value = defaults.theme;
+  }
+  updateFireworkSpeedLabel();
+  updateHandControlLabels();
+}
+
 function syncVisualizerControls() {
   const visualizer = visualizerSelect.value;
-  const formOptions = formOptionsByVisualizer[visualizer] || [];
+  const config = visualizerConfig(visualizer);
+  const controls = controlConfig(config);
+  const labels = controlLabels(config);
+  const formOptions = config.forms || [];
   const activeForm = fireworkFormSelect.value;
   const formLabel = fireworkFormSelect.closest("label");
   const peakLabel = peakToggle.closest("label");
@@ -765,34 +951,35 @@ function syncVisualizerControls() {
   const isMissileCommand = visualizer === "lightning" && fireworkFormSelect.value === "missilecommand";
   syncSauronMoodControl(isSauron);
   document.querySelector("#visualizer").classList.toggle("missile-targeting", isMissileCommand);
-  themeLabel.hidden = visualizer === "warofroses";
-  peakLabel.hidden = visualizer !== "equalizer";
-  speedLabel.hidden = visualizer === "equalizer";
-  reachLabel.hidden = isSauron || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles", "warofroses", "turtleriver", "cathedralorganism"].includes(visualizer);
+  themeLabel.hidden = !controls.theme;
+  peakLabel.hidden = !controls.peak;
+  speedLabel.hidden = !controls.speed;
+  reachLabel.hidden = isSauron || !controls.size;
   dischargeLabel.hidden = !isSauron;
-  armsLabel.hidden = visualizer === "tipustiger" || !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles", "warofroses", "turtleriver", "cathedralorganism"].includes(visualizer);
-  graspLabel.hidden = !["branchhands", "arrowstorm", "cephalopod", "swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses", "climbinggarden", "tipustiger", "mandelbrot", "eyevisions", "lightning", "asteroids", "interzoneoracles", "sunflowersmiles", "warofroses", "turtleriver", "cathedralorganism"].includes(visualizer);
-  setControlLabel(themeSelect, visualizer === "cathedralorganism" ? "Glass" : visualizer === "turtleriver" ? "Spectrum" : themeLabel.hidden ? "Colour" : "Colour");
-
-  setControlLabel(
-    fireworkSpeed,
-    visualizer === "cathedralorganism" ? "Breath" : visualizer === "turtleriver" ? "Grievance" : visualizer === "warofroses" ? "March" : visualizer === "sunflowersmiles" ? "Breeze" : visualizer === "interzoneoracles" ? "Pulse" : visualizer === "asteroids" ? "Game tempo" : visualizer === "lightning" ? "Strike rate" : visualizer === "eyevisions" ? "Blink rate" : visualizer === "mandelbrot" ? "Introspection" : visualizer === "swampbubbles" ? "Current" : ["discojive", "butterflyhost", "octopusocclusion", "lizardlouche", "climbinggarden", "tipustiger"].includes(visualizer) ? "Tempo" : visualizer === "goddesskisses" ? "Kiss rate" : visualizer === "glitterfall" ? "Fall rate" : visualizer === "knifethunk" ? "Throw rate" : "Speed",
-  );
-  setControlLabel(handSize, visualizer === "cathedralorganism" ? "Flex" : visualizer === "turtleriver" ? "Hunger" : visualizer === "warofroses" ? "Bloom scale" : visualizer === "sunflowersmiles" ? "Bloom size" : visualizer === "interzoneoracles" ? "Stature" : visualizer === "asteroids" ? "Rock scale" : visualizer === "lightning" ? "Bolt size" : visualizer === "eyevisions" ? "Lashes" : visualizer === "mandelbrot" ? "Magnify" : visualizer === "tipustiger" ? "Zoom" : visualizer === "climbinggarden" ? "Range" : ["swampbubbles", "discojive", "glitterfall", "butterflyhost", "knifethunk", "octopusocclusion", "lizardlouche", "goddesskisses"].includes(visualizer) ? "Scale" : "Reach");
-  setControlLabel(
-    handCount,
-    visualizer === "cathedralorganism" ? "Procession" : visualizer === "turtleriver" ? "Turtles" : visualizer === "warofroses" ? "Numbers" : visualizer === "sunflowersmiles" ? "Flowers" : visualizer === "interzoneoracles" ? "Chorus" : visualizer === "asteroids" ? "Rock density" : visualizer === "lightning" ? "Afterglow" : visualizer === "eyevisions" ? "Flecks" : visualizer === "mandelbrot" ? "Detail" : visualizer === "swampbubbles" ? "Population" : visualizer === "discojive" ? "Couples" : visualizer === "glitterfall" ? "Density" : visualizer === "butterflyhost" ? "Host" : visualizer === "knifethunk" ? "Targets" : visualizer === "octopusocclusion" ? "Octopi" : visualizer === "lizardlouche" ? "Lizards" : visualizer === "goddesskisses" ? "Kisses" : visualizer === "climbinggarden" ? "Shoots" : "Arms",
-  );
-  setControlLabel(
-    handGrasp,
-    visualizer === "cathedralorganism" ? "Sentience" : visualizer === "turtleriver" ? "Munchiness" : visualizer === "warofroses" ? "Belligerence" : visualizer === "sunflowersmiles" ? "Insects" : visualizer === "interzoneoracles" ? "Exudation" : visualizer === "asteroids" ? "Saucer threat" : visualizer === "lightning" ? "Snaking" : visualizer === "eyevisions" ? "Gaze" : visualizer === "mandelbrot" ? "Warp" : visualizer === "swampbubbles" ? "Pressure" : visualizer === "discojive" ? "Flair" : visualizer === "glitterfall" ? "Gust" : visualizer === "butterflyhost" ? "Flutter" : visualizer === "knifethunk" ? "Force" : visualizer === "goddesskisses" ? "Pout" : visualizer === "climbinggarden" ? "Bloom" : visualizer === "tipustiger" ? "Gore" : ["octopusocclusion", "lizardlouche"].includes(visualizer) ? "Mood" : "Grasp",
-  );
+  armsLabel.hidden = !controls.count;
+  graspLabel.hidden = !controls.grasp;
+  if (!isSauron) {
+    setControlLabel(themeSelect, labels.theme);
+  }
+  setControlLabel(fireworkSpeed, labels.speed);
+  setControlLabel(handSize, labels.size);
+  setControlLabel(handCount, labels.count);
+  setControlLabel(handGrasp, labels.grasp);
 }
 
 function setFullscreenLabel() {
   const active = document.querySelector(".player").classList.contains("visual-fullscreen");
   fullscreenButton.textContent = active ? "X" : "F";
   fullscreenButton.title = active ? "Exit fullscreen (Esc)" : "Visual fullscreen (F4)";
+}
+
+function scheduleCanvasResize() {
+  requestAnimationFrame(() => {
+    resizeCanvas();
+    requestAnimationFrame(resizeCanvas);
+  });
+  window.setTimeout(resizeCanvas, 80);
+  window.setTimeout(resizeCanvas, 220);
 }
 
 function enterVisualStage() {
@@ -805,10 +992,10 @@ function enterVisualStage() {
   player.classList.add("visual-fullscreen");
   document.body.classList.add("visual-stage");
   setFullscreenLabel();
-  requestAnimationFrame(resizeCanvas);
+  scheduleCanvasResize();
 
   if (player.requestFullscreen) {
-    player.requestFullscreen().catch(() => requestAnimationFrame(resizeCanvas));
+    player.requestFullscreen().then(scheduleCanvasResize).catch(scheduleCanvasResize);
   }
 }
 
@@ -818,10 +1005,10 @@ function exitVisualStage() {
   player.classList.remove("visual-fullscreen");
   document.body.classList.remove("visual-stage");
   setFullscreenLabel();
-  requestAnimationFrame(resizeCanvas);
+  scheduleCanvasResize();
 
   if (document.fullscreenElement) {
-    document.exitFullscreen().catch(() => {});
+    document.exitFullscreen().then(scheduleCanvasResize).catch(scheduleCanvasResize);
   }
 }
 
@@ -830,6 +1017,31 @@ function toggleVisualFullscreen() {
     exitVisualStage();
   } else {
     enterVisualStage();
+  }
+}
+
+function spectrumPadLabel() {
+  const vertical = spectrumPad.smilesDecadence >= 0 ? "Smiles" : "Decadence";
+  const horizontal = spectrumPad.psychedeliaInsanity >= 0 ? "Insanity" : "Psychedelia";
+  const verticalAmount = Math.round(Math.abs(spectrumPad.smilesDecadence) * 100);
+  const horizontalAmount = Math.round(Math.abs(spectrumPad.psychedeliaInsanity) * 100);
+  if (verticalAmount === 0 && horizontalAmount === 0) {
+    return "Spectrum neutral";
+  }
+  return `${vertical} ${verticalAmount} / ${horizontal} ${horizontalAmount}`;
+}
+
+function adjustSpectrumPad(code) {
+  const step = 0.1;
+  if (code === "KeyW") spectrumPad.smilesDecadence += step;
+  if (code === "KeyS") spectrumPad.smilesDecadence -= step;
+  if (code === "KeyA") spectrumPad.psychedeliaInsanity -= step;
+  if (code === "KeyD") spectrumPad.psychedeliaInsanity += step;
+  spectrumPad.smilesDecadence = clampNumber(spectrumPad.smilesDecadence, -1, 1);
+  spectrumPad.psychedeliaInsanity = clampNumber(spectrumPad.psychedeliaInsanity, -1, 1);
+  pulseStageLabel("visual", spectrumPadLabel());
+  if (!animationId) {
+    drawIdleVisualizer();
   }
 }
 
@@ -909,6 +1121,10 @@ function restartVisualizer() {
   cathedralFrame = 0;
   cathedralFigures = [];
   cathedralSparks = [];
+  hypnoticFrame = 0;
+  hypnoticFigures = [];
+  hypnoticMonsters = [];
+  hypnoticBlobs = [];
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -1224,7 +1440,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "cathedralorganism") {
+      if (visualizerSelect.value === "hypnoticflight") {
+        drawHypnoticFlightFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "cathedralorganism") {
         drawCathedralOrganismFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "turtleriver") {
         drawTurtleRiverFrame(canvasContext, buffer);
@@ -1366,7 +1584,23 @@ function fireworkHue(bandIndex, intensity) {
   return baseHue + moodShift + intensity * 16;
 }
 
+function clampNumber(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
 function hsla(hue, saturation, lightness, alpha) {
+  const smiles = Math.max(0, spectrumPad.smilesDecadence);
+  const decadence = Math.max(0, -spectrumPad.smilesDecadence);
+  const psychedelia = Math.max(0, -spectrumPad.psychedeliaInsanity);
+  const insanity = Math.max(0, spectrumPad.psychedeliaInsanity);
+
+  if (smiles || decadence || psychedelia || insanity) {
+    const movingHue = Math.sin((performance.now?.() || Date.now()) * 0.0007) * (psychedelia * 42 + insanity * 76);
+    hue += smiles * -12 + decadence * 28 + psychedelia * 112 + insanity * 213 + movingHue;
+    saturation = clampNumber(saturation + smiles * 8 - decadence * 7 + psychedelia * 18 + insanity * 30, 0, 100);
+    lightness = clampNumber(lightness + smiles * 9 - decadence * 15 + psychedelia * 5 + insanity * Math.sin((performance.now?.() || Date.now()) * 0.002) * 16, 0, 100);
+  }
+
   return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
 }
 
@@ -6422,6 +6656,247 @@ function drawCathedralOrganismFrame(canvasContext, buffer) {
   drawCathedralOrganismScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
 }
 
+function hypnoticHue(progress, intensity) {
+  const dream = themeSelect.value;
+  if (dream === "ice") return 182 + progress * 118 + intensity * 78;
+  if (dream === "ember") return 8 + progress * 96 + intensity * 50;
+  if (dream === "pressure") return 318 - progress * 280 + intensity * 120;
+  if (dream === "spectrum") return (42 + progress * 211 + intensity * 173) % 360;
+  return (126 + progress * 137 + intensity * 91) % 360;
+}
+
+function setupHypnoticFigures(width, height) {
+  const desired = Math.max(4, Math.min(22, handCountValueNumber() + 5));
+  while (hypnoticFigures.length < desired) {
+    const index = hypnoticFigures.length;
+    hypnoticFigures.push({
+      x: width * (0.12 + Math.random() * 0.78),
+      y: height * (0.18 + Math.random() * 0.68),
+      vx: (Math.random() - 0.5) * 1.7,
+      vy: (Math.random() - 0.5) * 1.2,
+      phase: Math.random() * Math.PI * 2,
+      hueShift: index / Math.max(1, desired - 1),
+      scale: 0.72 + Math.random() * 0.9,
+      dissolve: Math.random(),
+      turn: Math.random() < 0.5 ? -1 : 1,
+    });
+  }
+  if (hypnoticFigures.length > desired) {
+    hypnoticFigures.splice(desired);
+  }
+}
+
+function setupHypnoticMonsters(width, height) {
+  const desired = Math.max(2, Math.min(7, Math.round(2 + handGraspAmount() * 5)));
+  while (hypnoticMonsters.length < desired) {
+    const index = hypnoticMonsters.length;
+    hypnoticMonsters.push({
+      x: width * (0.12 + Math.random() * 0.78),
+      y: height * (0.18 + Math.random() * 0.68),
+      vx: (Math.random() - 0.5) * 0.75,
+      vy: (Math.random() - 0.5) * 0.55,
+      phase: Math.random() * Math.PI * 2,
+      hunger: 0.3 + Math.random() * 0.7,
+      limbs: 5 + (index % 4),
+    });
+  }
+  if (hypnoticMonsters.length > desired) {
+    hypnoticMonsters.splice(desired);
+  }
+}
+
+function nearestHypnoticMonster(figure) {
+  return hypnoticMonsters.reduce((nearest, monster) => {
+    const distance = Math.hypot(figure.x - monster.x, figure.y - monster.y);
+    if (!nearest || distance < nearest.distance) {
+      return { monster, distance };
+    }
+    return nearest;
+  }, null);
+}
+
+function drawHypnoticField(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  const form = fireworkFormSelect.value;
+  const pulse = Math.sin(hypnoticFrame * 0.035) * 0.5 + 0.5;
+  const bg = canvasContext.createLinearGradient(0, 0, width, height);
+  bg.addColorStop(0, hsla(hypnoticHue(0.05, trebleEnergy), 88, form === "nocturne" ? 10 : 22 + trebleEnergy * 20, 0.92));
+  bg.addColorStop(0.42, hsla(hypnoticHue(0.48, midsEnergy), 96, form === "liquid" ? 28 + bassEnergy * 18 : 18 + midsEnergy * 22, 0.92));
+  bg.addColorStop(1, hsla(hypnoticHue(0.88, bassEnergy), 86, form === "prismatic" ? 26 + pulse * 22 : 8 + bassEnergy * 18, 0.96));
+  canvasContext.fillStyle = bg;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.globalCompositeOperation = "lighter";
+  for (let ring = 0; ring < 16; ring += 1) {
+    const amount = ring / 15;
+    const radius = Math.min(width, height) * (0.16 + amount * 0.72 + bassEnergy * 0.08);
+    const x = width * (0.5 + Math.sin(hypnoticFrame * 0.007 + ring) * 0.18);
+    const y = height * (0.5 + Math.cos(hypnoticFrame * 0.006 + ring * 1.3) * 0.22);
+    canvasContext.strokeStyle = hsla(hypnoticHue(amount, trebleEnergy), 100, 54 + pulse * 18, 0.035 + midsEnergy * 0.04);
+    canvasContext.lineWidth = Math.max(1, width * (0.003 + amount * 0.006));
+    canvasContext.beginPath();
+    canvasContext.ellipse(x, y, radius * (1.1 + Math.sin(hypnoticFrame * 0.015 + ring) * 0.2), radius * 0.58, Math.sin(hypnoticFrame * 0.004 + ring), 0, Math.PI * 2);
+    canvasContext.stroke();
+  }
+  canvasContext.globalCompositeOperation = "source-over";
+}
+
+function drawHypnoticBlob(canvasContext, blob, width, height) {
+  blob.life *= 0.955;
+  blob.radius *= 1.013;
+  blob.x += blob.vx;
+  blob.y += blob.vy;
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  const gradient = canvasContext.createRadialGradient(blob.x, blob.y, 0, blob.x, blob.y, blob.radius);
+  gradient.addColorStop(0, hsla(blob.hue, 100, 62, blob.life * 0.34));
+  gradient.addColorStop(0.55, hsla(blob.hue + 97, 100, 44, blob.life * 0.18));
+  gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = gradient;
+  canvasContext.beginPath();
+  canvasContext.ellipse(blob.x, blob.y, blob.radius * blob.stretch, blob.radius, blob.spin, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+}
+
+function drawHypnoticMonster(canvasContext, monster, width, height, intensity, bassEnergy) {
+  const dread = handGraspAmount();
+  const size = Math.min(width, height) * (0.08 + dread * 0.07 + bassEnergy * 0.06) * monster.hunger;
+  const hue = hypnoticHue(monster.hunger, intensity);
+  canvasContext.save();
+  canvasContext.translate(monster.x, monster.y);
+  canvasContext.rotate(Math.sin(hypnoticFrame * 0.013 + monster.phase) * 0.35);
+  canvasContext.globalCompositeOperation = "multiply";
+  canvasContext.fillStyle = `rgba(0, 0, 0, ${0.24 + dread * 0.34})`;
+  canvasContext.beginPath();
+  for (let point = 0; point < monster.limbs * 2; point += 1) {
+    const angle = point / (monster.limbs * 2) * Math.PI * 2;
+    const pulse = 0.72 + Math.sin(hypnoticFrame * 0.04 + monster.phase + point) * 0.24 + intensity * 0.2;
+    const radius = size * (point % 2 === 0 ? 1.05 : 0.56) * pulse;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+    if (point === 0) canvasContext.moveTo(x, y);
+    else canvasContext.lineTo(x, y);
+  }
+  canvasContext.closePath();
+  canvasContext.fill();
+  canvasContext.globalCompositeOperation = "lighter";
+  canvasContext.strokeStyle = hsla(hue + 180, 96, 58, 0.24 + intensity * 0.28);
+  canvasContext.lineWidth = Math.max(1, size * 0.035);
+  canvasContext.stroke();
+  for (let eye = -1; eye <= 1; eye += 2) {
+    canvasContext.fillStyle = hsla(hue + 60, 100, 68, 0.62 + intensity * 0.24);
+    canvasContext.beginPath();
+    canvasContext.ellipse(size * 0.18, eye * size * 0.18, size * 0.12, size * 0.055, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+  canvasContext.restore();
+}
+
+function drawHypnoticFigure(canvasContext, figure, width, height, intensity, bassEnergy, trebleEnergy) {
+  const melt = handSizeMultiplier();
+  const size = Math.min(width, height) * 0.04 * figure.scale * (0.8 + intensity * 0.45);
+  const hue = hypnoticHue(figure.hueShift, intensity + trebleEnergy * 0.4);
+  const drip = size * melt * (0.8 + bassEnergy * 1.6);
+  const sway = Math.sin(hypnoticFrame * 0.09 + figure.phase) * size * 0.35;
+  canvasContext.save();
+  canvasContext.translate(figure.x, figure.y);
+  canvasContext.rotate(Math.atan2(figure.vy, figure.vx || 1) * 0.14 + sway * 0.006);
+  canvasContext.globalCompositeOperation = "lighter";
+  const aura = canvasContext.createRadialGradient(0, 0, 0, 0, 0, size * 3.2);
+  aura.addColorStop(0, hsla(hue, 100, 62, 0.18 + intensity * 0.22));
+  aura.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = aura;
+  canvasContext.fillRect(-size * 4, -size * 4, size * 8, size * 8);
+  canvasContext.fillStyle = hsla(hue, 92, 60 + intensity * 18, 0.66 + trebleEnergy * 0.18);
+  canvasContext.beginPath();
+  canvasContext.arc(0, -size * 1.25, size * 0.38, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.beginPath();
+  canvasContext.moveTo(0, -size * 0.86);
+  canvasContext.bezierCurveTo(size * 0.64, -size * 0.42, size * 0.55 + sway, size * 0.62, size * 0.12, size * 1.1 + drip * 0.35);
+  canvasContext.bezierCurveTo(size * 0.42, size * 1.62 + drip, -size * 0.48, size * 1.58 + drip * 0.8, -size * 0.12, size * 0.94);
+  canvasContext.bezierCurveTo(-size * 0.56 - sway, size * 0.22, -size * 0.5, -size * 0.44, 0, -size * 0.86);
+  canvasContext.fill();
+  canvasContext.strokeStyle = hsla(hue + 137, 96, 70, 0.32 + intensity * 0.28);
+  canvasContext.lineWidth = Math.max(1, size * 0.08);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.38, -size * 0.18);
+  canvasContext.lineTo(-size * (1.2 + bassEnergy), size * (0.38 + figure.dissolve));
+  canvasContext.moveTo(size * 0.38, -size * 0.16);
+  canvasContext.lineTo(size * (1.05 + trebleEnergy), size * (0.34 + figure.dissolve * 0.8));
+  canvasContext.stroke();
+  canvasContext.restore();
+}
+
+function drawHypnoticFlightScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  const speed = fireworkSpeedMultiplier();
+  const dread = handGraspAmount();
+  hypnoticFrame += speed * (0.88 + bassEnergy * 0.7 + midsEnergy * 0.28);
+  setupHypnoticFigures(width, height);
+  setupHypnoticMonsters(width, height);
+  drawHypnoticField(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+
+  if (Math.random() < (0.06 + bassEnergy * 0.18 + trebleEnergy * 0.08) * speed && hypnoticBlobs.length < 80) {
+    hypnoticBlobs.push({
+      x: width * Math.random(),
+      y: height * Math.random(),
+      radius: Math.min(width, height) * (0.035 + Math.random() * 0.13 + bassEnergy * 0.12),
+      stretch: 0.55 + Math.random() * 1.7,
+      spin: Math.random() * Math.PI,
+      vx: (Math.random() - 0.5) * 0.9,
+      vy: (Math.random() - 0.5) * 0.65,
+      hue: hypnoticHue(Math.random(), trebleEnergy),
+      life: 1,
+    });
+  }
+  hypnoticBlobs = hypnoticBlobs.filter((blob) => blob.life > 0.035);
+  hypnoticBlobs.forEach((blob) => drawHypnoticBlob(canvasContext, blob, width, height));
+
+  hypnoticMonsters.forEach((monster, index) => {
+    const target = hypnoticFigures[index % Math.max(1, hypnoticFigures.length)];
+    const intensity = intensities[index % intensities.length];
+    if (target) {
+      monster.vx += (target.x - monster.x) * (0.00018 + dread * 0.00038);
+      monster.vy += (target.y - monster.y) * (0.00015 + dread * 0.00032);
+    }
+    monster.vx += Math.sin(hypnoticFrame * 0.018 + monster.phase) * 0.025;
+    monster.vy += Math.cos(hypnoticFrame * 0.016 + monster.phase) * 0.022;
+    monster.vx *= 0.96;
+    monster.vy *= 0.96;
+    monster.x = (monster.x + monster.vx * speed + width) % width;
+    monster.y = (monster.y + monster.vy * speed + height) % height;
+    drawHypnoticMonster(canvasContext, monster, width, height, intensity, bassEnergy);
+  });
+
+  hypnoticFigures.forEach((figure, index) => {
+    const nearest = nearestHypnoticMonster(figure);
+    const intensity = intensities[index % intensities.length];
+    if (nearest) {
+      const push = (0.35 + dread * 1.2) / Math.max(80, nearest.distance);
+      figure.vx += (figure.x - nearest.monster.x) * push * 0.012;
+      figure.vy += (figure.y - nearest.monster.y) * push * 0.01;
+    }
+    figure.vx += Math.sin(hypnoticFrame * 0.028 + figure.phase) * (0.045 + midsEnergy * 0.09);
+    figure.vy += Math.cos(hypnoticFrame * 0.024 + figure.phase) * (0.035 + trebleEnergy * 0.08);
+    figure.vx *= 0.95;
+    figure.vy *= 0.95;
+    figure.x = (figure.x + figure.vx * (0.9 + speed * 0.45) + width) % width;
+    figure.y = (figure.y + figure.vy * (0.8 + speed * 0.34) + height) % height;
+    drawHypnoticFigure(canvasContext, figure, width, height, intensity, bassEnergy, trebleEnergy);
+  });
+}
+
+function drawHypnoticFlightFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 8), 1.38);
+  const midsEnergy = pressureResponse(averageBand(buffer, 12, 58), 1.32);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 62, 112), 1.46);
+  const intensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.36));
+  drawHypnoticFlightScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -7700,7 +8175,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "cathedralorganism") {
+  if (visualizerSelect.value === "hypnoticflight") {
+    drawIdleHypnoticFlight();
+  } else if (visualizerSelect.value === "cathedralorganism") {
     drawIdleCathedralOrganism();
   } else if (visualizerSelect.value === "turtleriver") {
     drawIdleTurtleRiver();
@@ -8231,6 +8708,25 @@ function drawIdleCathedralOrganism() {
   }
 }
 
+function drawIdleHypnoticFlight() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(hypnoticFrame * 0.04) * 0.5;
+  const shimmer = 0.5 + Math.sin(hypnoticFrame * 0.067 + 1.4) * 0.5;
+  const intensities = fireworksBands.map((band, index) => 0.18 + pulse * 0.17 + (index % 2) * shimmer * 0.13);
+  drawHypnoticFlightScene(canvasContext, width, height, 0.14 + pulse * 0.22, 0.13 + shimmer * 0.18, 0.16 + (1 - pulse) * 0.22, intensities);
+
+  if (visualizerSelect.value === "hypnoticflight" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleLightning() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -8317,8 +8813,11 @@ function drawIdleFireworks() {
 function resizeCanvas() {
   const ratio = window.devicePixelRatio || 1;
   const rect = visualizer.getBoundingClientRect();
-  visualizer.width = Math.floor(rect.width * ratio);
-  visualizer.height = Math.floor(rect.height * ratio);
+  const isVisualFullscreen = document.querySelector(".player").classList.contains("visual-fullscreen");
+  const cssWidth = isVisualFullscreen ? window.innerWidth : rect.width;
+  const cssHeight = isVisualFullscreen ? window.innerHeight : rect.height;
+  visualizer.width = Math.floor(cssWidth * ratio);
+  visualizer.height = Math.floor(cssHeight * ratio);
   pacDancers = [];
   handForms = [];
   swampBubbles = [];
@@ -8355,6 +8854,10 @@ function resizeCanvas() {
   cathedralFrame = 0;
   cathedralFigures = [];
   cathedralSparks = [];
+  hypnoticFrame = 0;
+  hypnoticFigures = [];
+  hypnoticMonsters = [];
+  hypnoticBlobs = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -8433,48 +8936,11 @@ peakToggle.addEventListener("change", () => {
 });
 
 visualizerSelect.addEventListener("change", () => {
-  const visualizerLabels = {
-    equalizer: "Graphic equaliser visualisation",
-    fireworks: "Frequency fireworks visualisation",
-    pacdance: "Pac Dance frequency visualisation",
-    branchhands: "Branch Hands frequency visualisation",
-    swampbubbles: "Swamp Bubbles frequency visualisation",
-    arrowstorm: "Arrow Storm frequency visualisation",
-    cephalopod: "Cephalopod Mind frequency visualisation",
-    discojive: "Disco Jive frequency visualisation",
-    glitterfall: "Glitter Fall frequency visualisation",
-    butterflyhost: "Butterfly Host frequency visualisation",
-    knifethunk: "Knife Thunk frequency visualisation",
-    octopusocclusion: "Octopus Occlusion frequency visualisation",
-    lizardlouche: "Lizard Louche frequency visualisation",
-    goddesskisses: "Goddess Kisses frequency visualisation",
-    climbinggarden: "Climbing Garden frequency visualisation",
-    tipustiger: "Tipu's Tiger frequency visualisation",
-    mandelbrot: "Mandelbrot Set frequency visualisation",
-    eyevisions: "Eye Visions frequency visualisation",
-    lightning: "Lightning frequency visualisation",
-    asteroids: "Playable Asteroids music visualisation",
-    interzoneoracles: "Interzone Oracles frequency visualisation",
-    sunflowersmiles: "Sunflower Smiles frequency visualisation",
-    warofroses: "War of the Roses frequency visualisation",
-    turtleriver: "Pilot fish in snapping turtle river visualisation",
-    cathedralorganism: "Living stained glass cathedral music visualisation",
-  };
+  const config = visualizerConfig();
 
-  visualizer.setAttribute(
-    "aria-label",
-    visualizerLabels[visualizerSelect.value] || visualizerLabels.equalizer,
-  );
+  visualizer.setAttribute("aria-label", config.ariaLabel);
   syncVisualizerControls();
-  if (visualizerSelect.value === "cathedralorganism") {
-    fireworkSpeed.value = fireworkSpeed.max;
-    handSize.value = handSize.max;
-    handCount.value = handCount.max;
-    handGrasp.value = handGrasp.max;
-    themeSelect.value = "spectrum";
-    updateFireworkSpeedLabel();
-    updateHandControlLabels();
-  }
+  applyVisualizerDefaults(config);
   restartVisualizer();
 });
 
@@ -8528,6 +8994,10 @@ handCount.addEventListener("input", () => {
   cathedralFrame = 0;
   cathedralFigures = [];
   cathedralSparks = [];
+  hypnoticFrame = 0;
+  hypnoticFigures = [];
+  hypnoticMonsters = [];
+  hypnoticBlobs = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
@@ -8588,7 +9058,7 @@ document.addEventListener("fullscreenchange", () => {
     document.body.classList.remove("visual-stage");
   }
   setFullscreenLabel();
-  requestAnimationFrame(resizeCanvas);
+  scheduleCanvasResize();
 });
 
 function handleGlobalKey(event) {
@@ -8596,6 +9066,8 @@ function handleGlobalKey(event) {
   const key = event.key || "";
   const code = event.code || "";
   const lowerKey = key.toLowerCase();
+  const tagName = event.target.tagName.toLowerCase();
+  const isEditingTarget = tagName === "input" || tagName === "select" || tagName === "textarea";
 
   if (key === "Escape" && player.classList.contains("visual-fullscreen") && !document.fullscreenElement) {
     event.preventDefault();
@@ -8614,6 +9086,17 @@ function handleGlobalKey(event) {
     event.preventDefault();
     roarTipusTiger();
     return;
+  }
+
+  if (!isEditingTarget && ["KeyA", "KeyD", "KeyW", "KeyS"].includes(code)) {
+    event.preventDefault();
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+    adjustSpectrumPad(code);
+    if (!["turtleriver", "asteroids"].includes(visualizerSelect.value)) {
+      return;
+    }
   }
 
   if (visualizerSelect.value === "turtleriver" && ["KeyA", "KeyD", "KeyW", "KeyS"].includes(code)) {
@@ -8643,9 +9126,7 @@ function handleGlobalKey(event) {
     return;
   }
 
-  const tagName = event.target.tagName.toLowerCase();
-
-  if (tagName === "input" || tagName === "select" || tagName === "textarea") {
+  if (isEditingTarget) {
     return;
   }
 
