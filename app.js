@@ -131,6 +131,7 @@ const peakHoldMs = 3200;
 const defaultDirectoryName = "Andy ChatGPT DALL-E aisongs";
 const defaultLibraryApi = "http://127.0.0.1:4173/api/tracks";
 const directoryStoreName = "waveDeckDirectory";
+const sessionStoreName = "waveDeckSession";
 const fireworksBands = [
   { start: 1, end: 5, threshold: 0.42, name: "bass" },
   { start: 6, end: 14, threshold: 0.35, name: "lowMid" },
@@ -613,6 +614,32 @@ function trackDisplayTitle(track) {
   return trackName(track).replace(/\.wav$/i, "");
 }
 
+function trackIdentity(track) {
+  if (!track) {
+    return null;
+  }
+
+  return {
+    name: trackName(track),
+    relativePath: track.relativePath || trackName(track),
+    lastModified: trackModified(track),
+    source: track.source || "",
+  };
+}
+
+function tracksMatchIdentity(track, identity) {
+  if (!track || !identity) {
+    return false;
+  }
+
+  const relativePath = track.relativePath || trackName(track);
+  return (
+    relativePath === identity.relativePath
+    || trackName(track) === identity.name
+    || (identity.lastModified && trackModified(track) === identity.lastModified && trackName(track) === identity.name)
+  );
+}
+
 function visualizerDisplayName() {
   return visualizerSelect.selectedOptions[0]?.textContent || "Visualisation";
 }
@@ -884,6 +911,134 @@ function updateHandControlLabels() {
   handGraspValue.textContent = `${Math.round(handGraspAmount() * 100)}%`;
 }
 
+let sessionSaveTimer = 0;
+let restoredSession = null;
+let sessionRestoredToTrack = false;
+let lastPersistedSecond = -1;
+
+function currentAudioState() {
+  if (!audio.src || currentIndex < 0) {
+    return "stopped";
+  }
+
+  return audio.paused ? "paused" : "playing";
+}
+
+function sessionSnapshot() {
+  return {
+    version: 1,
+    savedAt: Date.now(),
+    directoryName: directoryName.textContent,
+    librarySource: tracks[currentIndex]?.source || tracks[0]?.source || "",
+    currentTrack: trackIdentity(tracks[currentIndex]),
+    currentIndex,
+    currentTime: Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
+    duration: Number.isFinite(audio.duration) ? audio.duration : 0,
+    audioState: currentAudioState(),
+    controls: {
+      sort: sortSelect.value,
+      shuffle: shuffleToggle.checked,
+      visualizer: visualizerSelect.value,
+      form: fireworkFormSelect.value,
+      theme: themeSelect.value,
+      speed: fireworkSpeed.value,
+      size: handSize.value,
+      count: handCount.value,
+      grasp: handGrasp.value,
+      peak: peakToggle.checked,
+      discharge: eyeDischargeSelect.value,
+      spectrumPad: { ...spectrumPad },
+    },
+  };
+}
+
+function saveSessionNow() {
+  try {
+    localStorage.setItem(sessionStoreName, JSON.stringify(sessionSnapshot()));
+  } catch (error) {
+    console.warn("Session save failed", error);
+  }
+}
+
+function scheduleSessionSave(delay = 650) {
+  window.clearTimeout(sessionSaveTimer);
+  sessionSaveTimer = window.setTimeout(saveSessionNow, delay);
+}
+
+function loadSavedSession() {
+  try {
+    const saved = localStorage.getItem(sessionStoreName);
+    return saved ? JSON.parse(saved) : null;
+  } catch (error) {
+    console.warn("Session restore failed", error);
+    return null;
+  }
+}
+
+function setSelectValueIfPresent(select, value) {
+  if (!value) {
+    return false;
+  }
+
+  const option = Array.from(select.options).find((item) => item.value === value);
+  if (!option) {
+    return false;
+  }
+
+  select.value = value;
+  return true;
+}
+
+function restoreControlPreferences(session) {
+  const controls = session?.controls;
+  if (!controls) {
+    return;
+  }
+
+  setSelectValueIfPresent(sortSelect, controls.sort);
+  shuffleToggle.checked = Boolean(controls.shuffle);
+  peakToggle.checked = controls.peak !== false;
+  fireworkSpeed.value = controls.speed || fireworkSpeed.value;
+  handSize.value = controls.size || handSize.value;
+  handCount.value = controls.count || handCount.value;
+  handGrasp.value = controls.grasp || handGrasp.value;
+  if (controls.spectrumPad) {
+    spectrumPad.smilesDecadence = clampNumber(Number(controls.spectrumPad.smilesDecadence) || 0, -1, 1);
+    spectrumPad.psychedeliaInsanity = clampNumber(Number(controls.spectrumPad.psychedeliaInsanity) || 0, -1, 1);
+  }
+
+  setSelectValueIfPresent(visualizerSelect, controls.visualizer);
+  visualizer.setAttribute("aria-label", visualizerConfig().ariaLabel);
+  syncVisualizerControls();
+  setSelectValueIfPresent(fireworkFormSelect, controls.form);
+  syncVisualizerControls();
+  setSelectValueIfPresent(themeSelect, controls.theme);
+  setSelectValueIfPresent(eyeDischargeSelect, controls.discharge);
+  updateFireworkSpeedLabel();
+  updateHandControlLabels();
+}
+
+function restoreTrackFromSession(session) {
+  if (!session || sessionRestoredToTrack || tracks.length === 0) {
+    return;
+  }
+
+  const identity = session.currentTrack;
+  let index = identity ? tracks.findIndex((track) => tracksMatchIdentity(track, identity)) : -1;
+  if (index < 0 && Number.isInteger(session.currentIndex) && session.currentIndex >= 0 && session.currentIndex < tracks.length) {
+    index = session.currentIndex;
+  }
+  if (index < 0) {
+    return;
+  }
+
+  sessionRestoredToTrack = true;
+  const resumeAt = Math.max(0, Number(session.currentTime) || 0);
+  loadTrack(index, false, resumeAt);
+  setStatus("paused");
+  scheduleSessionSave(1000);
+}
+
 function setControlLabel(control, text) {
   const label = control.closest("label");
   const textNode = Array.from(label.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
@@ -1088,6 +1243,7 @@ function adjustSpectrumPad(code) {
   if (!animationId) {
     drawIdleVisualizer();
   }
+  scheduleSessionSave();
 }
 
 function restartVisualizer() {
@@ -1193,7 +1349,7 @@ function setupAudioGraph() {
   }
 }
 
-function loadTrack(index, autoplay = true) {
+function loadTrack(index, autoplay = true, resumeAt = null) {
   if (index < 0 || index >= tracks.length) {
     return;
   }
@@ -1208,8 +1364,17 @@ function loadTrack(index, autoplay = true) {
   const trackUrl = track.audioUrl || URL.createObjectURL(track.file);
   track.url = trackUrl;
   audio.src = trackUrl;
+  if (Number.isFinite(resumeAt) && resumeAt > 0) {
+    const applyResumeTime = () => {
+      const safeDuration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : resumeAt + 1;
+      audio.currentTime = Math.min(resumeAt, Math.max(0, safeDuration - 0.8));
+      timeReadout.textContent = `${formatDuration(audio.currentTime)} / ${formatDuration(audio.duration)}`;
+    };
+    audio.addEventListener("loadedmetadata", applyResumeTime, { once: true });
+  }
   currentTrack.textContent = trackDisplayTitle(track);
   renderTracks();
+  scheduleSessionSave();
 
   if (autoplay) {
     playCurrent();
@@ -1229,18 +1394,21 @@ async function playCurrent() {
   await audioContext.resume();
   await audio.play();
   setStatus("playing");
+  scheduleSessionSave(120);
   drawVisualizer();
 }
 
 function pauseCurrent() {
   audio.pause();
   setStatus("paused");
+  scheduleSessionSave(120);
 }
 
 function stopCurrent() {
   audio.pause();
   audio.currentTime = 0;
   setStatus("stopped");
+  scheduleSessionSave(120);
 }
 
 function resetLibraryState() {
@@ -1321,6 +1489,8 @@ function loadTrackFiles(files, name, source) {
   directoryName.textContent = name || defaultDirectoryName;
   sortTracks();
   renderTracks();
+  restoreTrackFromSession(restoredSession);
+  scheduleSessionSave();
 }
 
 function loadServerTracks(library) {
@@ -1339,6 +1509,8 @@ function loadServerTracks(library) {
   directoryName.textContent = library.directoryName || defaultDirectoryName;
   sortTracks();
   renderTracks();
+  restoreTrackFromSession(restoredSession);
+  scheduleSessionSave();
 }
 
 async function loadDefaultServerLibrary() {
@@ -1389,6 +1561,27 @@ async function openRememberedDirectory({ prompt = false } = {}) {
       console.warn("Directory load failed", error);
     }
     return false;
+  }
+}
+
+async function loadPreferredLibrary() {
+  if (restoredSession?.librarySource === "directory-handle") {
+    const opened = await openRememberedDirectory();
+    if (opened) {
+      restoreTrackFromSession(restoredSession);
+      return;
+    }
+  }
+
+  const loaded = await loadDefaultServerLibrary();
+  if (loaded) {
+    restoreTrackFromSession(restoredSession);
+    return;
+  }
+
+  const opened = await openRememberedDirectory();
+  if (opened) {
+    restoreTrackFromSession(restoredSession);
   }
 }
 
@@ -9859,7 +10052,10 @@ folderInput.closest("label").addEventListener("click", async (event) => {
   }
 
   event.preventDefault();
-  await openRememberedDirectory({ prompt: true });
+  const opened = await openRememberedDirectory({ prompt: true });
+  if (opened) {
+    scheduleSessionSave(120);
+  }
 });
 
 folderInput.addEventListener("change", () => {
@@ -9869,6 +10065,7 @@ folderInput.addEventListener("change", () => {
     files[0]?.webkitRelativePath?.split("/")[0] || defaultDirectoryName,
     "picker",
   );
+  scheduleSessionSave(120);
 });
 
 sortSelect.addEventListener("change", () => {
@@ -9876,12 +10073,14 @@ sortSelect.addEventListener("change", () => {
   sortTracks();
   currentIndex = activeTrack ? tracks.findIndex((track) => track === activeTrack) : -1;
   renderTracks();
+  scheduleSessionSave(120);
 });
 
 themeSelect.addEventListener("change", () => {
   if (!animationId) {
     drawIdleVisualizer();
   }
+  scheduleSessionSave();
 });
 
 window.addEventListener("pointermove", (event) => {
@@ -9922,6 +10121,7 @@ visualizer.addEventListener("click", (event) => {
 peakToggle.addEventListener("change", () => {
   peakLevels = [];
   peakUpdatedAt = [];
+  scheduleSessionSave();
 });
 
 visualizerSelect.addEventListener("change", () => {
@@ -9931,17 +10131,20 @@ visualizerSelect.addEventListener("change", () => {
   syncVisualizerControls();
   applyVisualizerDefaults(config);
   restartVisualizer();
+  scheduleSessionSave();
 });
 
 fireworkFormSelect.addEventListener("change", () => {
   syncVisualizerControls();
   restartVisualizer();
+  scheduleSessionSave();
 });
 
 eyeDischargeSelect.addEventListener("change", () => {
   if (!animationId) {
     drawIdleVisualizer();
   }
+  scheduleSessionSave();
 });
 
 handSize.addEventListener("input", () => {
@@ -9952,6 +10155,7 @@ handSize.addEventListener("input", () => {
       drawIdleVisualizer();
     }
   }
+  scheduleSessionSave();
 });
 
 handCount.addEventListener("input", () => {
@@ -9999,10 +10203,12 @@ handCount.addEventListener("input", () => {
   if (!animationId) {
     drawIdleVisualizer();
   }
+  scheduleSessionSave();
 });
 
 handGrasp.addEventListener("input", () => {
   updateHandControlLabels();
+  scheduleSessionSave();
 });
 
 trackList.addEventListener("click", (event) => {
@@ -10037,17 +10243,31 @@ nextButton.addEventListener("click", () => loadTrack(nextIndex()));
 previousButton.addEventListener("click", () => loadTrack(previousIndex()));
 fullscreenButton.addEventListener("click", toggleVisualFullscreen);
 
-fireworkSpeed.addEventListener("input", updateFireworkSpeedLabel);
+shuffleToggle.addEventListener("change", () => scheduleSessionSave());
+fireworkSpeed.addEventListener("input", () => {
+  updateFireworkSpeedLabel();
+  scheduleSessionSave();
+});
 
-audio.addEventListener("ended", () => loadTrack(nextIndex()));
+audio.addEventListener("ended", () => {
+  loadTrack(nextIndex());
+  scheduleSessionSave(120);
+});
 audio.addEventListener("pause", () => {
   if (audio.currentTime > 0 && audio.currentTime < audio.duration) {
     setStatus("paused");
   }
+  scheduleSessionSave(120);
 });
 audio.addEventListener("timeupdate", () => {
   timeReadout.textContent = `${formatDuration(audio.currentTime)} / ${formatDuration(audio.duration)}`;
+  const second = Math.floor(audio.currentTime || 0);
+  if (Math.abs(second - lastPersistedSecond) >= 3) {
+    lastPersistedSecond = second;
+    scheduleSessionSave(900);
+  }
 });
+audio.addEventListener("loadedmetadata", () => scheduleSessionSave(120));
 
 window.addEventListener("resize", resizeCanvas);
 document.addEventListener("fullscreenchange", () => {
@@ -10162,7 +10382,15 @@ document.addEventListener("keyup", (event) => {
   }
 }, true);
 window.addEventListener("blur", () => asteroidKeys.clear());
+window.addEventListener("pagehide", saveSessionNow);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    saveSessionNow();
+  }
+});
 
+restoredSession = loadSavedSession();
+restoreControlPreferences(restoredSession);
 resizeCanvas();
 updateFireworkSpeedLabel();
 updateHandControlLabels();
@@ -10170,9 +10398,5 @@ syncVisualizerControls();
 setFullscreenLabel();
 setControlsEnabled(false);
 setStatus("stopped");
-directoryName.textContent = defaultDirectoryName;
-loadDefaultServerLibrary().then((loaded) => {
-  if (!loaded) {
-    openRememberedDirectory();
-  }
-});
+directoryName.textContent = restoredSession?.directoryName || defaultDirectoryName;
+loadPreferredLibrary();
