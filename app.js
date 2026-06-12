@@ -113,6 +113,8 @@ let hypnoticFigures = [];
 let hypnoticMonsters = [];
 let hypnoticBlobs = [];
 let kaleidoscopeFrame = 0;
+const kaleidoscopeWedgeCanvas = document.createElement("canvas");
+const kaleidoscopeWedgeContext = kaleidoscopeWedgeCanvas.getContext("2d");
 let bobGardenFrame = 0;
 let bobGardenBugs = [];
 let stagePulse = null;
@@ -7369,12 +7371,52 @@ function drawKaleidoscopeWedge(canvasContext, radius, palette, segment, bassEner
   canvasContext.stroke();
 }
 
+function renderKaleidoscopeWedgeSource(angleStep, palette, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  const sourceRadius = Math.round(clampNumber(Math.min(visualizer.width, visualizer.height) * 0.32, 220, 640));
+  const sourceWidth = Math.round(sourceRadius * 1.12);
+  const sourceHeight = Math.round(Math.max(140, sourceRadius * Math.tan(angleStep * 0.56) * 2 + sourceRadius * 0.24));
+  const originY = sourceHeight / 2;
+
+  if (kaleidoscopeWedgeCanvas.width !== sourceWidth || kaleidoscopeWedgeCanvas.height !== sourceHeight) {
+    kaleidoscopeWedgeCanvas.width = sourceWidth;
+    kaleidoscopeWedgeCanvas.height = sourceHeight;
+  }
+
+  const context = kaleidoscopeWedgeContext;
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.globalAlpha = 1;
+  context.globalCompositeOperation = "source-over";
+  context.shadowBlur = 0;
+  context.clearRect(0, 0, sourceWidth, sourceHeight);
+  context.save();
+  context.translate(0, originY);
+  context.beginPath();
+  context.moveTo(0, 0);
+  context.lineTo(Math.cos(-angleStep * 0.52) * sourceRadius, Math.sin(-angleStep * 0.52) * sourceRadius);
+  context.lineTo(Math.cos(angleStep * 0.52) * sourceRadius, Math.sin(angleStep * 0.52) * sourceRadius);
+  context.closePath();
+  context.clip();
+  context.globalCompositeOperation = "lighter";
+  context.shadowBlur = 5 + trebleEnergy * 9 + handGraspAmount() * 6;
+  context.shadowColor = kaleidoscopeColour(palette, 3, trebleEnergy, 0.52);
+  drawKaleidoscopeWedge(context, sourceRadius, palette, 0, bassEnergy, midsEnergy, trebleEnergy, intensities);
+  context.restore();
+
+  return {
+    canvas: kaleidoscopeWedgeCanvas,
+    radius: sourceRadius,
+    width: sourceWidth,
+    height: sourceHeight,
+    originY,
+  };
+}
+
 function drawKaleidoscopeScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
   const palette = kaleidoscopePalette();
   const pulse = fireworkSpeedMultiplier();
   const trip = handGraspAmount();
   const morph = handSizeMultiplier();
-  const segmentCount = Math.max(8, Math.min(32, handCountValueNumber() * 2));
+  const segmentCount = Math.max(8, Math.min(24, handCountValueNumber() * 2));
   const radius = Math.hypot(width, height) * 0.58;
   const centerX = width / 2 + Math.sin(kaleidoscopeFrame * 0.009) * width * 0.035 * trip;
   const centerY = height / 2 + Math.cos(kaleidoscopeFrame * 0.008) * height * 0.035 * trip;
@@ -7392,27 +7434,26 @@ function drawKaleidoscopeScene(canvasContext, width, height, bassEnergy, midsEne
   canvasContext.translate(centerX, centerY);
   canvasContext.rotate(kaleidoscopeFrame * 0.0025 * (0.5 + trip));
   canvasContext.globalCompositeOperation = "lighter";
-  canvasContext.shadowBlur = 12 + trebleEnergy * 24 + trip * 18;
-  canvasContext.shadowColor = kaleidoscopeColour(palette, 3, trebleEnergy, 0.72);
-
   const angleStep = Math.PI * 2 / segmentCount;
+  const wedgeSource = renderKaleidoscopeWedgeSource(angleStep, palette, bassEnergy, midsEnergy, trebleEnergy, intensities);
+  const sourceScale = radius / wedgeSource.radius;
+  const drawWidth = wedgeSource.width * sourceScale;
+  const drawHeight = wedgeSource.height * sourceScale;
+  const drawOriginY = wedgeSource.originY * sourceScale;
+
   for (let segment = 0; segment < segmentCount; segment += 1) {
     canvasContext.save();
     canvasContext.rotate(segment * angleStep);
     if (segment % 2) canvasContext.scale(1, -1);
-    canvasContext.beginPath();
-    canvasContext.moveTo(0, 0);
-    canvasContext.lineTo(Math.cos(-angleStep * 0.52) * radius, Math.sin(-angleStep * 0.52) * radius);
-    canvasContext.lineTo(Math.cos(angleStep * 0.52) * radius, Math.sin(angleStep * 0.52) * radius);
-    canvasContext.closePath();
-    canvasContext.clip();
-    drawKaleidoscopeWedge(canvasContext, radius, palette, segment, bassEnergy, midsEnergy, trebleEnergy, intensities);
+    canvasContext.globalAlpha = 0.82 + (segment % 3) * 0.07;
+    canvasContext.drawImage(wedgeSource.canvas, 0, -drawOriginY, drawWidth, drawHeight);
     canvasContext.restore();
   }
+  canvasContext.globalAlpha = 1;
 
   canvasContext.globalCompositeOperation = "source-over";
-  for (let ring = 0; ring < 9; ring += 1) {
-    const amount = (ring + 1) / 9;
+  for (let ring = 0; ring < 7; ring += 1) {
+    const amount = (ring + 1) / 7;
     const ringRadius = radius * amount * (0.08 + morph * 0.09 + bassEnergy * 0.04);
     canvasContext.strokeStyle = kaleidoscopeColour(palette, ring + 1, intensities[ring % intensities.length] || 0.2, 0.08 + trip * 0.045);
     canvasContext.lineWidth = Math.max(1, radius * 0.003);
