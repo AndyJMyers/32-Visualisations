@@ -117,6 +117,8 @@ const kaleidoscopeWedgeCanvas = document.createElement("canvas");
 const kaleidoscopeWedgeContext = kaleidoscopeWedgeCanvas.getContext("2d");
 let bobGardenFrame = 0;
 let bobGardenBugs = [];
+let oilSlideFrame = 0;
+let oilBlobs = [];
 let stagePulse = null;
 let fullscreenInfoPulse = null;
 let spectrumPad = {
@@ -563,6 +565,19 @@ const visualizerConfigs = {
       ["squash", "Pumpkins & sage"],
       ["berries", "Strawberry & basil"],
       ["roots", "Beetroot & borage"],
+    ],
+  },
+  oilslide: {
+    ariaLabel: "Oil Slide liquid light visualisation",
+    controls: { theme: false, size: true, count: true, grasp: true },
+    labels: { form: "Dyes", speed: "Flow", size: "Cell size", count: "Drops", grasp: "Agitation" },
+    forms: [
+      ["acid", "Acid primaries"],
+      ["warm", "Ruby amber"],
+      ["cool", "Aqua violet"],
+      ["garden", "Garden oils"],
+      ["nocturne", "Nocturne"],
+      ["candy", "Sweet shop"],
     ],
   },
 };
@@ -1331,6 +1346,8 @@ function restartVisualizer() {
   kaleidoscopeFrame = 0;
   bobGardenFrame = 0;
   bobGardenBugs = [];
+  oilSlideFrame = 0;
+  oilBlobs = [];
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -1683,7 +1700,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "bobrossgarden") {
+      if (visualizerSelect.value === "oilslide") {
+        drawOilSlideFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "bobrossgarden") {
         drawBobRossGardenFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "kaleidoscope") {
         drawKaleidoscopeFrame(canvasContext, buffer);
@@ -8055,6 +8074,216 @@ function drawBobRossGardenFrame(canvasContext, buffer) {
   drawBobRossGardenScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
 }
 
+const oilSlidePalettes = {
+  acid: [54, 318, 184, 24, 266],
+  warm: [350, 22, 42, 8, 316],
+  cool: [188, 224, 272, 162, 310],
+  garden: [104, 142, 54, 326, 182],
+  nocturne: [232, 268, 198, 318, 38],
+  candy: [330, 38, 188, 286, 72],
+};
+
+function oilSlidePalette() {
+  return oilSlidePalettes[fireworkFormSelect.value] || oilSlidePalettes.acid;
+}
+
+function setupOilBlobs(width, height) {
+  const target = Math.max(8, Math.min(34, handCountValueNumber() * 2));
+  const palette = oilSlidePalette();
+  while (oilBlobs.length < target) {
+    const index = oilBlobs.length;
+    const stretch = 0.62 + Math.random() * 1.25;
+    oilBlobs.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.018,
+      vy: (Math.random() - 0.5) * 0.015,
+      radius: 0.11 + Math.random() * 0.22,
+      stretch,
+      baseStretch: stretch,
+      phase: Math.random() * Math.PI * 2,
+      hue: palette[index % palette.length] + Math.random() * 22,
+      band: index % fireworksBands.length,
+      spin: (Math.random() - 0.5) * 0.001,
+    });
+  }
+  if (oilBlobs.length > target) {
+    oilBlobs.splice(target);
+  }
+}
+
+function drawOilSlideBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const palette = oilSlidePalette();
+  const baseHue = palette[0];
+  const wash = canvasContext.createLinearGradient(0, 0, width, height);
+  wash.addColorStop(0, hsla(baseHue + oilSlideFrame * 0.006, 82, 13 + trebleEnergy * 10, 0.98));
+  wash.addColorStop(0.48, hsla(palette[2] - oilSlideFrame * 0.004, 74, 10 + bassEnergy * 12, 0.98));
+  wash.addColorStop(1, hsla(palette[4] + oilSlideFrame * 0.005, 78, 8 + trebleEnergy * 8, 0.98));
+  canvasContext.fillStyle = wash;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  for (let band = 0; band < 7; band += 1) {
+    const y = height * (0.12 + band * 0.13 + Math.sin(oilSlideFrame * 0.00065 + band) * 0.025);
+    const gradient = canvasContext.createLinearGradient(0, y - height * 0.08, width, y + height * 0.08);
+    gradient.addColorStop(0, hsla(palette[band % palette.length] + band * 12, 92, 44, 0));
+    gradient.addColorStop(0.5, hsla(palette[(band + 2) % palette.length], 88, 52 + trebleEnergy * 12, 0.075 + bassEnergy * 0.05));
+    gradient.addColorStop(1, hsla(palette[(band + 4) % palette.length], 92, 44, 0));
+    canvasContext.fillStyle = gradient;
+    canvasContext.fillRect(0, y - height * 0.06, width, height * 0.14);
+  }
+  canvasContext.restore();
+}
+
+function settleOilBlobInteractions(width, height, bassEnergy, midsEnergy) {
+  const scale = handSizeMultiplier();
+  const agitation = handGraspAmount();
+  const viscosity = 0.000004 + agitation * 0.000008 + bassEnergy * 0.000004;
+  const limit = 0.038 + agitation * 0.018 + midsEnergy * 0.012;
+
+  for (let aIndex = 0; aIndex < oilBlobs.length; aIndex += 1) {
+    const a = oilBlobs[aIndex];
+    a.stretch += ((a.baseStretch || 1) - a.stretch) * 0.006;
+    for (let bIndex = aIndex + 1; bIndex < oilBlobs.length; bIndex += 1) {
+      const b = oilBlobs[bIndex];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const reach = Math.min(width, height) * (a.radius + b.radius) * scale * 0.48;
+      if (distance >= reach) continue;
+
+      const pressure = (reach - distance) / reach;
+      const nx = dx / distance;
+      const ny = dy / distance;
+      const force = pressure * viscosity;
+      a.vx -= nx * force;
+      a.vy -= ny * force;
+      b.vx += nx * force;
+      b.vy += ny * force;
+      a.stretch += pressure * 0.00035;
+      b.stretch += pressure * 0.00035;
+    }
+    a.vx = clampNumber(a.vx, -limit, limit);
+    a.vy = clampNumber(a.vy, -limit, limit);
+    a.stretch = clampNumber(a.stretch, 0.48, 2.25);
+  }
+}
+
+function drawOilBlob(canvasContext, blob, width, height, intensity, bassEnergy, midsEnergy, trebleEnergy) {
+  const cellScale = handSizeMultiplier();
+  const agitation = handGraspAmount();
+  const flow = fireworkSpeedMultiplier();
+  const radius = Math.min(width, height) * blob.radius * cellScale * (0.82 + intensity * 0.34 + bassEnergy * 0.12);
+  const pulse = Math.sin(oilSlideFrame * (0.0012 + flow * 0.00045) + blob.phase) * 0.5 + 0.5;
+  const drift = 0.014 + flow * 0.018 + agitation * 0.035;
+
+  blob.vx += Math.sin(oilSlideFrame * 0.0008 + blob.phase) * 0.00018 * drift + (midsEnergy - 0.18) * 0.00032;
+  blob.vy += Math.cos(oilSlideFrame * 0.0007 + blob.phase * 0.7) * 0.00018 * drift + (trebleEnergy - 0.18) * 0.00024;
+  blob.vx *= 0.92;
+  blob.vy *= 0.92;
+  blob.x = (blob.x + blob.vx * (0.032 + flow * 0.016) + width + radius) % (width + radius * 2) - radius;
+  blob.y = (blob.y + blob.vy * (0.03 + flow * 0.014) + height + radius) % (height + radius * 2) - radius;
+
+  canvasContext.save();
+  canvasContext.translate(blob.x, blob.y);
+  canvasContext.rotate(oilSlideFrame * blob.spin + Math.sin(blob.phase + oilSlideFrame * 0.00055) * 0.025);
+  canvasContext.scale(blob.stretch + pulse * 0.055, 1 / (blob.stretch * 0.72 + 0.55));
+  canvasContext.globalCompositeOperation = "lighter";
+  const gradient = canvasContext.createRadialGradient(
+    -radius * 0.22,
+    -radius * 0.18,
+    radius * 0.06,
+    0,
+    0,
+    radius,
+  );
+  gradient.addColorStop(0, hsla(blob.hue + trebleEnergy * 54, 96, 72, 0.24 + intensity * 0.25));
+  gradient.addColorStop(0.38, hsla(blob.hue, 92, 48 + pulse * 10, 0.34 + intensity * 0.24));
+  gradient.addColorStop(0.72, hsla(blob.hue + 62 + bassEnergy * 34, 88, 36, 0.16 + agitation * 0.1));
+  gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = gradient;
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, radius, radius * (0.54 + pulse * 0.09), 0, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.globalCompositeOperation = "source-over";
+  canvasContext.strokeStyle = hsla(blob.hue + 38, 92, 74, 0.13 + intensity * 0.24);
+  canvasContext.lineWidth = Math.max(1, radius * 0.018);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, radius * 0.88, radius * (0.44 + pulse * 0.06), 0, 0, Math.PI * 2);
+  canvasContext.stroke();
+  canvasContext.restore();
+}
+
+function drawOilInterference(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  const palette = oilSlidePalette();
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "overlay";
+  for (let line = 0; line < 14; line += 1) {
+    const y = height * (line / 13);
+    const amplitude = height * (0.006 + trebleEnergy * 0.018);
+    canvasContext.strokeStyle = hsla(palette[line % palette.length] + oilSlideFrame * 0.014, 90, 62, 0.045 + midsEnergy * 0.035);
+    canvasContext.lineWidth = Math.max(1, height * 0.0025);
+    canvasContext.beginPath();
+    for (let step = 0; step <= 60; step += 1) {
+      const x = width * (step / 60);
+      const wave = Math.sin(step * 0.5 + oilSlideFrame * 0.0018 + line) * amplitude
+        + Math.cos(step * 0.17 + oilSlideFrame * 0.0009 + line * 2) * amplitude * (0.8 + bassEnergy);
+      if (step === 0) canvasContext.moveTo(x, y + wave);
+      else canvasContext.lineTo(x, y + wave);
+    }
+    canvasContext.stroke();
+  }
+  canvasContext.restore();
+}
+
+function drawOilSlideScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  oilSlideFrame += (0.014 + fireworkSpeedMultiplier() * 0.012) * (0.72 + bassEnergy * 0.12 + handGraspAmount() * 0.08);
+  setupOilBlobs(width, height);
+  settleOilBlobInteractions(width, height, bassEnergy, midsEnergy);
+  drawOilSlideBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  canvasContext.save();
+  canvasContext.filter = `blur(${Math.min(16, Math.max(2.5, Math.min(width, height) * 0.006))}px) saturate(${1.16 + trebleEnergy * 0.5})`;
+  oilBlobs.forEach((blob) => {
+    const intensity = intensities[blob.band % intensities.length] || 0.18;
+    drawOilBlob(canvasContext, blob, width, height, intensity, bassEnergy, midsEnergy, trebleEnergy);
+  });
+  canvasContext.restore();
+
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  oilBlobs.slice(0, Math.min(10, oilBlobs.length)).forEach((blob, index) => {
+    const radius = Math.min(width, height) * blob.radius * handSizeMultiplier() * 0.72;
+    canvasContext.strokeStyle = hsla(blob.hue + 110, 88, 70, 0.06 + trebleEnergy * 0.08);
+    canvasContext.lineWidth = Math.max(1, radius * 0.012);
+    canvasContext.beginPath();
+    canvasContext.arc(
+      blob.x + Math.sin(oilSlideFrame * 0.0009 + index) * radius * 0.24,
+      blob.y + Math.cos(oilSlideFrame * 0.00075 + index) * radius * 0.18,
+      radius * (0.62 + bassEnergy * 0.35),
+      0,
+      Math.PI * 2,
+    );
+    canvasContext.stroke();
+  });
+  canvasContext.restore();
+
+  drawOilInterference(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+}
+
+function drawOilSlideFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 10), 1.28);
+  const midsEnergy = pressureResponse(averageBand(buffer, 14, 58), 1.24);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 62, 118), 1.36);
+  const intensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.24));
+  drawOilSlideScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -9333,7 +9562,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "bobrossgarden") {
+  if (visualizerSelect.value === "oilslide") {
+    drawIdleOilSlide();
+  } else if (visualizerSelect.value === "bobrossgarden") {
     drawIdleBobRossGarden();
   } else if (visualizerSelect.value === "kaleidoscope") {
     drawIdleKaleidoscope();
@@ -9928,6 +10159,34 @@ function drawIdleBobRossGarden() {
   }
 }
 
+function drawIdleOilSlide() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const pulse = 0.5 + Math.sin(oilSlideFrame * 0.003) * 0.5;
+  const shimmer = 0.5 + Math.sin(oilSlideFrame * 0.004 + 1.2) * 0.5;
+  const intensities = fireworksBands.map((band, index) => 0.14 + pulse * 0.12 + shimmer * 0.08 + (index % 3) * 0.03);
+
+  drawOilSlideScene(
+    canvasContext,
+    width,
+    height,
+    0.14 + pulse * 0.14,
+    0.14 + shimmer * 0.14,
+    0.16 + (1 - pulse) * 0.18,
+    intensities,
+  );
+
+  if (visualizerSelect.value === "oilslide" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleHypnoticFlight() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -10081,6 +10340,8 @@ function resizeCanvas() {
   kaleidoscopeFrame = 0;
   bobGardenFrame = 0;
   bobGardenBugs = [];
+  oilSlideFrame = 0;
+  oilBlobs = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -10241,6 +10502,8 @@ handCount.addEventListener("input", () => {
   kaleidoscopeFrame = 0;
   bobGardenFrame = 0;
   bobGardenBugs = [];
+  oilSlideFrame = 0;
+  oilBlobs = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
