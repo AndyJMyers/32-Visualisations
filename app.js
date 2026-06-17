@@ -50,6 +50,7 @@ let swampBubbles = [];
 let swampFrame = 0;
 let arrows = [];
 let arrowFires = [];
+let arrowBursts = [];
 let arrowFrame = 0;
 let cephArms = [];
 let cephInkBlooms = [];
@@ -1312,6 +1313,7 @@ function restartVisualizer() {
   swampFrame = 0;
   arrows = [];
   arrowFires = [];
+  arrowBursts = [];
   arrowFrame = 0;
   cephArms = [];
   cephInkBlooms = [];
@@ -9718,32 +9720,52 @@ function spawnArrow(bandIndex, intensity, width, height, bassEnergy) {
   const size = handSizeMultiplier();
   const speedMultiplier = fireworkSpeedMultiplier();
   const scene = fireworkFormSelect.value;
-  const wind = Math.sin(arrowFrame * 0.012 + bandIndex) * width * (0.04 + drama * 0.07);
   const length = (34 + intensity * 54 + bassEnergy * 42) * size * arrowBands[bandIndex].weight;
   const fire = Math.random() < drama;
-  const williamTellHit = scene === "williamtell" && Math.random() < 0.24 + intensity * 0.16;
+  const williamTellHit = scene === "williamtell" && Math.random() < 0.2 + intensity * 0.14;
+  const centreWeighted = Math.random() < 0.7;
+  const fieldX = centreWeighted
+    ? (Math.random() + Math.random() + Math.random()) / 3
+    : Math.random();
+  const fieldY = centreWeighted
+    ? (Math.random() + Math.random() + Math.random()) / 3
+    : Math.random();
   const targetX = williamTellHit
-    ? width * (0.5 + (Math.random() - 0.5) * (0.28 - intensity * 0.12))
-    : scene === "fort"
-      ? width * (0.18 + Math.random() * 0.64)
-      : Math.random() * width;
-  const startSide = Math.random() < drama * 0.38 ? (Math.random() < 0.5 ? -0.16 : 1.16) : Math.random();
+    ? width * (0.5 + (Math.random() - 0.5) * (0.2 - intensity * 0.08))
+    : width * (0.035 + fieldX * 0.93);
   const targetY = williamTellHit
-    ? height * (0.55 + Math.random() * 0.08)
-    : scene === "fort"
-      ? height * (0.72 + Math.random() * 0.28)
-      : height * (0.8 + Math.random() * 0.28);
+    ? height * (0.55 + Math.random() * 0.07)
+    : height * (0.045 + fieldY * 0.91);
+  const entry = Math.random();
+  let x;
+  let y;
+  if (entry < 0.72) {
+    x = width * (-0.05 + Math.random() * 1.1);
+    y = -length * (0.7 + Math.random());
+  } else if (entry < 0.86) {
+    x = -length;
+    y = height * Math.random() * 0.72;
+  } else {
+    x = width + length;
+    y = height * Math.random() * 0.72;
+  }
+  const dx = targetX - x;
+  const dy = targetY - y;
+  const distance = Math.max(1, Math.hypot(dx, dy));
+  const launchSpeed = (6.4 + intensity * 9 + bassEnergy * 6) * speedMultiplier;
 
   arrows.push({
-    x: startSide * width - wind,
-    y: -height * (0.025 + Math.random() * 0.2),
-    vx: wind * 0.01 + (targetX / width - startSide) * (0.8 + intensity * 2.2),
-    vy: (5.8 + intensity * 8 + bassEnergy * 6) * speedMultiplier,
-    angle: 0,
+    x,
+    y,
+    vx: (dx / distance) * launchSpeed,
+    vy: (dy / distance) * launchSpeed,
+    angle: Math.atan2(dy, dx) - Math.PI / 2,
     spin: (Math.random() - 0.5) * 0.016 * (1 + drama),
     length,
     targetX,
     targetY,
+    lastDistance: distance,
+    travel: 0,
     hue: arrowHue(bandIndex, intensity),
     alpha: 1,
     fire,
@@ -9751,6 +9773,7 @@ function spawnArrow(bandIndex, intensity, width, height, bassEnergy) {
     ignited: false,
     impact: 0,
     bandIndex,
+    intensity,
     density,
     agency: 0.16 + drama * 0.55 + intensity * 0.45 + bassEnergy * 0.28,
     weavePhase: Math.random() * Math.PI * 2,
@@ -9858,13 +9881,78 @@ function igniteArrowLanding(arrow, width, height) {
   arrow.ignited = true;
   arrowFires.push({
     x: clampNumber(arrow.x, width * 0.01, width * 0.99),
-    y: clampNumber(arrow.y + arrow.length * 0.4, height * 0.56, height * 0.98),
+    y: clampNumber(arrow.y + arrow.length * 0.25, height * 0.03, height * 0.98),
     radius: arrow.length * (0.18 + Math.random() * 0.22),
     fuel: 0.9 + Math.random() * 0.8,
     age: 0,
     phase: Math.random() * Math.PI * 2,
   });
   if (arrowFires.length > 110) arrowFires.splice(0, arrowFires.length - 110);
+}
+
+function spawnArrowBurst(arrow, bandEnergy, bassEnergy, trebleEnergy) {
+  const particleCount = Math.round(24 + bandEnergy * 34 + bassEnergy * 22);
+  const force = arrow.length * (0.055 + bandEnergy * 0.065 + trebleEnergy * 0.04);
+  const particles = Array.from({ length: particleCount }, (_, index) => {
+    const angle = (index / particleCount) * Math.PI * 2 + Math.random() * 0.2;
+    const speed = force * (0.42 + Math.random() * 0.9);
+    return {
+      x: arrow.x,
+      y: arrow.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0.72 + Math.random() * 0.28,
+      decay: 0.012 + Math.random() * 0.014,
+      hue: arrow.hue + (Math.random() - 0.5) * 54,
+      size: 1.3 + Math.random() * (2.8 + trebleEnergy * 3.5),
+      trail: 0.55 + Math.random() * 0.55,
+    };
+  });
+
+  arrowBursts.push({
+    x: arrow.x,
+    y: arrow.y,
+    life: 1,
+    hue: arrow.hue,
+    radius: arrow.length * 0.18,
+    particles,
+  });
+  if (arrowBursts.length > 36) arrowBursts.splice(0, arrowBursts.length - 36);
+}
+
+function drawArrowBursts(canvasContext, bassEnergy) {
+  const speed = fireworkSpeedMultiplier();
+  arrowBursts = arrowBursts.filter((burst) => burst.life > 0.01 || burst.particles.some((particle) => particle.life > 0.01));
+
+  arrowBursts.forEach((burst) => {
+    burst.life *= Math.pow(0.88, speed);
+    burst.radius += (3 + bassEnergy * 8) * speed;
+    canvasContext.strokeStyle = hsla(burst.hue + 36, 96, 74, burst.life * 0.72);
+    canvasContext.lineWidth = Math.max(1, burst.radius * 0.06);
+    canvasContext.beginPath();
+    canvasContext.arc(burst.x, burst.y, burst.radius, 0, Math.PI * 2);
+    canvasContext.stroke();
+
+    burst.particles.forEach((particle) => {
+      if (particle.life <= 0) return;
+      const oldX = particle.x;
+      const oldY = particle.y;
+      particle.x += particle.vx * speed;
+      particle.y += particle.vy * speed;
+      particle.vx *= Math.pow(0.982, speed);
+      particle.vy = particle.vy * Math.pow(0.982, speed) + (0.018 + bassEnergy * 0.035) * speed;
+      particle.life -= particle.decay * speed;
+      canvasContext.strokeStyle = hsla(particle.hue, 96, 66, Math.max(0, particle.life) * 0.9);
+      canvasContext.lineWidth = particle.size * Math.max(0.35, particle.life);
+      canvasContext.beginPath();
+      canvasContext.moveTo(oldX, oldY);
+      canvasContext.lineTo(
+        particle.x + particle.vx * particle.trail,
+        particle.y + particle.vy * particle.trail,
+      );
+      canvasContext.stroke();
+    });
+  });
 }
 
 function drawArrowFires(canvasContext, width, height, bassEnergy) {
@@ -9909,7 +9997,7 @@ function drawArrowFires(canvasContext, width, height, bassEnergy) {
     if (fireIndex < 40 && bassEnergy > 0.44 && Math.random() < bassEnergy * fireShare * 0.0009 * speed && arrowFires.length < 110) {
       arrowFires.push({
         x: clampNumber(fire.x + (Math.random() - 0.5) * fire.radius * 5, 0, width),
-        y: clampNumber(fire.y + (Math.random() - 0.5) * fire.radius, height * 0.58, height * 0.98),
+        y: clampNumber(fire.y + (Math.random() - 0.5) * fire.radius, height * 0.03, height * 0.98),
         radius: fire.radius * (0.62 + Math.random() * 0.45),
         fuel: 0.6 + Math.random() * 0.7,
         age: 0,
@@ -9945,7 +10033,13 @@ function drawArrowStormFrame(canvasContext, buffer) {
     }
   });
 
-  arrows = arrows.filter((arrow) => arrow.alpha > 0 && arrow.y < height + arrow.length * 1.5);
+  arrows = arrows.filter((arrow) => (
+    arrow.alpha > 0
+    && arrow.x > -arrow.length * 2
+    && arrow.x < width + arrow.length * 2
+    && arrow.y > -arrow.length * 2
+    && arrow.y < height + arrow.length * 2
+  ));
   arrows.forEach((arrow) => {
     if (!arrow.stuck) {
       const band = arrowBands[arrow.bandIndex] || arrowBands[0];
@@ -9972,16 +10066,30 @@ function drawArrowStormFrame(canvasContext, buffer) {
 
       arrow.x += arrow.vx * speedMultiplier;
       arrow.y += arrow.vy * speedMultiplier;
+      arrow.travel += speed * speedMultiplier;
       const targetAngle = Math.atan2(arrow.vy, arrow.vx) - Math.PI / 2;
       const angleDelta = Math.atan2(Math.sin(targetAngle - arrow.angle), Math.cos(targetAngle - arrow.angle));
       arrow.angle += angleDelta * (0.12 + arrow.agency * 0.12) + arrow.spin * speedMultiplier;
 
-      if (Math.hypot(dx, dy) < arrow.length * 0.38 || arrow.y >= arrow.targetY + arrow.length * 0.22) {
+      const newDistance = Math.hypot(arrow.targetX - arrow.x, arrow.targetY - arrow.y);
+      const impactDistance = Math.max(8, arrow.length * 0.26);
+      const passedTarget = arrow.travel > arrow.length
+        && newDistance > arrow.lastDistance
+        && arrow.lastDistance < arrow.length * 0.72;
+      if (newDistance < impactDistance || passedTarget) {
         arrow.stuck = true;
+        arrow.x = arrow.targetX;
+        arrow.y = arrow.targetY;
         arrow.impact = 1;
         arrow.angle += (Math.random() - 0.5) * 0.18;
-        if (arrow.fire) igniteArrowLanding(arrow, width, height);
+        if (arrow.fire) {
+          igniteArrowLanding(arrow, width, height);
+          if (Math.random() < 0.24 + bandEnergy * 0.52 + trebleEnergy * 0.18) {
+            spawnArrowBurst(arrow, bandEnergy, bassEnergy, trebleEnergy);
+          }
+        }
       }
+      arrow.lastDistance = newDistance;
     } else {
       arrow.impact *= 0.88;
       arrow.alpha -= arrow.fire ? 0.0025 : 0.0045;
@@ -10000,6 +10108,7 @@ function drawArrowStormFrame(canvasContext, buffer) {
   if (arrows.length > 420) {
     arrows.splice(0, arrows.length - 420);
   }
+  drawArrowBursts(canvasContext, bassEnergy);
 }
 
 function setupCephArms(width, height) {
@@ -11093,6 +11202,7 @@ function resizeCanvas() {
   swampBubbles = [];
   arrows = [];
   arrowFires = [];
+  arrowBursts = [];
   cephArms = [];
   cephInkBlooms = [];
   discoCouples = [];
