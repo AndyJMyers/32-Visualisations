@@ -26,6 +26,10 @@ const handCountValue = document.querySelector("#handCountValue");
 const handGrasp = document.querySelector("#handGrasp");
 const handGraspValue = document.querySelector("#handGraspValue");
 const peakToggle = document.querySelector("#peakToggle");
+const smilesDial = document.querySelector("#smilesDial");
+const smilesDialValue = document.querySelector("#smilesDialValue");
+const insanityDial = document.querySelector("#insanityDial");
+const insanityDialValue = document.querySelector("#insanityDialValue");
 const trackCount = document.querySelector("#trackCount");
 const trackList = document.querySelector("#trackList");
 audio.crossOrigin = "anonymous";
@@ -1050,8 +1054,8 @@ function restoreControlPreferences(session) {
   handCount.value = controls.count || handCount.value;
   handGrasp.value = controls.grasp || handGrasp.value;
   if (controls.spectrumPad) {
-    spectrumPad.smilesDecadence = clampNumber(Number(controls.spectrumPad.smilesDecadence) || 0, -1, 1);
-    spectrumPad.psychedeliaInsanity = clampNumber(Number(controls.spectrumPad.psychedeliaInsanity) || 0, -1, 1);
+    spectrumPad.smilesDecadence = clampNumber(Number(controls.spectrumPad.smilesDecadence) || 0, 0, 1);
+    spectrumPad.psychedeliaInsanity = clampNumber(Number(controls.spectrumPad.psychedeliaInsanity) || 0, 0, 1);
   }
 
   setSelectValueIfPresent(visualizerSelect, controls.visualizer);
@@ -1063,6 +1067,7 @@ function restoreControlPreferences(session) {
   setSelectValueIfPresent(eyeDischargeSelect, controls.discharge);
   updateFireworkSpeedLabel();
   updateHandControlLabels();
+  updateSpectrumDials();
 }
 
 function restoreTrackFromSession(session) {
@@ -1267,30 +1272,66 @@ function toggleVisualFullscreen() {
   }
 }
 
-function spectrumPadLabel() {
-  const vertical = spectrumPad.smilesDecadence >= 0 ? "Smiles" : "Decadence";
-  const horizontal = spectrumPad.psychedeliaInsanity >= 0 ? "Insanity" : "Psychedelia";
-  const verticalAmount = Math.round(Math.abs(spectrumPad.smilesDecadence) * 100);
-  const horizontalAmount = Math.round(Math.abs(spectrumPad.psychedeliaInsanity) * 100);
-  if (verticalAmount === 0 && horizontalAmount === 0) {
-    return "Spectrum neutral";
-  }
-  return `${vertical} ${verticalAmount} / ${horizontal} ${horizontalAmount}`;
+const smileDialLevels = [
+  { value: 0, label: "Composed", angle: -52 },
+  { value: 0.55, label: "Amused", angle: 0 },
+  { value: 1, label: "Beaming", angle: 52 },
+];
+const insanityDialLevels = [
+  { value: 0, label: "Sane", angle: -52 },
+  { value: 0.55, label: "Strange", angle: 0 },
+  { value: 1, label: "Unhinged", angle: 52 },
+];
+
+function spectrumLevelIndex(value) {
+  if (value >= 0.78) return 2;
+  if (value >= 0.28) return 1;
+  return 0;
 }
 
-function adjustSpectrumPad(code) {
-  const step = 0.1;
-  if (code === "KeyW") spectrumPad.smilesDecadence += step;
-  if (code === "KeyS") spectrumPad.smilesDecadence -= step;
-  if (code === "KeyA") spectrumPad.psychedeliaInsanity -= step;
-  if (code === "KeyD") spectrumPad.psychedeliaInsanity += step;
-  spectrumPad.smilesDecadence = clampNumber(spectrumPad.smilesDecadence, -1, 1);
-  spectrumPad.psychedeliaInsanity = clampNumber(spectrumPad.psychedeliaInsanity, -1, 1);
-  pulseStageLabel("visual", spectrumPadLabel());
+function updateSpectrumDials() {
+  const smileLevel = smileDialLevels[spectrumLevelIndex(spectrumPad.smilesDecadence)];
+  const insanityLevel = insanityDialLevels[spectrumLevelIndex(spectrumPad.psychedeliaInsanity)];
+  spectrumPad.smilesDecadence = smileLevel.value;
+  spectrumPad.psychedeliaInsanity = insanityLevel.value;
+
+  smilesDial.dataset.level = String(spectrumLevelIndex(smileLevel.value));
+  smilesDial.style.setProperty("--dial-angle", `${smileLevel.angle}deg`);
+  smilesDial.setAttribute("aria-label", `Smiles: ${smileLevel.label}`);
+  smilesDialValue.textContent = smileLevel.label;
+
+  insanityDial.dataset.level = String(spectrumLevelIndex(insanityLevel.value));
+  insanityDial.style.setProperty("--dial-angle", `${insanityLevel.angle}deg`);
+  insanityDial.setAttribute("aria-label", `Insanity: ${insanityLevel.label}`);
+  insanityDialValue.textContent = insanityLevel.label;
+}
+
+function spectrumPadLabel() {
+  const smileLevel = smileDialLevels[spectrumLevelIndex(spectrumPad.smilesDecadence)];
+  const insanityLevel = insanityDialLevels[spectrumLevelIndex(spectrumPad.psychedeliaInsanity)];
+  return `${smileLevel.label} / ${insanityLevel.label}`;
+}
+
+function setSpectrumDial(axis, index, pulse = true) {
+  const levels = axis === "smiles" ? smileDialLevels : insanityDialLevels;
+  const level = levels[clampNumber(index, 0, levels.length - 1)];
+  if (axis === "smiles") spectrumPad.smilesDecadence = level.value;
+  else spectrumPad.psychedeliaInsanity = level.value;
+  updateSpectrumDials();
+  if (pulse) pulseStageLabel("visual", spectrumPadLabel());
   if (!animationId) {
     drawIdleVisualizer();
   }
   scheduleSessionSave();
+}
+
+function adjustSpectrumPad(code) {
+  const smileIndex = spectrumLevelIndex(spectrumPad.smilesDecadence);
+  const insanityIndex = spectrumLevelIndex(spectrumPad.psychedeliaInsanity);
+  if (code === "KeyW") setSpectrumDial("smiles", smileIndex + 1);
+  if (code === "KeyS") setSpectrumDial("smiles", smileIndex - 1);
+  if (code === "KeyA") setSpectrumDial("insanity", insanityIndex - 1);
+  if (code === "KeyD") setSpectrumDial("insanity", insanityIndex + 1);
 }
 
 function restartVisualizer() {
@@ -1799,6 +1840,7 @@ function drawVisualizer() {
       } else {
         drawEqualizerFrame(canvasContext, buffer);
       }
+      drawSpectrumDialEffects(canvasContext);
       drawStagePulse(canvasContext);
       drawFullscreenInfo(canvasContext);
     } catch (error) {
@@ -1895,19 +1937,68 @@ function clampNumber(value, min, max) {
 }
 
 function hsla(hue, saturation, lightness, alpha) {
-  const smiles = Math.max(0, spectrumPad.smilesDecadence);
-  const decadence = Math.max(0, -spectrumPad.smilesDecadence);
-  const psychedelia = Math.max(0, -spectrumPad.psychedeliaInsanity);
-  const insanity = Math.max(0, spectrumPad.psychedeliaInsanity);
+  const smiles = clampNumber(spectrumPad.smilesDecadence, 0, 1);
+  const insanity = clampNumber(spectrumPad.psychedeliaInsanity, 0, 1);
 
-  if (smiles || decadence || psychedelia || insanity) {
-    const movingHue = Math.sin((performance.now?.() || Date.now()) * 0.0007) * (psychedelia * 42 + insanity * 76);
-    hue += smiles * -12 + decadence * 28 + psychedelia * 112 + insanity * 213 + movingHue;
-    saturation = clampNumber(saturation + smiles * 8 - decadence * 7 + psychedelia * 18 + insanity * 30, 0, 100);
-    lightness = clampNumber(lightness + smiles * 9 - decadence * 15 + psychedelia * 5 + insanity * Math.sin((performance.now?.() || Date.now()) * 0.002) * 16, 0, 100);
+  if (smiles || insanity) {
+    const now = performance.now?.() || Date.now();
+    const movingHue = Math.sin(now * (0.0008 + insanity * 0.0022)) * insanity * 156;
+    hue += smiles * -24 + insanity * 148 + movingHue;
+    saturation = clampNumber(saturation + smiles * 14 + insanity * 42, 0, 100);
+    lightness = clampNumber(lightness + smiles * 17 + insanity * Math.sin(now * 0.004) * 24, 0, 100);
   }
 
   return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
+}
+
+function drawSpectrumDialEffects(canvasContext) {
+  const smiles = clampNumber(spectrumPad.smilesDecadence, 0, 1);
+  const insanity = clampNumber(spectrumPad.psychedeliaInsanity, 0, 1);
+  if (!smiles && !insanity) return;
+
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const now = performance.now?.() || Date.now();
+  canvasContext.save();
+  canvasContext.setTransform(1, 0, 0, 1, 0, 0);
+
+  if (smiles) {
+    canvasContext.globalCompositeOperation = "screen";
+    const glow = canvasContext.createRadialGradient(width * 0.5, height * 0.34, 0, width * 0.5, height * 0.34, width * 0.72);
+    glow.addColorStop(0, `rgba(255, 236, 142, ${0.13 * smiles})`);
+    glow.addColorStop(0.5, `rgba(255, 102, 138, ${0.08 * smiles})`);
+    glow.addColorStop(1, "rgba(255, 255, 255, 0)");
+    canvasContext.fillStyle = glow;
+    canvasContext.fillRect(0, 0, width, height);
+  }
+
+  if (insanity) {
+    const hue = (now * 0.045) % 360;
+    canvasContext.globalCompositeOperation = "color";
+    canvasContext.globalAlpha = 0.16 + insanity * 0.32;
+    const wash = canvasContext.createLinearGradient(0, 0, width, height);
+    wash.addColorStop(0, `hsl(${hue} 100% 50%)`);
+    wash.addColorStop(0.5, `hsl(${(hue + 137) % 360} 100% 54%)`);
+    wash.addColorStop(1, `hsl(${(hue + 272) % 360} 100% 48%)`);
+    canvasContext.fillStyle = wash;
+    canvasContext.fillRect(0, 0, width, height);
+
+    canvasContext.globalCompositeOperation = "screen";
+    canvasContext.globalAlpha = 0.14 + insanity * 0.2;
+    canvasContext.lineWidth = Math.max(2, Math.min(width, height) * 0.006);
+    for (let ring = 0; ring < 5; ring += 1) {
+      const phase = now * (0.00035 + ring * 0.00005) + ring * 1.7;
+      const x = width * (0.5 + Math.sin(phase) * 0.34);
+      const y = height * (0.5 + Math.cos(phase * 1.3) * 0.3);
+      const radius = Math.min(width, height) * (0.08 + ring * 0.07 + insanity * 0.08 * Math.sin(phase * 2));
+      canvasContext.strokeStyle = `hsl(${(hue + ring * 73) % 360} 100% 68%)`;
+      canvasContext.beginPath();
+      canvasContext.arc(x, y, Math.max(4, radius), 0, Math.PI * 2);
+      canvasContext.stroke();
+    }
+  }
+
+  canvasContext.restore();
 }
 
 function pressureResponse(value, boost = 1.35) {
@@ -5652,7 +5743,11 @@ function drawSunflowerLandscape(canvasContext, width, height, bassEnergy, midsEn
 }
 
 function drawSunflowerExpression(canvasContext, radius, intensity, trebleEnergy, phase) {
-  const smile = intensity < 0.24 ? "sleepy" : intensity < 0.5 ? "smile" : intensity < 0.74 ? "laugh" : "surprise";
+  const smileDial = clampNumber(spectrumPad.smilesDecadence, 0, 1);
+  const insanityDial = clampNumber(spectrumPad.psychedeliaInsanity, 0, 1);
+  const instability = Math.sin(sunflowerFrame * (0.035 + insanityDial * 0.12) + phase * 2.3) * insanityDial * 0.38;
+  const expression = clampNumber(intensity + smileDial * 0.48 + instability, 0, 1);
+  const smile = expression < 0.2 ? "sleepy" : expression < 0.48 ? "smile" : expression < 0.78 ? "laugh" : "surprise";
   const wink = Math.sin(sunflowerFrame * 0.035 + phase) > 0.94 && trebleEnergy > 0.22;
   canvasContext.strokeStyle = "rgba(55, 33, 20, 0.9)";
   canvasContext.fillStyle = "rgba(48, 29, 18, 0.92)";
@@ -10486,6 +10581,7 @@ function drawIdleVisualizer() {
   } else {
     drawIdleEqualizer();
   }
+  drawSpectrumDialEffects(canvasContext);
   drawStagePulse(canvasContext);
   drawFullscreenInfo(canvasContext);
 }
@@ -11332,6 +11428,16 @@ peakToggle.addEventListener("change", () => {
   scheduleSessionSave();
 });
 
+smilesDial.addEventListener("click", () => {
+  const nextLevel = (spectrumLevelIndex(spectrumPad.smilesDecadence) + 1) % smileDialLevels.length;
+  setSpectrumDial("smiles", nextLevel);
+});
+
+insanityDial.addEventListener("click", () => {
+  const nextLevel = (spectrumLevelIndex(spectrumPad.psychedeliaInsanity) + 1) % insanityDialLevels.length;
+  setSpectrumDial("insanity", nextLevel);
+});
+
 visualizerSelect.addEventListener("change", () => {
   const config = visualizerConfig();
 
@@ -11608,6 +11714,7 @@ restoreControlPreferences(restoredSession);
 resizeCanvas();
 updateFireworkSpeedLabel();
 updateHandControlLabels();
+updateSpectrumDials();
 syncVisualizerControls();
 setFullscreenLabel();
 setControlsEnabled(false);

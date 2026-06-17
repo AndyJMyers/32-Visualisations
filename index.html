@@ -146,6 +146,24 @@
             <input id="peakToggle" type="checkbox" checked>
             <span>Peak hold</span>
           </label>
+          <div class="spectrum-dials" role="group" aria-label="Global expression controls">
+            <div class="dial-control">
+              <span class="dial-title">Smiles</span>
+              <button id="smilesDial" class="bakelite-dial" type="button" data-level="0" aria-label="Smiles: Composed">
+                <span class="dial-face" aria-hidden="true"><span class="dial-pointer"></span></span>
+                <output id="smilesDialValue">Composed</output>
+              </button>
+              <span class="dial-scale" aria-hidden="true"><span>Composed</span><span>Amused</span><span>Beaming</span></span>
+            </div>
+            <div class="dial-control">
+              <span class="dial-title">Insanity</span>
+              <button id="insanityDial" class="bakelite-dial" type="button" data-level="0" aria-label="Insanity: Sane">
+                <span class="dial-face" aria-hidden="true"><span class="dial-pointer"></span></span>
+                <output id="insanityDialValue">Sane</output>
+              </button>
+              <span class="dial-scale" aria-hidden="true"><span>Sane</span><span>Strange</span><span>Unhinged</span></span>
+            </div>
+          </div>
           <span id="trackCount">0 tracks</span>
         </section>
 
