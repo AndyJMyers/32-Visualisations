@@ -49,6 +49,7 @@ let handFrame = 0;
 let swampBubbles = [];
 let swampFrame = 0;
 let arrows = [];
+let arrowFires = [];
 let arrowFrame = 0;
 let cephArms = [];
 let cephInkBlooms = [];
@@ -119,6 +120,10 @@ let bobGardenFrame = 0;
 let bobGardenBugs = [];
 let oilSlideFrame = 0;
 let oilBlobs = [];
+let oysterFrame = 0;
+let oysters = [];
+let lingerieFrame = 0;
+let lingerieGarments = [];
 let stagePulse = null;
 let fullscreenInfoPulse = null;
 let spectrumPad = {
@@ -368,6 +373,7 @@ const visualizerConfigs = {
   arrowstorm: {
     ariaLabel: "Arrow Storm frequency visualisation",
     controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Volley speed", size: "Arrow size", count: "Volley size", grasp: "Fire arrows" },
     forms: [
       ["woodland", "Woodland"],
       ["williamtell", "William Tell"],
@@ -578,6 +584,29 @@ const visualizerConfigs = {
       ["garden", "Garden oils"],
       ["nocturne", "Nocturne"],
       ["candy", "Sweet shop"],
+    ],
+  },
+  oysterpearls: {
+    ariaLabel: "Oyster Pearls slow shell visualisation",
+    controls: { theme: false, size: true, count: true, grasp: true },
+    labels: { form: "Waters", speed: "Tide", size: "Shell size", count: "Oysters", grasp: "Pearl making" },
+    forms: [
+      ["lagoon", "Lagoon"],
+      ["opal", "Opal"],
+      ["midnight", "Midnight"],
+      ["coral", "Coral"],
+    ],
+  },
+  lingerie: {
+    ariaLabel: "Lingerie music visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { form: "Salon", speed: "Draft", size: "Drape", count: "Wardrobe", grasp: "Mischief" },
+    forms: [
+      ["chinoiserie", "Chinoiserie"],
+      ["lacquer", "Black lacquer"],
+      ["bamboo", "Bamboo pavilion"],
+      ["shellac", "Amber shellac"],
+      ["leather", "Leather salon"],
     ],
   },
 };
@@ -1282,6 +1311,7 @@ function restartVisualizer() {
   swampBubbles = [];
   swampFrame = 0;
   arrows = [];
+  arrowFires = [];
   arrowFrame = 0;
   cephArms = [];
   cephInkBlooms = [];
@@ -1348,6 +1378,10 @@ function restartVisualizer() {
   bobGardenBugs = [];
   oilSlideFrame = 0;
   oilBlobs = [];
+  oysterFrame = 0;
+  oysters = [];
+  lingerieFrame = 0;
+  lingerieGarments = [];
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -1700,7 +1734,11 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "oilslide") {
+      if (visualizerSelect.value === "lingerie") {
+        drawLingerieFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "oysterpearls") {
+        drawOysterPearlsFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "oilslide") {
         drawOilSlideFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "bobrossgarden") {
         drawBobRossGardenFrame(canvasContext, buffer);
@@ -2171,16 +2209,20 @@ function drawEmergentForm(canvasContext, width, height) {
   canvasContext.restore();
 }
 
+function standardThemeHue(progress, intensity) {
+  const theme = themeSelect.value;
+
+  if (theme === "ice") return 188 + progress * 58 + intensity * 18;
+  if (theme === "ember") return 2 + progress * 48 + intensity * 14;
+  if (theme === "spectrum") return 302 - progress * 268 + intensity * 28;
+  if (theme === "pressure") return 338 - progress * 246 + intensity * 58;
+
+  return 148 + progress * 52 + intensity * 16;
+}
+
 function frequencyHue(bandIndex, intensity) {
-  const lowHue = 352;
-  const highHue = 272;
   const progress = bandIndex / Math.max(1, pacBands.length - 1);
-
-  if (progress < 0.5) {
-    return lowHue + progress * 2 * 68;
-  }
-
-  return 60 + (progress - 0.5) * 2 * (highHue - 60) + intensity * 14;
+  return standardThemeHue(progress, intensity);
 }
 
 function setupPacDancers(width, height) {
@@ -8284,6 +8326,253 @@ function drawOilSlideFrame(canvasContext, buffer) {
   drawOilSlideScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
 }
 
+const oysterPalettes = {
+  lagoon: {
+    water: [188, 214, 164],
+    shell: [36, 28, 322],
+    mantle: [296, 190, 54],
+    pearl: [46, 198, 316],
+  },
+  opal: {
+    water: [214, 282, 170],
+    shell: [318, 38, 206],
+    mantle: [184, 278, 18],
+    pearl: [52, 172, 306],
+  },
+  midnight: {
+    water: [226, 256, 188],
+    shell: [250, 304, 18],
+    mantle: [194, 278, 334],
+    pearl: [206, 286, 42],
+  },
+  coral: {
+    water: [186, 202, 156],
+    shell: [14, 34, 338],
+    mantle: [352, 24, 286],
+    pearl: [40, 326, 178],
+  },
+};
+
+function oysterPalette() {
+  return oysterPalettes[fireworkFormSelect.value] || oysterPalettes.lagoon;
+}
+
+function setupOysters(width, height) {
+  const target = Math.max(4, Math.min(22, handCountValueNumber() + 3));
+  const columns = Math.ceil(Math.sqrt(target * 1.45));
+  const rows = Math.ceil(target / columns);
+
+  while (oysters.length < target) {
+    const index = oysters.length;
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const cellWidth = width / columns;
+    const cellHeight = height / Math.max(1, rows);
+    const hasPearl = Math.random() > 0.42;
+    oysters.push({
+      x: cellWidth * (column + 0.5) + (Math.random() - 0.5) * cellWidth * 0.42,
+      y: height * 0.24 + cellHeight * (row + 0.48) + (Math.random() - 0.5) * cellHeight * 0.28,
+      scale: 0.72 + Math.random() * 0.55,
+      phase: Math.random() * Math.PI * 2,
+      band: index % fireworksBands.length,
+      hueOffset: Math.random() * 18 - 9,
+      hasPearl,
+      grain: !hasPearl || Math.random() > 0.62,
+      pearlAge: hasPearl ? 0.45 + Math.random() * 0.55 : Math.random() * 0.28,
+      sway: Math.random() * Math.PI * 2,
+    });
+  }
+
+  if (oysters.length > target) {
+    oysters.splice(target);
+  }
+}
+
+function drawOysterBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const palette = oysterPalette();
+  const water = canvasContext.createLinearGradient(0, 0, 0, height);
+  water.addColorStop(0, hsla(palette.water[0] + oysterFrame * 0.01, 58, 12 + trebleEnergy * 5, 1));
+  water.addColorStop(0.48, hsla(palette.water[1] - oysterFrame * 0.006, 54, 17 + bassEnergy * 6, 1));
+  water.addColorStop(1, hsla(palette.water[2], 48, 8, 1));
+  canvasContext.fillStyle = water;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  for (let shaft = 0; shaft < 9; shaft += 1) {
+    const x = width * (shaft / 8) + Math.sin(oysterFrame * 0.003 + shaft) * width * 0.035;
+    const glow = canvasContext.createLinearGradient(x - width * 0.07, 0, x + width * 0.1, height);
+    glow.addColorStop(0, "rgba(210, 255, 244, 0.06)");
+    glow.addColorStop(0.5, "rgba(180, 234, 230, 0.025)");
+    glow.addColorStop(1, "rgba(255, 255, 255, 0)");
+    canvasContext.fillStyle = glow;
+    canvasContext.beginPath();
+    canvasContext.moveTo(x - width * 0.07, 0);
+    canvasContext.lineTo(x + width * 0.05, 0);
+    canvasContext.lineTo(x + width * 0.18, height);
+    canvasContext.lineTo(x - width * 0.16, height);
+    canvasContext.closePath();
+    canvasContext.fill();
+  }
+  canvasContext.restore();
+
+  const sand = canvasContext.createLinearGradient(0, height * 0.72, 0, height);
+  sand.addColorStop(0, hsla(42, 24, 18, 0));
+  sand.addColorStop(0.38, hsla(36, 34, 24, 0.72));
+  sand.addColorStop(1, hsla(28, 42, 15, 1));
+  canvasContext.fillStyle = sand;
+  canvasContext.fillRect(0, height * 0.68, width, height * 0.32);
+
+  canvasContext.save();
+  canvasContext.globalAlpha = 0.22;
+  for (let speck = 0; speck < 90; speck += 1) {
+    const x = ((speck * 97.13 + Math.sin(oysterFrame * 0.002 + speck) * 18) % width + width) % width;
+    const y = height * (0.69 + ((speck * 37.7) % 31) / 100);
+    canvasContext.fillStyle = hsla(38 + (speck % 7) * 4, 34, 48 + (speck % 5) * 5, 0.28);
+    canvasContext.beginPath();
+    canvasContext.arc(x, y, 0.8 + (speck % 4) * 0.45, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+  canvasContext.restore();
+}
+
+function drawOyster(canvasContext, oyster, width, height, intensity, bassEnergy, midsEnergy, trebleEnergy) {
+  const palette = oysterPalette();
+  const scaleControl = handSizeMultiplier();
+  const pearlMaking = handGraspAmount();
+  const shellBase = Math.min(width, height) * 0.078 * oyster.scale * (0.82 + scaleControl * 0.28);
+  const openPulse = Math.sin(oysterFrame * (0.009 + fireworkSpeedMultiplier() * 0.004) + oyster.phase) * 0.5 + 0.5;
+  const openness = 0.1 + openPulse * 0.36 + intensity * 0.28 + pearlMaking * 0.12;
+  const wobble = Math.sin(oysterFrame * 0.006 + oyster.sway) * shellBase * 0.035;
+  const x = oyster.x + wobble;
+  const y = oyster.y + Math.sin(oysterFrame * 0.004 + oyster.phase) * shellBase * 0.08;
+  const shellHue = palette.shell[oyster.band % palette.shell.length] + oyster.hueOffset;
+  const mantleHue = palette.mantle[oyster.band % palette.mantle.length] + trebleEnergy * 22;
+
+  oyster.pearlAge = clampNumber(oyster.pearlAge + (intensity * 0.00055 + pearlMaking * 0.00045), 0, 1);
+
+  canvasContext.save();
+  canvasContext.translate(x, y);
+  canvasContext.rotate(Math.sin(oysterFrame * 0.0025 + oyster.phase) * 0.035);
+
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  const halo = canvasContext.createRadialGradient(0, 0, shellBase * 0.2, 0, 0, shellBase * 2.3);
+  halo.addColorStop(0, hsla(mantleHue, 72, 62, 0.08 + intensity * 0.11));
+  halo.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = halo;
+  canvasContext.fillRect(-shellBase * 2.4, -shellBase * 2.1, shellBase * 4.8, shellBase * 4.2);
+  canvasContext.restore();
+
+  canvasContext.fillStyle = hsla(mantleHue, 58, 30 + midsEnergy * 14, 0.9);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, shellBase * 0.18, shellBase * 0.98, shellBase * (0.34 + openness * 0.24), 0, 0, Math.PI * 2);
+  canvasContext.fill();
+
+  const topGradient = canvasContext.createLinearGradient(0, -shellBase * 1.3, 0, shellBase * 0.3);
+  topGradient.addColorStop(0, hsla(shellHue + 16, 58, 68, 0.96));
+  topGradient.addColorStop(0.55, hsla(shellHue, 48, 42, 0.97));
+  topGradient.addColorStop(1, hsla(shellHue - 22, 54, 22, 0.98));
+  canvasContext.fillStyle = topGradient;
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, -shellBase * openness, shellBase * 1.12, shellBase * 0.52, -openness * 0.08, Math.PI, Math.PI * 2);
+  canvasContext.quadraticCurveTo(shellBase * 0.72, -shellBase * 0.1, 0, shellBase * 0.12);
+  canvasContext.quadraticCurveTo(-shellBase * 0.72, -shellBase * 0.1, -shellBase * 1.12, -shellBase * openness);
+  canvasContext.fill();
+
+  const bottomGradient = canvasContext.createLinearGradient(0, -shellBase * 0.15, 0, shellBase * 1.05);
+  bottomGradient.addColorStop(0, hsla(shellHue + 34, 54, 72, 0.98));
+  bottomGradient.addColorStop(0.56, hsla(shellHue + 5, 48, 48, 0.98));
+  bottomGradient.addColorStop(1, hsla(shellHue - 34, 54, 24, 1));
+  canvasContext.fillStyle = bottomGradient;
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, shellBase * 0.22, shellBase * 1.16, shellBase * 0.6, 0, 0, Math.PI);
+  canvasContext.quadraticCurveTo(shellBase * 0.68, shellBase * 0.82, 0, shellBase * 1.02);
+  canvasContext.quadraticCurveTo(-shellBase * 0.68, shellBase * 0.82, -shellBase * 1.16, shellBase * 0.22);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = hsla(shellHue + 20, 64, 80, 0.28);
+  canvasContext.lineWidth = Math.max(1, shellBase * 0.022);
+  for (let rib = -4; rib <= 4; rib += 1) {
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, shellBase * 0.95);
+    canvasContext.quadraticCurveTo(shellBase * rib * 0.12, shellBase * 0.24, shellBase * rib * 0.24, -shellBase * openness * 0.75);
+    canvasContext.stroke();
+  }
+
+  const pearlRadius = shellBase * (0.09 + oyster.pearlAge * 0.17 + intensity * 0.03);
+  if (oyster.hasPearl || oyster.pearlAge > 0.36) {
+    const pearlHue = palette.pearl[oyster.band % palette.pearl.length] + trebleEnergy * 34;
+    const pearlGradient = canvasContext.createRadialGradient(
+      -pearlRadius * 0.32,
+      -pearlRadius * 0.35,
+      pearlRadius * 0.08,
+      0,
+      0,
+      pearlRadius,
+    );
+    pearlGradient.addColorStop(0, "rgba(255, 255, 255, 0.98)");
+    pearlGradient.addColorStop(0.34, hsla(pearlHue, 76, 80, 0.96));
+    pearlGradient.addColorStop(1, hsla(pearlHue + 88, 50, 44, 0.88));
+    canvasContext.fillStyle = pearlGradient;
+    canvasContext.beginPath();
+    canvasContext.arc(0, shellBase * 0.2, pearlRadius, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.strokeStyle = "rgba(255, 255, 255, 0.42)";
+    canvasContext.lineWidth = Math.max(1, pearlRadius * 0.08);
+    canvasContext.stroke();
+  }
+
+  if (oyster.grain && oyster.pearlAge < 0.82) {
+    canvasContext.fillStyle = hsla(42, 42, 68, 0.78);
+    canvasContext.beginPath();
+    canvasContext.arc(shellBase * 0.28, shellBase * 0.18, shellBase * 0.032, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  canvasContext.restore();
+}
+
+function drawOysterPearlsScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities) {
+  oysterFrame += (0.045 + fireworkSpeedMultiplier() * 0.038) * (0.72 + bassEnergy * 0.18);
+  setupOysters(width, height);
+  drawOysterBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  oysters
+    .slice()
+    .sort((a, b) => a.y - b.y)
+    .forEach((oyster) => {
+      const intensity = intensities[oyster.band % intensities.length] || 0.14;
+      drawOyster(canvasContext, oyster, width, height, intensity, bassEnergy, midsEnergy, trebleEnergy);
+    });
+
+  canvasContext.save();
+  canvasContext.globalCompositeOperation = "lighter";
+  for (let bubble = 0; bubble < 36; bubble += 1) {
+    const drift = Math.sin(oysterFrame * 0.009 + bubble * 1.7);
+    const x = ((bubble * 71.3 + drift * 18) % width + width) % width;
+    const y = ((height - ((oysterFrame * (0.12 + trebleEnergy * 0.18) + bubble * 43) % (height * 1.1))) + height * 0.08) % (height * 1.1);
+    const radius = Math.max(1.2, Math.min(width, height) * (0.003 + (bubble % 5) * 0.0009));
+    canvasContext.strokeStyle = `rgba(220, 255, 248, ${0.06 + trebleEnergy * 0.08})`;
+    canvasContext.lineWidth = Math.max(1, radius * 0.18);
+    canvasContext.beginPath();
+    canvasContext.arc(x, y, radius, 0, Math.PI * 2);
+    canvasContext.stroke();
+  }
+  canvasContext.restore();
+}
+
+function drawOysterPearlsFrame(canvasContext, buffer) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 10), 1.2);
+  const midsEnergy = pressureResponse(averageBand(buffer, 14, 58), 1.18);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 62, 118), 1.24);
+  const intensities = fireworksBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.18));
+  drawOysterPearlsScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, intensities);
+}
+
 function setupLoucheLizards(width, height) {
   const targetCount = handCountValueNumber();
   if (loucheLizards.length === targetCount) return;
@@ -8704,6 +8993,326 @@ function drawOctopusOcclusionFrame(canvasContext, buffer) {
     });
 }
 
+const lingerieBands = [
+  { start: 1, end: 7 },
+  { start: 8, end: 16 },
+  { start: 17, end: 30 },
+  { start: 31, end: 50 },
+  { start: 51, end: 78 },
+  { start: 79, end: 112 },
+];
+
+const lingerieScenes = {
+  chinoiserie: { top: "#142b32", bottom: "#391928", panel: "#8e1f2c", trim: "#d4a84f", motif: 166 },
+  lacquer: { top: "#08090d", bottom: "#250b12", panel: "#170b0f", trim: "#d8ad57", motif: 8 },
+  bamboo: { top: "#173128", bottom: "#49361d", panel: "#31573d", trim: "#c5a34f", motif: 104 },
+  shellac: { top: "#31110b", bottom: "#6d2f12", panel: "#8b421c", trim: "#f0a84a", motif: 28 },
+  leather: { top: "#140c0c", bottom: "#38221c", panel: "#4a251d", trim: "#bf7952", motif: 350 },
+};
+
+function setupLingerieGarments(width, height) {
+  const targetCount = Math.max(8, Math.round(handCountValueNumber() * 1.8));
+  if (lingerieGarments.length === targetCount) return;
+
+  const types = ["stockings", "briefs", "slip", "corset", "stockings", "garter"];
+  lingerieGarments = Array.from({ length: targetCount }, (_, index) => {
+    const columns = Math.ceil(Math.sqrt(targetCount * 1.7));
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const rows = Math.ceil(targetCount / columns);
+    const anchorX = width * (0.1 + (column / Math.max(1, columns - 1)) * 0.8);
+    const anchorY = height * (0.2 + (row / Math.max(1, rows - 1)) * 0.52);
+    return {
+      index,
+      bandIndex: index % lingerieBands.length,
+      type: types[index % types.length],
+      anchorX,
+      anchorY,
+      x: anchorX,
+      y: anchorY,
+      vx: 0,
+      vy: 0,
+      phase: Math.random() * Math.PI * 2,
+      scale: 0.78 + Math.random() * 0.5,
+      blown: false,
+      alpha: 1,
+    };
+  });
+}
+
+function drawLingerieSalon(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const scene = lingerieScenes[fireworkFormSelect.value] || lingerieScenes.chinoiserie;
+  const room = canvasContext.createLinearGradient(0, 0, 0, height);
+  room.addColorStop(0, scene.top);
+  room.addColorStop(1, scene.bottom);
+  canvasContext.fillStyle = room;
+  canvasContext.fillRect(0, 0, width, height);
+
+  const canopy = canvasContext.createLinearGradient(0, 0, 0, height * 0.2);
+  canopy.addColorStop(0, "rgba(7, 2, 8, 0.94)");
+  canopy.addColorStop(0.7, "rgba(82, 7, 36, 0.72)");
+  canopy.addColorStop(1, "rgba(20, 3, 14, 0)");
+  canvasContext.fillStyle = canopy;
+  canvasContext.fillRect(0, 0, width, height * 0.22);
+
+  const panelCount = 5;
+  const margin = width * 0.035;
+  const panelWidth = (width - margin * 2) / panelCount;
+  for (let panel = 0; panel < panelCount; panel += 1) {
+    const x = margin + panel * panelWidth;
+    const sheen = canvasContext.createLinearGradient(x, 0, x + panelWidth, 0);
+    sheen.addColorStop(0, "rgba(0, 0, 0, 0.28)");
+    sheen.addColorStop(0.45, scene.panel);
+    sheen.addColorStop(0.75, `hsla(${scene.motif}, 54%, 48%, ${0.1 + trebleEnergy * 0.12})`);
+    sheen.addColorStop(1, "rgba(0, 0, 0, 0.34)");
+    canvasContext.fillStyle = sheen;
+    canvasContext.fillRect(x + 3, height * 0.06, panelWidth - 6, height * 0.82);
+    canvasContext.strokeStyle = scene.trim;
+    canvasContext.lineWidth = Math.max(1, width * 0.002);
+    canvasContext.strokeRect(x + 3, height * 0.06, panelWidth - 6, height * 0.82);
+
+    canvasContext.strokeStyle = `hsla(${scene.motif + panel * 7}, 58%, 68%, ${0.16 + trebleEnergy * 0.18})`;
+    canvasContext.lineWidth = Math.max(1, width * 0.0015);
+    canvasContext.beginPath();
+    canvasContext.moveTo(x + panelWidth * 0.2, height * 0.73);
+    canvasContext.bezierCurveTo(
+      x + panelWidth * (0.1 + bassEnergy * 0.2), height * 0.52,
+      x + panelWidth * 0.9, height * 0.4,
+      x + panelWidth * (0.45 + trebleEnergy * 0.3), height * 0.15,
+    );
+    canvasContext.stroke();
+
+    canvasContext.fillStyle = `hsla(${scene.motif + 18}, 44%, 12%, ${0.08 + bassEnergy * 0.1})`;
+    canvasContext.beginPath();
+    canvasContext.ellipse(x + panelWidth * 0.5, height * 0.43, panelWidth * 0.16, height * 0.2, 0, 0, Math.PI * 2);
+    canvasContext.ellipse(x + panelWidth * 0.5, height * 0.65, panelWidth * 0.25, height * 0.17, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  canvasContext.strokeStyle = scene.trim;
+  canvasContext.lineWidth = Math.max(2, height * 0.008);
+  canvasContext.beginPath();
+  canvasContext.moveTo(width * 0.04, height * 0.13);
+  canvasContext.quadraticCurveTo(width * 0.5, height * (0.105 + bassEnergy * 0.015), width * 0.96, height * 0.13);
+  canvasContext.stroke();
+
+  canvasContext.fillStyle = "rgba(14, 2, 10, 0.72)";
+  for (let fold = 0; fold < 9; fold += 1) {
+    const x = width * (fold / 8);
+    canvasContext.beginPath();
+    canvasContext.moveTo(x - width * 0.09, 0);
+    canvasContext.quadraticCurveTo(x, height * (0.12 + (fold % 2) * 0.05), x + width * 0.09, 0);
+    canvasContext.fill();
+  }
+
+  canvasContext.fillStyle = `rgba(245, 196, 112, ${0.025 + bassEnergy * 0.055})`;
+  for (let mote = 0; mote < 38; mote += 1) {
+    const x = (mote * 137 + lingerieFrame * (0.22 + trebleEnergy)) % width;
+    const y = height * (0.08 + ((mote * 47) % 80) / 100);
+    canvasContext.beginPath();
+    canvasContext.arc(x, y, 1 + (mote % 3), 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+}
+
+function drawLingerieGarment(canvasContext, garment, energy, bassEnergy, trebleEnergy) {
+  const drape = handSizeMultiplier();
+  const progress = garment.bandIndex / Math.max(1, lingerieBands.length - 1);
+  const hue = standardThemeHue(progress, energy);
+  const size = Math.min(visualizer.width, visualizer.height) * 0.112 * garment.scale * Math.sqrt(drape);
+  const flutter = Math.sin(lingerieFrame * (0.035 + trebleEnergy * 0.045) + garment.phase);
+
+  canvasContext.save();
+  canvasContext.translate(garment.x, garment.y);
+  canvasContext.rotate(flutter * (0.08 + energy * 0.22) + (garment.blown ? Math.atan2(garment.vy, garment.vx) * 0.22 : 0));
+  canvasContext.globalAlpha = garment.alpha;
+  canvasContext.lineJoin = "round";
+  canvasContext.lineCap = "round";
+  canvasContext.shadowColor = hsla(hue, 84, 62, 0.44);
+  canvasContext.shadowBlur = size * (0.08 + energy * 0.15);
+  const satin = canvasContext.createLinearGradient(-size, -size * 0.2, size, size * 0.24);
+  satin.addColorStop(0, hsla(hue - 12, 72, 18 + energy * 16, 0.72));
+  satin.addColorStop(0.42, hsla(hue, 82, 38 + energy * 28, 0.82));
+  satin.addColorStop(0.58, hsla(hue + 26, 86, 72 + trebleEnergy * 12, 0.62));
+  satin.addColorStop(1, hsla(hue + 4, 76, 24 + energy * 22, 0.76));
+  canvasContext.fillStyle = satin;
+  canvasContext.strokeStyle = hsla(hue + 22, 72, 72, 0.74);
+  canvasContext.lineWidth = Math.max(1.2, size * 0.035);
+
+  if (garment.type === "stockings") {
+    [-1, 1].forEach((side) => {
+      canvasContext.beginPath();
+      canvasContext.moveTo(side * size * 0.12, -size * 0.72);
+      canvasContext.bezierCurveTo(side * size * 0.42, -size * 0.2, side * size * 0.1, size * 0.42, side * size * (0.28 + flutter * 0.08), size * 0.72);
+      canvasContext.lineTo(side * size * (0.05 + flutter * 0.06), size * 0.72);
+      canvasContext.bezierCurveTo(side * size * 0.02, size * 0.2, side * size * 0.18, -size * 0.25, side * size * 0.02, -size * 0.72);
+      canvasContext.closePath();
+      canvasContext.fill();
+      canvasContext.stroke();
+
+      canvasContext.strokeStyle = hsla(hue + 30, 86, 80, 0.7);
+      canvasContext.lineWidth = Math.max(1, size * 0.026);
+      canvasContext.beginPath();
+      canvasContext.moveTo(side * size * 0.02, -size * 0.61);
+      canvasContext.lineTo(side * size * 0.25, -size * 0.6);
+      canvasContext.moveTo(side * size * 0.09, -size * 0.5);
+      canvasContext.bezierCurveTo(side * size * 0.2, -size * 0.05, side * size * 0.02, size * 0.34, side * size * 0.2, size * 0.67);
+      canvasContext.stroke();
+    });
+  } else if (garment.type === "briefs") {
+    canvasContext.beginPath();
+    canvasContext.moveTo(-size * 0.62, -size * 0.28);
+    canvasContext.quadraticCurveTo(0, -size * (0.42 + energy * 0.12), size * 0.62, -size * 0.28);
+    canvasContext.lineTo(size * 0.22, size * 0.46);
+    canvasContext.quadraticCurveTo(0, size * (0.26 + flutter * 0.08), -size * 0.22, size * 0.46);
+    canvasContext.closePath();
+    canvasContext.fill();
+    canvasContext.stroke();
+
+    canvasContext.strokeStyle = hsla(hue + 34, 88, 84, 0.82);
+    canvasContext.lineWidth = Math.max(1, size * 0.025);
+    for (let scallop = -5; scallop <= 5; scallop += 1) {
+      canvasContext.beginPath();
+      canvasContext.arc(scallop * size * 0.1, -size * 0.29, size * 0.06, 0, Math.PI);
+      canvasContext.stroke();
+    }
+    canvasContext.fillStyle = hsla(hue + 44, 88, 78, 0.9);
+    canvasContext.beginPath();
+    canvasContext.moveTo(0, -size * 0.2);
+    canvasContext.quadraticCurveTo(-size * 0.22, -size * 0.4, -size * 0.25, -size * 0.16);
+    canvasContext.quadraticCurveTo(-size * 0.12, -size * 0.08, 0, -size * 0.2);
+    canvasContext.quadraticCurveTo(size * 0.22, -size * 0.4, size * 0.25, -size * 0.16);
+    canvasContext.quadraticCurveTo(size * 0.12, -size * 0.08, 0, -size * 0.2);
+    canvasContext.fill();
+  } else if (garment.type === "slip") {
+    canvasContext.beginPath();
+    canvasContext.moveTo(-size * 0.3, -size * 0.66);
+    canvasContext.quadraticCurveTo(0, -size * 0.45, size * 0.3, -size * 0.66);
+    canvasContext.lineTo(size * (0.58 + flutter * 0.08), size * 0.7);
+    canvasContext.quadraticCurveTo(0, size * (0.54 - energy * 0.08), -size * (0.58 - flutter * 0.08), size * 0.7);
+    canvasContext.closePath();
+    canvasContext.fill();
+    canvasContext.stroke();
+    canvasContext.strokeStyle = hsla(hue + 32, 82, 82, 0.72);
+    canvasContext.beginPath();
+    canvasContext.moveTo(-size * 0.3, -size * 0.64);
+    canvasContext.quadraticCurveTo(-size * 0.42, -size * 0.92, -size * 0.17, -size * 0.98);
+    canvasContext.moveTo(size * 0.3, -size * 0.64);
+    canvasContext.quadraticCurveTo(size * 0.42, -size * 0.92, size * 0.17, -size * 0.98);
+    canvasContext.moveTo(-size * 0.29, -size * 0.62);
+    canvasContext.quadraticCurveTo(0, -size * 0.22, size * 0.29, -size * 0.62);
+    canvasContext.stroke();
+  } else if (garment.type === "corset") {
+    canvasContext.beginPath();
+    canvasContext.moveTo(-size * 0.5, -size * 0.62);
+    canvasContext.bezierCurveTo(-size * 0.28, 0, -size * 0.42, size * 0.48, -size * 0.3, size * 0.68);
+    canvasContext.lineTo(size * 0.3, size * 0.68);
+    canvasContext.bezierCurveTo(size * 0.42, size * 0.48, size * 0.28, 0, size * 0.5, -size * 0.62);
+    canvasContext.quadraticCurveTo(0, -size * 0.38, -size * 0.5, -size * 0.62);
+    canvasContext.fill();
+    canvasContext.stroke();
+    canvasContext.strokeStyle = hsla(hue + 48, 80, 78, 0.66);
+    for (let lace = -2; lace <= 2; lace += 1) {
+      canvasContext.beginPath();
+      canvasContext.moveTo(-size * 0.14, lace * size * 0.2);
+      canvasContext.lineTo(size * 0.14, (lace + 0.5) * size * 0.2);
+      canvasContext.stroke();
+    }
+  } else {
+    canvasContext.beginPath();
+    canvasContext.ellipse(0, 0, size * 0.62, size * 0.24, flutter * 0.16, 0, Math.PI * 2);
+    canvasContext.stroke();
+    canvasContext.setLineDash([size * 0.08, size * 0.06]);
+    canvasContext.beginPath();
+    canvasContext.arc(0, size * 0.2, size * 0.48, 0.2, Math.PI - 0.2);
+    canvasContext.stroke();
+    canvasContext.setLineDash([]);
+    [-1, 1].forEach((side) => {
+      canvasContext.beginPath();
+      canvasContext.moveTo(side * size * 0.32, size * 0.08);
+      canvasContext.bezierCurveTo(side * size * 0.42, size * 0.42, side * size * 0.26, size * 0.62, side * size * 0.36, size * 0.82);
+      canvasContext.stroke();
+    });
+  }
+
+  canvasContext.setLineDash([]);
+  canvasContext.globalAlpha = garment.alpha * (0.18 + trebleEnergy * 0.24);
+  canvasContext.fillStyle = "rgba(255, 250, 236, 0.8)";
+  canvasContext.beginPath();
+  canvasContext.arc(-size * 0.16, -size * 0.24, size * (0.025 + energy * 0.035), 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.restore();
+}
+
+function drawLingerieScene(canvasContext, energies, active) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const speed = fireworkSpeedMultiplier();
+  const mischief = handGraspAmount();
+  const bassEnergy = energies[0] || 0.12;
+  const trebleEnergy = energies[energies.length - 1] || 0.14;
+  const wind = (Math.sin(lingerieFrame * 0.018) * 0.7 + trebleEnergy * 1.8 + bassEnergy * 0.45) * speed;
+
+  setupLingerieGarments(width, height);
+  drawLingerieSalon(canvasContext, width, height, bassEnergy, trebleEnergy);
+
+  lingerieGarments.forEach((garment) => {
+    const energy = energies[garment.bandIndex] || 0.12;
+
+    if (!garment.blown) {
+      canvasContext.strokeStyle = `rgba(230, 190, 116, ${0.18 + energy * 0.28})`;
+      canvasContext.lineWidth = Math.max(1, width * 0.0012);
+      canvasContext.beginPath();
+      canvasContext.moveTo(garment.anchorX, height * 0.13);
+      canvasContext.quadraticCurveTo(
+        garment.anchorX + Math.sin(lingerieFrame * 0.02 + garment.phase) * width * 0.012,
+        garment.anchorY * 0.58,
+        garment.x,
+        garment.y - Math.min(width, height) * 0.055,
+      );
+      canvasContext.stroke();
+    }
+    if (active && garment.type === "briefs" && !garment.blown && energy > 0.38 && Math.random() < energy * mischief * 0.018 * speed) {
+      garment.blown = true;
+      garment.vx = (2.2 + energy * 6 + mischief * 5) * (Math.sin(garment.phase) < 0 ? -1 : 1);
+      garment.vy = -1.2 - trebleEnergy * 4;
+    }
+
+    if (garment.blown) {
+      garment.vx += wind * 0.018;
+      garment.vy += Math.sin(lingerieFrame * 0.06 + garment.phase) * 0.08;
+      garment.x += garment.vx * speed;
+      garment.y += garment.vy * speed;
+      garment.alpha -= 0.004 * speed;
+      if (garment.alpha <= 0 || garment.x < -width * 0.2 || garment.x > width * 1.2 || garment.y < -height * 0.25) {
+        garment.x = garment.anchorX;
+        garment.y = garment.anchorY;
+        garment.vx = 0;
+        garment.vy = 0;
+        garment.alpha = 1;
+        garment.blown = false;
+        garment.phase = Math.random() * Math.PI * 2;
+      }
+    } else {
+      garment.x = garment.anchorX + Math.sin(lingerieFrame * 0.022 * speed + garment.phase) * width * (0.006 + energy * 0.018);
+      garment.y = garment.anchorY + Math.cos(lingerieFrame * 0.017 * speed + garment.phase) * height * (0.004 + bassEnergy * 0.012);
+    }
+    drawLingerieGarment(canvasContext, garment, energy, bassEnergy, trebleEnergy);
+  });
+}
+
+function drawLingerieFrame(canvasContext, buffer) {
+  analyser.getByteFrequencyData(buffer);
+  lingerieFrame += fireworkSpeedMultiplier();
+  const energies = lingerieBands.map((band) => pressureResponse(averageBand(buffer, band.start, band.end), 1.42));
+  drawLingerieScene(canvasContext, energies, true);
+}
+
+function drawIdleLingerie() {
+  lingerieFrame += 0.7;
+  drawLingerieScene(visualizer.getContext("2d"), [0.14, 0.18, 0.12, 0.2, 0.16, 0.22], false);
+}
+
 function setupHandForms(width, height) {
   const targetCount = handCountValueNumber();
 
@@ -8736,10 +9345,18 @@ function setupHandForms(width, height) {
 
 function handHue(index, intensity) {
   const progress = index / Math.max(1, handCountValueNumber() - 1);
-  const hue = progress < 0.45
-    ? 354 + progress * 2.22 * 44
-    : 52 + (progress - 0.45) * 1.82 * 230;
-  return hue + intensity * 18;
+  return standardThemeHue(progress, intensity);
+}
+
+function branchFieldColours() {
+  const fields = {
+    mono: ["rgba(7, 46, 36, 0.2)", "rgba(14, 82, 62, 0.12)", "rgba(38, 20, 54, 0.12)"],
+    ice: ["rgba(4, 35, 72, 0.28)", "rgba(20, 112, 150, 0.2)", "rgba(92, 80, 180, 0.18)"],
+    ember: ["rgba(88, 7, 3, 0.3)", "rgba(156, 42, 4, 0.18)", "rgba(74, 10, 28, 0.2)"],
+    spectrum: ["rgba(82, 8, 112, 0.22)", "rgba(7, 100, 104, 0.16)", "rgba(132, 70, 3, 0.2)"],
+    pressure: ["rgba(106, 2, 48, 0.27)", "rgba(72, 10, 128, 0.2)", "rgba(5, 104, 112, 0.19)"],
+  };
+  return fields[themeSelect.value] || fields.mono;
 }
 
 function drawLittleBuoyMan(canvasContext, x, y, size, hue, alpha, wobble) {
@@ -8845,13 +9462,14 @@ function drawBranchHandsFrame(canvasContext, buffer) {
   handFrame += speedMultiplier;
   setupHandForms(width, height);
 
-  canvasContext.fillStyle = "rgba(5, 7, 9, 0.16)";
+  canvasContext.fillStyle = "rgba(3, 5, 9, 0.19)";
   canvasContext.fillRect(0, 0, width, height);
 
+  const fieldColours = branchFieldColours();
   const field = canvasContext.createLinearGradient(0, 0, width, height);
-  field.addColorStop(0, "rgba(70, 10, 24, 0.11)");
-  field.addColorStop(0.52, "rgba(20, 96, 76, 0.08)");
-  field.addColorStop(1, "rgba(74, 34, 128, 0.13)");
+  field.addColorStop(0, fieldColours[0]);
+  field.addColorStop(0.52, fieldColours[1]);
+  field.addColorStop(1, fieldColours[2]);
   canvasContext.fillStyle = field;
   canvasContext.fillRect(0, 0, width, height);
 
@@ -9102,28 +9720,35 @@ function spawnArrow(bandIndex, intensity, width, height, bassEnergy) {
   const scene = fireworkFormSelect.value;
   const wind = Math.sin(arrowFrame * 0.012 + bandIndex) * width * (0.04 + drama * 0.07);
   const length = (34 + intensity * 54 + bassEnergy * 42) * size * arrowBands[bandIndex].weight;
-  const fire = Math.random() < (drama * 0.42 + intensity * 0.28 + bassEnergy * 0.18);
-  const targetX = scene === "williamtell"
+  const fire = Math.random() < drama;
+  const williamTellHit = scene === "williamtell" && Math.random() < 0.24 + intensity * 0.16;
+  const targetX = williamTellHit
     ? width * (0.5 + (Math.random() - 0.5) * (0.28 - intensity * 0.12))
     : scene === "fort"
       ? width * (0.18 + Math.random() * 0.64)
       : Math.random() * width;
   const startSide = Math.random() < drama * 0.38 ? (Math.random() < 0.5 ? -0.16 : 1.16) : Math.random();
+  const targetY = williamTellHit
+    ? height * (0.55 + Math.random() * 0.08)
+    : scene === "fort"
+      ? height * (0.72 + Math.random() * 0.28)
+      : height * (0.8 + Math.random() * 0.28);
 
   arrows.push({
     x: startSide * width - wind,
-    y: -height * (0.06 + Math.random() * 0.52),
+    y: -height * (0.025 + Math.random() * 0.2),
     vx: wind * 0.01 + (targetX / width - startSide) * (0.8 + intensity * 2.2),
-    vy: (3.5 + intensity * 7 + bassEnergy * 5) * speedMultiplier,
+    vy: (5.8 + intensity * 8 + bassEnergy * 6) * speedMultiplier,
     angle: 0,
     spin: (Math.random() - 0.5) * 0.016 * (1 + drama),
     length,
     targetX,
-    targetY: height * (0.52 + Math.random() * 0.42),
+    targetY,
     hue: arrowHue(bandIndex, intensity),
     alpha: 1,
     fire,
     stuck: false,
+    ignited: false,
     impact: 0,
     bandIndex,
     density,
@@ -9229,6 +9854,71 @@ function drawArrow(canvasContext, arrow, bassEnergy) {
   canvasContext.restore();
 }
 
+function igniteArrowLanding(arrow, width, height) {
+  arrow.ignited = true;
+  arrowFires.push({
+    x: clampNumber(arrow.x, width * 0.01, width * 0.99),
+    y: clampNumber(arrow.y + arrow.length * 0.4, height * 0.56, height * 0.98),
+    radius: arrow.length * (0.18 + Math.random() * 0.22),
+    fuel: 0.9 + Math.random() * 0.8,
+    age: 0,
+    phase: Math.random() * Math.PI * 2,
+  });
+  if (arrowFires.length > 110) arrowFires.splice(0, arrowFires.length - 110);
+}
+
+function drawArrowFires(canvasContext, width, height, bassEnergy) {
+  const speed = fireworkSpeedMultiplier();
+  const fireShare = handGraspAmount();
+  arrowFires = arrowFires.filter((fire) => fire.fuel > 0.02);
+
+  arrowFires.forEach((fire, fireIndex) => {
+    fire.age += speed;
+    fire.fuel -= (0.00065 + Math.max(0, fire.age - 520) * 0.0000014) * speed;
+    const strength = Math.min(1, fire.age / 10) * Math.min(1, fire.fuel) * (0.72 + bassEnergy * 0.7);
+    const glowRadius = fire.radius * (2.2 + bassEnergy * 1.5);
+    const glow = canvasContext.createRadialGradient(fire.x, fire.y, 0, fire.x, fire.y, glowRadius);
+    glow.addColorStop(0, `rgba(255, 224, 92, ${0.3 * strength})`);
+    glow.addColorStop(0.38, `rgba(255, 76, 18, ${0.2 * strength})`);
+    glow.addColorStop(1, "rgba(42, 0, 0, 0)");
+    canvasContext.fillStyle = glow;
+    canvasContext.fillRect(fire.x - glowRadius, fire.y - glowRadius, glowRadius * 2, glowRadius * 2);
+
+    const tongues = 4 + Math.round(bassEnergy * 5);
+    for (let tongue = 0; tongue < tongues; tongue += 1) {
+      const sway = Math.sin(arrowFrame * 0.11 + fire.phase + tongue * 1.7);
+      const x = fire.x + (tongue / Math.max(1, tongues - 1) - 0.5) * fire.radius * 1.5;
+      const flameHeight = fire.radius * (0.9 + ((tongue * 7) % 5) * 0.16 + bassEnergy * 1.8) * strength;
+      const flame = canvasContext.createLinearGradient(x, fire.y, x + sway * fire.radius * 0.35, fire.y - flameHeight);
+      flame.addColorStop(0, `rgba(174, 18, 3, ${0.7 * strength})`);
+      flame.addColorStop(0.48, `rgba(255, 112, 16, ${0.82 * strength})`);
+      flame.addColorStop(1, `rgba(255, 244, 154, ${0.08 * strength})`);
+      canvasContext.fillStyle = flame;
+      canvasContext.beginPath();
+      canvasContext.moveTo(x - fire.radius * 0.18, fire.y);
+      canvasContext.quadraticCurveTo(x + sway * fire.radius * 0.5, fire.y - flameHeight * 0.52, x + sway * fire.radius * 0.28, fire.y - flameHeight);
+      canvasContext.quadraticCurveTo(x - sway * fire.radius * 0.18, fire.y - flameHeight * 0.42, x + fire.radius * 0.2, fire.y);
+      canvasContext.fill();
+    }
+
+    canvasContext.fillStyle = `rgba(18, 5, 3, ${0.32 + strength * 0.34})`;
+    canvasContext.beginPath();
+    canvasContext.ellipse(fire.x, fire.y + 2, fire.radius * 1.15, fire.radius * 0.28, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+
+    if (fireIndex < 40 && bassEnergy > 0.44 && Math.random() < bassEnergy * fireShare * 0.0009 * speed && arrowFires.length < 110) {
+      arrowFires.push({
+        x: clampNumber(fire.x + (Math.random() - 0.5) * fire.radius * 5, 0, width),
+        y: clampNumber(fire.y + (Math.random() - 0.5) * fire.radius, height * 0.58, height * 0.98),
+        radius: fire.radius * (0.62 + Math.random() * 0.45),
+        fuel: 0.6 + Math.random() * 0.7,
+        age: 0,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  });
+}
+
 function drawArrowStormFrame(canvasContext, buffer) {
   const width = visualizer.width;
   const height = visualizer.height;
@@ -9242,6 +9932,7 @@ function drawArrowStormFrame(canvasContext, buffer) {
   const trebleEnergy = pressureResponse(averageBand(buffer, 58, 112), 1.42);
 
   drawArrowBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+  drawArrowFires(canvasContext, width, height, bassEnergy);
 
   arrowBands.forEach((band, bandIndex) => {
     const intensity = pressureResponse(averageBand(buffer, band.start, band.end), 1.34);
@@ -9289,6 +9980,7 @@ function drawArrowStormFrame(canvasContext, buffer) {
         arrow.stuck = true;
         arrow.impact = 1;
         arrow.angle += (Math.random() - 0.5) * 0.18;
+        if (arrow.fire) igniteArrowLanding(arrow, width, height);
       }
     } else {
       arrow.impact *= 0.88;
@@ -9477,6 +10169,64 @@ function drawCephArm(canvasContext, arm, bodyX, bodyY, bodyRadius, intensity, ba
   });
 }
 
+function drawCephBeak(canvasContext, bodyRadius, bassEnergy, midsEnergy, trebleEnergy) {
+  const mischief = handGraspAmount();
+  const pulse = Math.sin(cephFrame * 0.08 * fireworkSpeedMultiplier());
+  const open = clampNumber(bassEnergy * 0.8 + midsEnergy * 0.42 + Math.max(0, pulse) * trebleEnergy * 0.3, 0.08, 1);
+  const mood = trebleEnergy > 0.62
+    ? "startled"
+    : bassEnergy > 0.62
+      ? "indignant"
+      : mischief > 0.62
+        ? "scheming"
+        : midsEnergy > 0.42
+          ? "pleased"
+          : "pensive";
+  const y = bodyRadius * 0.27;
+  const width = bodyRadius * (0.28 + open * 0.12);
+  const height = bodyRadius * (0.11 + open * 0.16);
+  const tilt = mood === "scheming" ? -0.12 : mood === "indignant" ? 0.08 * pulse : 0;
+
+  canvasContext.save();
+  canvasContext.translate(0, y);
+  canvasContext.rotate(tilt);
+  canvasContext.shadowColor = hsla(22 + trebleEnergy * 42, 92, 62, 0.72);
+  canvasContext.shadowBlur = bodyRadius * 0.1;
+  canvasContext.fillStyle = hsla(30 - bassEnergy * 18, 78, 28 + trebleEnergy * 22, 0.96);
+  canvasContext.strokeStyle = hsla(44 + trebleEnergy * 34, 88, 72, 0.88);
+  canvasContext.lineWidth = Math.max(1.5, bodyRadius * 0.025);
+
+  canvasContext.beginPath();
+  canvasContext.moveTo(-width, mood === "pleased" ? -height * 0.25 : -height * 0.62);
+  canvasContext.quadraticCurveTo(0, -height * (0.18 + open * 0.24), width, -height * 0.62);
+  canvasContext.quadraticCurveTo(width * 0.34, height * (0.12 + open * 0.36), 0, height);
+  canvasContext.quadraticCurveTo(-width * 0.34, height * (0.12 + open * 0.36), -width, -height * 0.62);
+  canvasContext.fill();
+  canvasContext.stroke();
+
+  if (open > 0.28) {
+    canvasContext.fillStyle = "rgba(4, 2, 8, 0.82)";
+    canvasContext.beginPath();
+    canvasContext.ellipse(0, height * 0.18, width * 0.46, height * open * 0.42, 0, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+
+  if (mood === "startled") {
+    canvasContext.strokeStyle = "rgba(215, 252, 255, 0.72)";
+    canvasContext.beginPath();
+    canvasContext.arc(0, 0, width * 1.28, 0, Math.PI * 2);
+    canvasContext.stroke();
+  } else if (mood === "scheming") {
+    canvasContext.fillStyle = "rgba(242, 224, 178, 0.78)";
+    canvasContext.beginPath();
+    canvasContext.moveTo(width * 0.12, height * 0.05);
+    canvasContext.lineTo(width * 0.42, height * 0.26);
+    canvasContext.lineTo(width * 0.22, height * 0.48);
+    canvasContext.fill();
+  }
+  canvasContext.restore();
+}
+
 function drawCephBody(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
   const bodyX = width * 0.5;
   const bodyY = height * 0.42;
@@ -9524,6 +10274,8 @@ function drawCephBody(canvasContext, width, height, bassEnergy, midsEnergy, treb
     canvasContext.fillStyle = "rgba(230, 255, 245, 0.82)";
   });
 
+  drawCephBeak(canvasContext, bodyRadius, bassEnergy, midsEnergy, trebleEnergy);
+
   canvasContext.restore();
 
   return { bodyX, bodyY, bodyRadius };
@@ -9562,7 +10314,11 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "oilslide") {
+  if (visualizerSelect.value === "lingerie") {
+    drawIdleLingerie();
+  } else if (visualizerSelect.value === "oysterpearls") {
+    drawIdleOysterPearls();
+  } else if (visualizerSelect.value === "oilslide") {
     drawIdleOilSlide();
   } else if (visualizerSelect.value === "bobrossgarden") {
     drawIdleBobRossGarden();
@@ -9712,7 +10468,14 @@ function drawIdleBranchHands() {
   const height = visualizer.height;
 
   canvasContext.clearRect(0, 0, width, height);
+  const fieldColours = branchFieldColours();
+  const field = canvasContext.createLinearGradient(0, 0, width, height);
+  field.addColorStop(0, fieldColours[0]);
+  field.addColorStop(0.52, fieldColours[1]);
+  field.addColorStop(1, fieldColours[2]);
   canvasContext.fillStyle = "#050709";
+  canvasContext.fillRect(0, 0, width, height);
+  canvasContext.fillStyle = field;
   canvasContext.fillRect(0, 0, width, height);
   setupHandForms(width, height);
 
@@ -10187,6 +10950,34 @@ function drawIdleOilSlide() {
   }
 }
 
+function drawIdleOysterPearls() {
+  const canvasContext = visualizer.getContext("2d");
+  const width = visualizer.width;
+  const height = visualizer.height;
+  const tide = 0.5 + Math.sin(oysterFrame * 0.012) * 0.5;
+  const shimmer = 0.5 + Math.sin(oysterFrame * 0.017 + 1.4) * 0.5;
+  const intensities = fireworksBands.map((band, index) => 0.1 + tide * 0.1 + shimmer * 0.04 + (index % 3) * 0.025);
+
+  drawOysterPearlsScene(
+    canvasContext,
+    width,
+    height,
+    0.12 + tide * 0.08,
+    0.1 + shimmer * 0.08,
+    0.12 + (1 - tide) * 0.08,
+    intensities,
+  );
+
+  if (visualizerSelect.value === "oysterpearls" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) {
+        drawIdleVisualizer();
+      }
+    });
+  }
+}
+
 function drawIdleHypnoticFlight() {
   const canvasContext = visualizer.getContext("2d");
   const width = visualizer.width;
@@ -10301,6 +11092,7 @@ function resizeCanvas() {
   handForms = [];
   swampBubbles = [];
   arrows = [];
+  arrowFires = [];
   cephArms = [];
   cephInkBlooms = [];
   discoCouples = [];
@@ -10342,6 +11134,10 @@ function resizeCanvas() {
   bobGardenBugs = [];
   oilSlideFrame = 0;
   oilBlobs = [];
+  oysterFrame = 0;
+  oysters = [];
+  lingerieFrame = 0;
+  lingerieGarments = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -10504,6 +11300,10 @@ handCount.addEventListener("input", () => {
   bobGardenBugs = [];
   oilSlideFrame = 0;
   oilBlobs = [];
+  oysterFrame = 0;
+  oysters = [];
+  lingerieFrame = 0;
+  lingerieGarments = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
