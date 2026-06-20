@@ -129,6 +129,9 @@ let oysterFrame = 0;
 let oysters = [];
 let lingerieFrame = 0;
 let lingerieGarments = [];
+let snakeCongaFrame = 0;
+let snakeCongas = [];
+let snakeCongaCastoffs = [];
 let stagePulse = null;
 let fullscreenInfoPulse = null;
 let spectrumPad = {
@@ -613,6 +616,12 @@ const visualizerConfigs = {
       ["shellac", "Amber shellac"],
       ["leather", "Leather salon"],
     ],
+  },
+  snakeconga: {
+    ariaLabel: "Chimaera of Snake and Conga-line music visualisation",
+    controls: { size: true, count: true, grasp: true },
+    labels: { speed: "Meander", size: "Scale", count: "Procession", grasp: "Snake / Conga mix" },
+    defaults: { speed: "1", size: "1", count: "8", grasp: "0.5", theme: "spectrum" },
   },
 };
 
@@ -1425,6 +1434,9 @@ function restartVisualizer() {
   oysters = [];
   lingerieFrame = 0;
   lingerieGarments = [];
+  snakeCongaFrame = 0;
+  snakeCongas = [];
+  snakeCongaCastoffs = [];
 
   if (!audio.paused && analyser) {
     drawVisualizer();
@@ -1777,7 +1789,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "lingerie") {
+      if (visualizerSelect.value === "snakeconga") {
+        drawSnakeCongaFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "lingerie") {
         drawLingerieFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "oysterpearls") {
         drawOysterPearlsFrame(canvasContext, buffer);
@@ -9405,6 +9419,376 @@ function drawLingerieFrame(canvasContext, buffer) {
   drawLingerieScene(canvasContext, energies, true);
 }
 
+function snakeCongaMix() {
+  return handGraspAmount();
+}
+
+function snakeCongaPalette(index, intensity) {
+  const theme = visualizerTheme();
+  return theme.color(index, 9, clampNumber(intensity, 0, 1));
+}
+
+function makeSnakeConga(width, height, options = {}) {
+  const angle = options.angle ?? ((Math.random() - 0.5) * 0.8);
+  const x = options.x ?? width * (0.64 + Math.random() * 0.1);
+  const y = options.y ?? height * (0.3 + Math.random() * 0.4);
+  const length = options.length ?? (20 + handCountValueNumber() * 3);
+  const spacing = Math.max(5, Math.min(width, height) * 0.024 * handSizeMultiplier());
+  const nodes = options.nodes || Array.from({ length }, (_, index) => ({
+    x: x - Math.cos(angle) * spacing * index,
+    y: y - Math.sin(angle) * spacing * index,
+  }));
+
+  return {
+    nodes,
+    angle,
+    phase: Math.random() * Math.PI * 2,
+    turnBias: (Math.random() - 0.5) * 0.012,
+    hueOffset: Math.floor(Math.random() * 8),
+    targetBonus: options.targetBonus || 0,
+    splitCooldown: 220 + Math.random() * 260,
+    age: 0,
+    energy: 0.18,
+  };
+}
+
+function setupSnakeCongas(width, height) {
+  if (!snakeCongas.length) {
+    snakeCongas.push(makeSnakeConga(width, height));
+  }
+}
+
+function shedSnakeCongaNode(node, conga, intensity) {
+  snakeCongaCastoffs.push({
+    x: node.x,
+    y: node.y,
+    vx: Math.cos(conga.angle + Math.PI + (Math.random() - 0.5) * 1.8) * (0.35 + intensity * 1.6),
+    vy: Math.sin(conga.angle + Math.PI + (Math.random() - 0.5) * 1.8) * (0.35 + intensity * 1.6),
+    radius: 2.5 + Math.random() * 5 * handSizeMultiplier(),
+    life: 1,
+    hueOffset: conga.hueOffset + Math.floor(Math.random() * 3),
+  });
+  if (snakeCongaCastoffs.length > 90) snakeCongaCastoffs.shift();
+}
+
+function splitSnakeConga(conga, width, height, intensity) {
+  const minimum = 12;
+  if (conga.nodes.length < minimum * 2) return null;
+  const splitAt = Math.floor(conga.nodes.length * (0.48 + Math.random() * 0.18));
+  const childNodes = conga.nodes.splice(splitAt);
+  const childHead = childNodes[0];
+  const child = makeSnakeConga(width, height, {
+    x: childHead.x,
+    y: childHead.y,
+    nodes: childNodes,
+    angle: conga.angle + (Math.random() < 0.5 ? -1 : 1) * (0.45 + intensity * 0.55),
+    targetBonus: -4,
+  });
+  child.hueOffset = conga.hueOffset + 2;
+  conga.splitCooldown = 300;
+  return child;
+}
+
+function updateSnakeCongas(width, height, bassEnergy, midsEnergy, trebleEnergy, active) {
+  const speedControl = fireworkSpeedMultiplier();
+  const mix = snakeCongaMix();
+  const scale = handSizeMultiplier();
+  const baseTarget = 20 + handCountValueNumber() * 3;
+  const maxCongas = 2 + Math.floor(handCountValueNumber() / 4);
+  const children = [];
+
+  snakeCongaFrame += speedControl * (active ? 1 : 0.72);
+  setupSnakeCongas(width, height);
+
+  snakeCongas.forEach((conga, congaIndex) => {
+    conga.age += speedControl;
+    conga.splitCooldown -= speedControl;
+    conga.energy += ((bassEnergy + midsEnergy + trebleEnergy) / 3 - conga.energy) * 0.08;
+    conga.targetBonus *= 0.998;
+    if (bassEnergy > 0.48 && Math.random() < bassEnergy * 0.045) {
+      conga.targetBonus = Math.min(16, conga.targetBonus + 1.5);
+    }
+
+    const head = conga.nodes[0];
+    const margin = 34 * scale;
+    let edgeTurn = 0;
+    const lookX = head.x + Math.cos(conga.angle) * margin * 2.4;
+    const lookY = head.y + Math.sin(conga.angle) * margin * 2.4;
+    if (lookX < margin || lookX > width - margin || lookY < margin || lookY > height - margin) {
+      const homeAngle = Math.atan2(height * 0.5 - head.y, width * 0.5 - head.x);
+      edgeTurn = Math.atan2(Math.sin(homeAngle - conga.angle), Math.cos(homeAngle - conga.angle)) * 0.045;
+    }
+
+    const musicalTurn = Math.sin(snakeCongaFrame * (0.012 + midsEnergy * 0.014) + conga.phase)
+      * (0.018 + midsEnergy * 0.036 + mix * 0.008);
+    const trebleFlick = Math.sin(snakeCongaFrame * 0.047 + conga.phase * 1.7)
+      * trebleEnergy * 0.026;
+    conga.angle += (musicalTurn + trebleFlick + conga.turnBias + edgeTurn) * speedControl;
+
+    const travel = (1.15 + bassEnergy * 1.8 + midsEnergy * 0.7) * speedControl * scale;
+    const nextHead = {
+      x: clampNumber(head.x + Math.cos(conga.angle) * travel, 3, width - 3),
+      y: clampNumber(head.y + Math.sin(conga.angle) * travel, 3, height - 3),
+    };
+    const nodeSpacing = Math.max(5, Math.min(width, height) * (0.016 + mix * 0.01) * scale);
+    if (Math.hypot(nextHead.x - head.x, nextHead.y - head.y) >= nodeSpacing * 0.48) {
+      conga.nodes.unshift(nextHead);
+    } else {
+      conga.nodes[0] = nextHead;
+    }
+
+    const targetLength = Math.round(baseTarget + conga.targetBonus + bassEnergy * 7 - congaIndex * 3);
+    while (conga.nodes.length > Math.max(10, targetLength)) {
+      const tail = conga.nodes.pop();
+      if (Math.random() < 0.3 + trebleEnergy * 0.5) shedSnakeCongaNode(tail, conga, trebleEnergy);
+    }
+
+    if (conga.nodes.length > 12 && trebleEnergy > 0.5 && Math.random() < trebleEnergy * 0.018 * speedControl) {
+      shedSnakeCongaNode(conga.nodes.pop(), conga, trebleEnergy);
+    }
+
+    const splitEnergy = bassEnergy * 0.46 + midsEnergy * 0.36 + trebleEnergy * 0.42;
+    if (snakeCongas.length + children.length < maxCongas
+        && conga.splitCooldown <= 0
+        && splitEnergy > 0.62
+        && Math.random() < splitEnergy * 0.012 * speedControl) {
+      const child = splitSnakeConga(conga, width, height, splitEnergy);
+      if (child) children.push(child);
+    }
+  });
+
+  snakeCongas.push(...children);
+  snakeCongas = snakeCongas.filter((conga) => conga.nodes.length >= 9);
+
+  snakeCongaCastoffs.forEach((castoff) => {
+    castoff.x += castoff.vx * speedControl;
+    castoff.y += castoff.vy * speedControl;
+    castoff.vx *= 0.985;
+    castoff.vy = castoff.vy * 0.985 + 0.012 * speedControl;
+    castoff.life -= 0.012 * speedControl;
+  });
+  snakeCongaCastoffs = snakeCongaCastoffs.filter((castoff) => castoff.life > 0);
+}
+
+function drawSnakeCongaBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  const theme = visualizerTheme();
+  const field = canvasContext.createRadialGradient(width * 0.48, height * 0.46, 0, width * 0.5, height * 0.5, width * 0.72);
+  field.addColorStop(0, "rgba(22, 21, 38, 0.98)");
+  field.addColorStop(0.58, "rgba(8, 13, 22, 0.99)");
+  field.addColorStop(1, "rgba(2, 4, 8, 1)");
+  canvasContext.fillStyle = field;
+  canvasContext.fillRect(0, 0, width, height);
+
+  canvasContext.save();
+  canvasContext.globalAlpha = 0.08 + trebleEnergy * 0.12;
+  for (let index = 0; index < 32; index += 1) {
+    const phase = index * 2.399 + snakeCongaFrame * 0.0015;
+    const x = width * (0.5 + Math.sin(phase * 1.7) * 0.48);
+    const y = height * (0.5 + Math.cos(phase * 1.3) * 0.46);
+    canvasContext.fillStyle = theme.color(index, 32, 0.28 + bassEnergy * 0.3);
+    canvasContext.beginPath();
+    canvasContext.arc(x, y, 1.2 + (index % 4) * 0.7 + trebleEnergy * 2, 0, Math.PI * 2);
+    canvasContext.fill();
+  }
+  canvasContext.restore();
+}
+
+function drawCongaDancer(canvasContext, node, next, radius, hueIndex, intensity, mix, isLeader) {
+  const angle = Math.atan2(next.y - node.y, next.x - node.x);
+  const shimmyPhase = snakeCongaFrame * (0.13 + intensity * 0.08) + hueIndex * 1.27;
+  const lift = Math.sin(shimmyPhase * 0.5) * radius * (0.06 + intensity * 0.14);
+  const hipSwing = Math.sin(shimmyPhase) * radius * (0.16 + intensity * 0.2);
+  const shoulderTwist = Math.sin(shimmyPhase + Math.PI * 0.5) * (0.1 + intensity * 0.16);
+  const step = Math.sin(shimmyPhase + Math.PI * 0.25) * radius * (0.12 + intensity * 0.18);
+  const colour = snakeCongaPalette(hueIndex, 0.38 + intensity * 0.55);
+  canvasContext.save();
+  canvasContext.translate(node.x, node.y);
+  canvasContext.rotate(angle);
+  canvasContext.translate(0, lift + hipSwing);
+  canvasContext.rotate(shoulderTwist);
+  canvasContext.globalAlpha = mix * (0.62 + intensity * 0.38);
+
+  canvasContext.strokeStyle = colour;
+  canvasContext.fillStyle = colour;
+  canvasContext.lineCap = "round";
+  canvasContext.lineWidth = Math.max(1.5, radius * 0.19);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-radius * 0.08, radius * 0.2);
+  canvasContext.lineTo(-radius * 0.18 - step, radius * 0.94);
+  canvasContext.moveTo(radius * 0.08, radius * 0.2);
+  canvasContext.lineTo(radius * 0.35 + step, radius * 0.9);
+  canvasContext.stroke();
+
+  canvasContext.beginPath();
+  canvasContext.roundRect(-radius * 0.42, -radius * 0.34, radius * 0.84, radius * 0.92, radius * 0.28);
+  canvasContext.fill();
+  canvasContext.fillStyle = "rgba(255, 244, 220, 0.92)";
+  canvasContext.beginPath();
+  canvasContext.arc(0, -radius * 0.72, radius * (isLeader ? 0.42 : 0.34), 0, Math.PI * 2);
+  canvasContext.fill();
+
+  canvasContext.strokeStyle = colour;
+  canvasContext.beginPath();
+  canvasContext.moveTo(radius * 0.2, -radius * 0.14);
+  canvasContext.quadraticCurveTo(radius * (0.78 + shoulderTwist), -radius * 0.2, radius * 0.92, -radius * (0.52 + intensity * 0.08));
+  canvasContext.moveTo(-radius * 0.2, -radius * 0.12);
+  canvasContext.quadraticCurveTo(-radius * (0.64 + shoulderTwist), radius * 0.05, -radius * 0.78, radius * (0.34 + intensity * 0.08));
+  canvasContext.stroke();
+
+  if (isLeader) {
+    canvasContext.fillStyle = "rgba(15, 12, 25, 0.9)";
+    [-1, 1].forEach((side) => {
+      canvasContext.beginPath();
+      canvasContext.arc(radius * 0.14, -radius * 0.77 + side * radius * 0.11, radius * 0.055, 0, Math.PI * 2);
+      canvasContext.fill();
+    });
+  }
+  canvasContext.restore();
+}
+
+function snakeCongaSlitherPoints(conga, radius, midsEnergy, trebleEnergy, mix) {
+  const points = conga.nodes;
+  const lastIndex = Math.max(1, points.length - 1);
+  const waveSpeed = 0.075 + midsEnergy * 0.075 + trebleEnergy * 0.025;
+  const waveLength = 0.42 + mix * 0.12;
+  const amplitude = radius * (0.34 + midsEnergy * 0.42 + trebleEnergy * 0.18) * (1 - mix * 0.28);
+
+  return points.map((point, index) => {
+    const before = points[Math.max(0, index - 1)];
+    const after = points[Math.min(lastIndex, index + 1)];
+    const tangentX = after.x - before.x;
+    const tangentY = after.y - before.y;
+    const tangentLength = Math.max(0.001, Math.hypot(tangentX, tangentY));
+    const normalX = -tangentY / tangentLength;
+    const normalY = tangentX / tangentLength;
+    const progress = index / lastIndex;
+    const envelope = 0.62 + Math.sin(progress * Math.PI) * 0.38;
+    const phase = snakeCongaFrame * waveSpeed - index * waveLength + conga.phase;
+    const wave = Math.sin(phase) + Math.sin(phase * 1.83 + conga.phase) * 0.24;
+
+    return {
+      x: point.x + normalX * wave * amplitude * envelope,
+      y: point.y + normalY * wave * amplitude * envelope,
+    };
+  });
+}
+
+function drawSnakeConga(canvasContext, conga, congaIndex, bassEnergy, midsEnergy, trebleEnergy) {
+  const mix = snakeCongaMix();
+  const scale = handSizeMultiplier();
+  const radius = Math.min(visualizer.width, visualizer.height) * 0.044 * scale * (0.88 + bassEnergy * 0.35);
+  if (conga.nodes.length < 2) return;
+  const points = snakeCongaSlitherPoints(conga, radius, midsEnergy, trebleEnergy, mix);
+
+  canvasContext.save();
+  canvasContext.lineCap = "round";
+  canvasContext.lineJoin = "round";
+  canvasContext.shadowBlur = radius * (0.8 + trebleEnergy * 1.7);
+  canvasContext.shadowColor = snakeCongaPalette(conga.hueOffset, 0.7);
+  canvasContext.strokeStyle = snakeCongaPalette(conga.hueOffset, 0.34 + conga.energy * 0.5);
+  canvasContext.globalAlpha = 0.24 + (1 - mix) * 0.68;
+  canvasContext.lineWidth = radius * (1.72 - mix * 0.55);
+  canvasContext.beginPath();
+  canvasContext.moveTo(points[0].x, points[0].y);
+  for (let index = 1; index < points.length; index += 1) {
+    const point = points[index];
+    const previous = points[index - 1];
+    canvasContext.quadraticCurveTo(previous.x, previous.y, (previous.x + point.x) * 0.5, (previous.y + point.y) * 0.5);
+  }
+  canvasContext.stroke();
+  canvasContext.restore();
+
+  const stride = Math.max(2, Math.round(2 + mix * 2));
+  for (let index = points.length - 2; index >= 0; index -= stride) {
+    const point = points[index];
+    const next = points[Math.min(points.length - 1, index + stride)];
+    const progress = 1 - index / points.length;
+    const localRadius = radius * (0.54 + progress * 0.48);
+    if (mix < 0.78) {
+      canvasContext.save();
+      canvasContext.globalAlpha = (1 - mix) * (0.24 + trebleEnergy * 0.32);
+      canvasContext.fillStyle = snakeCongaPalette(conga.hueOffset + index, 0.42 + trebleEnergy * 0.5);
+      canvasContext.beginPath();
+      canvasContext.arc(point.x, point.y, localRadius * 0.3, 0, Math.PI * 2);
+      canvasContext.fill();
+      canvasContext.restore();
+    }
+    if (mix > 0.08) {
+      drawCongaDancer(canvasContext, point, next, localRadius, conga.hueOffset + index, conga.energy, mix, index === 0);
+    }
+  }
+
+  const head = points[0];
+  const neck = points[Math.min(points.length - 1, 3)];
+  const headAngle = Math.atan2(head.y - neck.y, head.x - neck.x);
+  canvasContext.save();
+  canvasContext.translate(head.x, head.y);
+  canvasContext.rotate(headAngle);
+  canvasContext.globalAlpha = 0.28 + (1 - mix) * 0.72;
+  canvasContext.fillStyle = snakeCongaPalette(conga.hueOffset, 0.62 + bassEnergy * 0.34);
+  canvasContext.beginPath();
+  canvasContext.ellipse(radius * 0.35, 0, radius * 0.9, radius * 0.66, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.fillStyle = "rgba(250, 246, 212, 0.94)";
+  [-1, 1].forEach((side) => {
+    canvasContext.beginPath();
+    canvasContext.arc(radius * 0.7, side * radius * 0.27, radius * 0.11, 0, Math.PI * 2);
+    canvasContext.fill();
+  });
+  if (trebleEnergy > 0.3) {
+    canvasContext.strokeStyle = "rgba(255, 90, 120, 0.9)";
+    canvasContext.lineWidth = Math.max(1, radius * 0.08);
+    canvasContext.beginPath();
+    canvasContext.moveTo(radius * 1.18, 0);
+    canvasContext.lineTo(radius * (1.5 + trebleEnergy * 0.45), 0);
+    canvasContext.moveTo(radius * (1.5 + trebleEnergy * 0.45), 0);
+    canvasContext.lineTo(radius * 1.68, -radius * 0.14);
+    canvasContext.moveTo(radius * (1.5 + trebleEnergy * 0.45), 0);
+    canvasContext.lineTo(radius * 1.68, radius * 0.14);
+    canvasContext.stroke();
+  }
+  canvasContext.restore();
+}
+
+function drawSnakeCongaScene(canvasContext, bassEnergy, midsEnergy, trebleEnergy, active) {
+  const width = visualizer.width;
+  const height = visualizer.height;
+  updateSnakeCongas(width, height, bassEnergy, midsEnergy, trebleEnergy, active);
+  drawSnakeCongaBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+  snakeCongas.slice().reverse().forEach((conga, index) => {
+    drawSnakeConga(canvasContext, conga, index, bassEnergy, midsEnergy, trebleEnergy);
+  });
+  snakeCongaCastoffs.forEach((castoff) => {
+    canvasContext.save();
+    canvasContext.globalAlpha = castoff.life * 0.72;
+    canvasContext.fillStyle = snakeCongaPalette(castoff.hueOffset, 0.64);
+    canvasContext.beginPath();
+    canvasContext.arc(castoff.x, castoff.y, castoff.radius * castoff.life, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.restore();
+  });
+}
+
+function drawSnakeCongaFrame(canvasContext, buffer) {
+  analyser.getByteFrequencyData(buffer);
+  const bassEnergy = pressureResponse(averageBand(buffer, 1, 10), 1.35);
+  const midsEnergy = pressureResponse(averageBand(buffer, 11, 52), 1.32);
+  const trebleEnergy = pressureResponse(averageBand(buffer, 53, 112), 1.38);
+  drawSnakeCongaScene(canvasContext, bassEnergy, midsEnergy, trebleEnergy, true);
+}
+
+function drawIdleSnakeConga() {
+  const pulse = 0.5 + Math.sin(snakeCongaFrame * 0.021) * 0.5;
+  const shimmer = 0.5 + Math.sin(snakeCongaFrame * 0.033 + 1.4) * 0.5;
+  drawSnakeCongaScene(visualizer.getContext("2d"), 0.14 + pulse * 0.1, 0.13 + shimmer * 0.1, 0.12 + (1 - pulse) * 0.12, false);
+  if (visualizerSelect.value === "snakeconga" && audio.paused) {
+    animationId = requestAnimationFrame(() => {
+      animationId = 0;
+      if (audio.paused) drawIdleVisualizer();
+    });
+  }
+}
+
 function drawIdleLingerie() {
   lingerieFrame += 0.7;
   drawLingerieScene(visualizer.getContext("2d"), [0.14, 0.18, 0.12, 0.2, 0.16, 0.22], false);
@@ -10518,7 +10902,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "lingerie") {
+  if (visualizerSelect.value === "snakeconga") {
+    drawIdleSnakeConga();
+  } else if (visualizerSelect.value === "lingerie") {
     drawIdleLingerie();
   } else if (visualizerSelect.value === "oysterpearls") {
     drawIdleOysterPearls();
@@ -11344,6 +11730,9 @@ function resizeCanvas() {
   oysters = [];
   lingerieFrame = 0;
   lingerieGarments = [];
+  snakeCongaFrame = 0;
+  snakeCongas = [];
+  snakeCongaCastoffs = [];
 
   if (!animationId) {
     drawIdleVisualizer();
@@ -11520,6 +11909,9 @@ handCount.addEventListener("input", () => {
   oysters = [];
   lingerieFrame = 0;
   lingerieGarments = [];
+  snakeCongaFrame = 0;
+  snakeCongas = [];
+  snakeCongaCastoffs = [];
   if (!animationId) {
     drawIdleVisualizer();
   }
