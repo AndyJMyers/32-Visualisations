@@ -86,10 +86,10 @@ browsers that support the File System Access API.
 
 ## Status
 
-This is a private workshop build while the interface and all 32 visualisations
+This is an active workshop build while the interface and all 32 visualisations
 receive several rounds of polish. It is not yet packaged as a release, and no
-public support programme is open. Asking for a quid before the controls are
-tip-top would be indecent.
+support programme is open. Asking for a quid before the controls are tip-top
+would be indecent.
 
 A licence, release notes, screenshots and supporter arrangements will be added
 before a public launch.
