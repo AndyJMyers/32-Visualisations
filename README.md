@@ -98,6 +98,23 @@ Then open [http://127.0.0.1:4173/](http://127.0.0.1:4173/).
 The **Open folder** control can also select a different local directory in
 browsers that support the File System Access API.
 
+### Run with Codex
+
+Clone the repository, open its folder in the
+[Codex app](https://developers.openai.com/codex/app) and select **Local**. Then
+give Codex the location of your WAV library:
+
+```text
+Start 32 Visualisations using my WAV library at "D:\Music\WAV". Keep the
+server running at http://127.0.0.1:4173/, verify that the page and track
+library load, and give me the link.
+```
+
+Use the equivalent `/path/to/wav-library` on macOS or Linux. Codex will set the
+library environment variable, start the local Node.js server and check that it
+is reachable. It may ask for approval before launching a persistent local
+process.
+
 ## Controls
 
 - `Play`, `Stop`, `Prev`, `Next` and `Shuffle` handle the library.
