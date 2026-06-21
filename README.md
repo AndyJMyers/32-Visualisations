@@ -114,8 +114,9 @@ browsers that support the File System Access API.
 This project is still under active development, so any hallucinations you
 experience may not be entirely your own fault this time.
 
-If you enjoyed this, why not gain merit in this life by buying this holy man a
-pint of mead or ale, according to your purse?
+If you enjoyed this, why not gain merit in this life by
+[buying this holy man a pint of mead or ale](https://buy.stripe.com/5kQ5kDcX8cwc52J70rds400),
+according to your purse?
 
 ## Direction
 
