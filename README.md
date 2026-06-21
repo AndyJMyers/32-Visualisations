@@ -111,13 +111,11 @@ browsers that support the File System Access API.
 
 ## Status
 
-This is an active workshop build while the interface and all 32 visualisations
-receive several rounds of polish. It is not yet packaged as a release, and no
-support programme is open. Asking for a quid before the controls are tip-top
-would be indecent.
+This project is still under active development, so any hallucinations you
+experience may not be entirely your own fault this time.
 
-A licence, release notes, screenshots and supporter arrangements will be added
-before a public launch.
+If you enjoyed this, why not gain merit in this life by buying this holy man a
+pint of mead or ale, according to your purse?
 
 ## Direction
 
