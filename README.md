@@ -11,6 +11,31 @@ The number is fixed. Thirty-two is binary, balanced, mellow in its intonation
 and just faintly occult. New visualisations may therefore require ceremonial
 retirement of old ones.
 
+## A glimpse
+
+![Cathedral Organism: a living stained-glass procession](docs/images/cathedral-organism.png)
+
+| | |
+|---|---|
+| ![The Chimaera of Snake and Conga-line in hybrid form](docs/images/chimaera-hybrid.png)<br>**Chimaera of Snake and Conga-line** | ![Midnight Kaleidoscope](docs/images/kaleidoscope.png)<br>**Kaleidoscope: Midnight rabbit** |
+| ![Figures fleeing monsters in Hypnotic Flight](docs/images/hypnotic-flight.png)<br>**Hypnotic Flight: Prismatic fever** | ![Flower armies in War of the Roses](docs/images/war-of-the-roses.png)<br>**War of the Roses: Crown melee** |
+
+![Bob Ross Garden roulette](docs/images/bob-ross-garden.png)
+
+**Bob Ross Garden**
+
+### Snake / Conga transition
+
+| Snake | Conga-line |
+|---|---|
+| ![The Chimaera near the Snake end of its transition](docs/images/chimaera-snake.png) | ![The Chimaera near the Conga-line end of its transition](docs/images/chimaera-conga.png) |
+
+### Controls with opinions
+
+| | |
+|---|---|
+| ![Turtle River with Grievance, Hunger and Munchiness controls](docs/images/controls-turtle-river.png)<br>**Grievance. Hunger. Munchiness.** | ![Oyster Pearls with Tide, Shell size and Pearl making controls](docs/images/controls-oyster-pearls.png)<br>**Tide. Shell size. Pearl making.** |
+
 ## The proposition
 
 - Play a directory of WAV files in order or on shuffle.
