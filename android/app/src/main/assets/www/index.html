@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wave Deck</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="player" aria-label="Music player">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Wave Deck</p>
+            <h1 id="directoryName">Choose a WAV directory</h1>
+          </div>
+          <label class="folder-button" title="Open folder" aria-label="Open folder">
+            <input id="folderInput" type="file" accept=".wav,audio/wav,audio/wave" webkitdirectory multiple>
+            <span>Open folder</span>
+          </label>
+        </header>
+
+        <section class="now-playing" aria-live="polite">
+          <div class="status-light" id="statusLight" aria-hidden="true"></div>
+          <div class="track-copy">
+            <span id="statusText">Stopped</span>
+            <strong id="currentTrack">No track loaded</strong>
+          </div>
+          <time id="timeReadout">0:00 / 0:00</time>
+        </section>
+
+        <canvas id="visualizer" width="1200" height="360" aria-label="Graphic equaliser visualisation"></canvas>
+
+        <audio id="audio" crossorigin="anonymous"></audio>
+
+        <section class="controls" aria-label="Playback controls">
+          <button id="previousButton" type="button" aria-label="Previous track">Prev</button>
+          <button id="playButton" type="button">Play</button>
+          <button id="stopButton" type="button">Stop</button>
+          <button id="nextButton" type="button" aria-label="Next track">Next</button>
+          <button id="fullscreenButton" type="button" aria-label="Toggle visual fullscreen" title="Visual fullscreen (F4)">F</button>
+          <label class="toggle">
+            <input id="shuffleToggle" type="checkbox">
+            <span>Shuffle</span>
+          </label>
+        </section>
+
+        <section class="library-tools" aria-label="Library controls">
+          <label>
+            Sort
+            <select id="sortSelect">
+              <option value="name-asc">Name A-Z</option>
+              <option value="name-desc">Name Z-A</option>
+              <option value="date-desc">Date newest</option>
+              <option value="date-asc">Date oldest</option>
+            </select>
+          </label>
+          <label>
+            Visual
+            <select id="visualizerSelect">
+              <option value="equalizer">Equaliser</option>
+              <option value="fireworks">Fireworks</option>
+              <option value="pacdance">Pac Dance</option>
+              <option value="branchhands">Branch Hands</option>
+              <option value="swampbubbles">Swamp Bubbles</option>
+              <option value="arrowstorm">Arrow Storm</option>
+              <option value="cephalopod">Cephalopod Mind</option>
+              <option value="discojive">Disco Jive</option>
+              <option value="glitterfall">Glitter Fall</option>
+              <option value="butterflyhost">Butterfly Host</option>
+              <option value="knifethunk">Knife Thunk</option>
+              <option value="octopusocclusion">Octopus Occlusion</option>
+              <option value="lizardlouche">Lizard Louche</option>
+              <option value="goddesskisses">Goddess Kisses</option>
+              <option value="climbinggarden">Climbing Garden</option>
+              <option value="tipustiger">Tipu's Tiger</option>
+              <option value="mandelbrot">Mandelbrot Set</option>
+              <option value="eyevisions">Eyes</option>
+              <option value="lightning">Lightning</option>
+              <option value="asteroids">Asteroids</option>
+              <option value="interzoneoracles">Interzone Oracles</option>
+              <option value="sunflowersmiles">Sunflower Smiles</option>
+              <option value="warofroses">War of the Roses</option>
+              <option value="turtleriver">Turtle River</option>
+              <option value="cathedralorganism">Cathedral Organism</option>
+              <option value="hypnoticflight">Hypnotic Flight</option>
+              <option value="kaleidoscope">Kaleidoscope</option>
+              <option value="bobrossgarden">Bob Ross Garden</option>
+              <option value="oilslide">Oil Slide</option>
+              <option value="oysterpearls">Oyster Pearls</option>
+              <option value="lingerie">Lingerie</option>
+              <option value="snakeconga">Chimaera of Snake and Conga-line</option>
+            </select>
+          </label>
+          <label>
+            Form
+            <select id="fireworkFormSelect">
+              <option value="hydra">Hydra</option>
+              <option value="woman">Woman</option>
+              <option value="lion">Lion rampant</option>
+              <option value="woodland">Woodland</option>
+              <option value="williamtell">William Tell</option>
+              <option value="fort">Wooden fort</option>
+            </select>
+          </label>
+          <label>
+            Colour
+            <select id="themeSelect">
+              <option value="mono">Mono green</option>
+              <option value="ice">Ice blue</option>
+              <option value="ember">Ember</option>
+              <option value="spectrum">Spectrum</option>
+              <option value="pressure">High Pressure</option>
+            </select>
+          </label>
+          <label class="range-control">
+            Speed
+            <input id="fireworkSpeed" type="range" min="0.4" max="2.2" step="0.1" value="1">
+            <output id="fireworkSpeedValue">1.0x</output>
+          </label>
+          <label class="range-control">
+            Reach
+            <input id="handSize" type="range" min="0.55" max="1.8" step="0.05" value="1">
+            <output id="handSizeValue">1.00x</output>
+          </label>
+          <label id="eyeDischargeLabel" hidden>
+            Discharges
+            <select id="eyeDischargeSelect">
+              <option value="ember-crackle">Ember / crackling</option>
+              <option value="white-fury">White / furious</option>
+              <option value="violet-venom">Violet / venomous</option>
+              <option value="blood-arc">Blood red / violent</option>
+              <option value="ashen-static">Ash blue / failing</option>
+            </select>
+          </label>
+          <label class="range-control">
+            Arms
+            <input id="handCount" type="range" min="3" max="14" step="1" value="6">
+            <output id="handCountValue">6</output>
+          </label>
+          <label class="range-control">
+            Grasp
+            <input id="handGrasp" type="range" min="0" max="1" step="0.05" value="0.35">
+            <output id="handGraspValue">35%</output>
+          </label>
+          <label class="toggle compact-toggle">
+            <input id="peakToggle" type="checkbox" checked>
+            <span>Peak hold</span>
+          </label>
+          <div class="spectrum-dials" role="group" aria-label="Global expression controls">
+            <div class="dial-control">
+              <span class="dial-title">Smiles</span>
+              <button id="smilesDial" class="bakelite-dial" type="button" data-level="0" aria-label="Smiles: Composed">
+                <span class="dial-face" aria-hidden="true"><span class="dial-pointer"></span></span>
+                <output id="smilesDialValue">Composed</output>
+              </button>
+              <span class="dial-scale" aria-hidden="true"><span>Composed</span><span>Amused</span><span>Beaming</span></span>
+            </div>
+            <div class="dial-control">
+              <span class="dial-title">Insanity</span>
+              <button id="insanityDial" class="bakelite-dial" type="button" data-level="0" aria-label="Insanity: Sane">
+                <span class="dial-face" aria-hidden="true"><span class="dial-pointer"></span></span>
+                <output id="insanityDialValue">Sane</output>
+              </button>
+              <span class="dial-scale" aria-hidden="true"><span>Sane</span><span>Strange</span><span>Unhinged</span></span>
+            </div>
+          </div>
+          <span id="trackCount">0 tracks</span>
+        </section>
+
+        <ol id="trackList" class="track-list" aria-label="WAV files in selected directory"></ol>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

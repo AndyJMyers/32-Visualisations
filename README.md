@@ -115,6 +115,23 @@ library environment variable, start the local Node.js server and check that it
 is reachable. It may ask for approval before launching a persistent local
 process.
 
+### Android wrapper
+
+The `android/` project is an offline-first WebView wrapper for carrying the
+same 32 visualisations onto an Android phone. It bundles the web app inside
+the APK and uses Android's folder picker to remember a local WAV directory.
+
+Before building the Android app, sync the shared web assets:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\sync-android-assets.ps1
+```
+
+Then open `android/` in Android Studio, let Gradle sync, and build or install
+the `app` module. On first launch, tap **Open folder** and choose the phone
+directory containing the WAV files. After that the app should work without
+internet connectivity; Bluetooth routing is handled by Android itself.
+
 ## Controls
 
 - `Play`, `Stop`, `Prev`, `Next` and `Shuffle` handle the library.
