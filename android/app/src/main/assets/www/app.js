@@ -35,6 +35,7 @@ const trackList = document.querySelector("#trackList");
 const carFolderButton = document.querySelector("#carFolderButton");
 const carPrevVisualButton = document.querySelector("#carPrevVisualButton");
 const carNextVisualButton = document.querySelector("#carNextVisualButton");
+const carAlchemyButton = document.querySelector("#carAlchemyButton");
 const carFirstButton = document.querySelector("#carFirstButton");
 const carPreviousButton = document.querySelector("#carPreviousButton");
 const carPlayButton = document.querySelector("#carPlayButton");
@@ -147,6 +148,7 @@ let snakeCongas = [];
 let snakeCongaCastoffs = [];
 let stagePulse = null;
 let fullscreenInfoPulse = null;
+let alchemicalStepByVisual = {};
 let spectrumPad = {
   smilesDecadence: 0,
   psychedeliaInsanity: 0,
@@ -653,6 +655,86 @@ const sauronMoodOptions = [
   ["overthrown", "Overthrown"],
 ];
 
+const alchemicalRecipes = [
+  {
+    name: "Mercury Bloom",
+    form: 1,
+    theme: 3,
+    speed: 1.8,
+    size: 1.45,
+    count: 11,
+    grasp: 0.72,
+    smiles: 1,
+    insanity: 0.55,
+  },
+  {
+    name: "Black Sun",
+    form: 2,
+    theme: 4,
+    speed: 0.75,
+    size: 1.75,
+    count: 5,
+    grasp: 0.94,
+    smiles: 0,
+    insanity: 1,
+  },
+  {
+    name: "Opal Motorik",
+    form: 3,
+    theme: 1,
+    speed: 1.25,
+    size: 0.82,
+    count: 14,
+    grasp: 0.38,
+    smiles: 0.55,
+    insanity: 0.55,
+  },
+  {
+    name: "Honeyed Static",
+    form: 4,
+    theme: 2,
+    speed: 2.15,
+    size: 1.08,
+    count: 9,
+    grasp: 0.18,
+    smiles: 1,
+    insanity: 0,
+  },
+  {
+    name: "Glass Cathedral",
+    form: 5,
+    theme: 3,
+    speed: 0.95,
+    size: 1.62,
+    count: 13,
+    grasp: 0.57,
+    smiles: 0.55,
+    insanity: 1,
+  },
+  {
+    name: "Petrol Peacock",
+    form: 6,
+    theme: 4,
+    speed: 1.55,
+    size: 1.22,
+    count: 7,
+    grasp: 0.82,
+    smiles: 1,
+    insanity: 1,
+  },
+  {
+    name: "Moonlit Velvet",
+    form: 7,
+    theme: 0,
+    speed: 0.55,
+    size: 1.35,
+    count: 4,
+    grasp: 0.48,
+    smiles: 0,
+    insanity: 0.55,
+  },
+];
+
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   year: "numeric",
@@ -964,7 +1046,7 @@ function setControlsEnabled(enabled) {
     control.disabled = !enabled;
   });
 
-  [carFolderButton, carPrevVisualButton, carNextVisualButton].forEach((control) => {
+  [carFolderButton, carPrevVisualButton, carNextVisualButton, carAlchemyButton].forEach((control) => {
     control.disabled = false;
   });
 }
@@ -1380,6 +1462,47 @@ function adjustSpectrumPad(code) {
   if (code === "KeyS") setSpectrumDial("smiles", smileIndex - 1);
   if (code === "KeyA") setSpectrumDial("insanity", insanityIndex - 1);
   if (code === "KeyD") setSpectrumDial("insanity", insanityIndex + 1);
+}
+
+function setRangeControlValue(control, value) {
+  control.value = clampNumber(Number(value), Number(control.min), Number(control.max));
+}
+
+function selectOptionByRecipe(select, index) {
+  const options = Array.from(select.options);
+  if (options.length === 0) {
+    return;
+  }
+
+  select.value = options[index % options.length].value;
+}
+
+function applyAlchemicalAdjustment() {
+  const visualizer = visualizerSelect.value;
+  const step = alchemicalStepByVisual[visualizer] || 0;
+  const recipe = alchemicalRecipes[step % alchemicalRecipes.length];
+  alchemicalStepByVisual[visualizer] = step + 1;
+
+  syncVisualizerControls();
+  selectOptionByRecipe(fireworkFormSelect, recipe.form + step);
+  syncVisualizerControls();
+  selectOptionByRecipe(themeSelect, recipe.theme + Math.floor(step / 2));
+  setRangeControlValue(fireworkSpeed, recipe.speed);
+  setRangeControlValue(handSize, recipe.size);
+  setRangeControlValue(handCount, recipe.count);
+  setRangeControlValue(handGrasp, recipe.grasp);
+  spectrumPad.smilesDecadence = recipe.smiles;
+  spectrumPad.psychedeliaInsanity = recipe.insanity;
+
+  updateFireworkSpeedLabel();
+  updateHandControlLabels();
+  updateSpectrumDials();
+  syncVisualizerControls();
+  pulseStageLabel("visual", `AA: ${recipe.name}`);
+  if (!animationId) {
+    drawIdleVisualizer();
+  }
+  scheduleSessionSave(120);
 }
 
 function restartVisualizer() {
@@ -12103,6 +12226,7 @@ carNextButton.addEventListener("click", () => changeTrackByStep(1));
 carLastButton.addEventListener("click", () => loadTrackBoundary(tracks.length - 1));
 carPrevVisualButton.addEventListener("click", () => changeVisualizerByStep(-1));
 carNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
+carAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
 
 shuffleToggle.addEventListener("change", () => scheduleSessionSave());
 fireworkSpeed.addEventListener("input", () => {
