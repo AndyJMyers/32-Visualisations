@@ -32,7 +32,16 @@ const insanityDial = document.querySelector("#insanityDial");
 const insanityDialValue = document.querySelector("#insanityDialValue");
 const trackCount = document.querySelector("#trackCount");
 const trackList = document.querySelector("#trackList");
+const carFolderButton = document.querySelector("#carFolderButton");
+const carPrevVisualButton = document.querySelector("#carPrevVisualButton");
+const carNextVisualButton = document.querySelector("#carNextVisualButton");
+const carFirstButton = document.querySelector("#carFirstButton");
+const carPreviousButton = document.querySelector("#carPreviousButton");
+const carPlayButton = document.querySelector("#carPlayButton");
+const carNextButton = document.querySelector("#carNextButton");
+const carLastButton = document.querySelector("#carLastButton");
 if (window.AndroidWaveDeck) {
+  document.body.classList.add("android-car");
   audio.removeAttribute("crossorigin");
 } else {
   audio.crossOrigin = "anonymous";
@@ -870,13 +879,16 @@ function setStatus(status) {
     statusLight.classList.add("playing");
     statusText.textContent = "Playing";
     playButton.textContent = "Pause";
+    carPlayButton.querySelector(".car-button-main").textContent = "‖";
   } else if (status === "paused") {
     statusLight.classList.add("paused");
     statusText.textContent = "Paused";
     playButton.textContent = "Play";
+    carPlayButton.querySelector(".car-button-main").textContent = "▶ / ‖";
   } else {
     statusText.textContent = "Stopped";
     playButton.textContent = "Play";
+    carPlayButton.querySelector(".car-button-main").textContent = "▶ / ‖";
   }
 }
 
@@ -936,8 +948,24 @@ function renderTracks() {
 }
 
 function setControlsEnabled(enabled) {
-  [previousButton, playButton, stopButton, nextButton, shuffleToggle, sortSelect].forEach((control) => {
+  [
+    previousButton,
+    playButton,
+    stopButton,
+    nextButton,
+    shuffleToggle,
+    sortSelect,
+    carFirstButton,
+    carPreviousButton,
+    carPlayButton,
+    carNextButton,
+    carLastButton,
+  ].forEach((control) => {
     control.disabled = !enabled;
+  });
+
+  [carFolderButton, carPrevVisualButton, carNextVisualButton].forEach((control) => {
+    control.disabled = false;
   });
 }
 
@@ -1807,6 +1835,20 @@ function changeTrackByStep(step) {
     next = (currentIndex + step + tracks.length) % tracks.length;
   }
 
+  pulseStageLabel("track", trackDisplayTitle(tracks[next]));
+  loadTrack(next, wasPlaying);
+  if (!wasPlaying && !animationId) {
+    drawIdleVisualizer();
+  }
+}
+
+function loadTrackBoundary(index) {
+  if (tracks.length === 0) {
+    return;
+  }
+
+  const next = clampNumber(index, 0, tracks.length - 1);
+  const wasPlaying = !audio.paused;
   pulseStageLabel("track", trackDisplayTitle(tracks[next]));
   loadTrack(next, wasPlaying);
   if (!wasPlaying && !animationId) {
@@ -11813,20 +11855,25 @@ function resizeCanvas() {
   }
 }
 
-folderInput.closest("label").addEventListener("click", async (event) => {
+async function openLibraryPicker() {
   if (chooseAndroidFolder()) {
+    return;
+  }
+
+  if ("showDirectoryPicker" in window) {
+    const opened = await openRememberedDirectory({ prompt: true });
+    if (opened) {
+      scheduleSessionSave(120);
+    }
+  } else {
+    folderInput.click();
+  }
+}
+
+folderInput.closest("label").addEventListener("click", async (event) => {
+  if (androidBridge || "showDirectoryPicker" in window) {
     event.preventDefault();
-    return;
-  }
-
-  if (!("showDirectoryPicker" in window)) {
-    return;
-  }
-
-  event.preventDefault();
-  const opened = await openRememberedDirectory({ prompt: true });
-  if (opened) {
-    scheduleSessionSave(120);
+    await openLibraryPicker();
   }
 });
 
@@ -11839,7 +11886,7 @@ window.waveDeckAndroidFolderSelected = () => {
 
 window.waveDeckAndroidFolderCancelled = () => {
   if (tracks.length === 0) {
-    directoryName.textContent = "Choose an Android music folder";
+    directoryName.textContent = "Choose Downloads/TVR Playlist";
   }
 };
 
@@ -12034,18 +12081,28 @@ trackList.addEventListener("keydown", (event) => {
   }
 });
 
-playButton.addEventListener("click", () => {
+function togglePlayPause() {
   if (!audio.paused) {
     pauseCurrent();
   } else {
     playCurrent().catch(() => setStatus("paused"));
   }
-});
+}
+
+playButton.addEventListener("click", togglePlayPause);
 
 stopButton.addEventListener("click", stopCurrent);
 nextButton.addEventListener("click", () => loadTrack(nextIndex()));
 previousButton.addEventListener("click", () => loadTrack(previousIndex()));
 fullscreenButton.addEventListener("click", toggleVisualFullscreen);
+carFolderButton.addEventListener("click", openLibraryPicker);
+carFirstButton.addEventListener("click", () => loadTrackBoundary(0));
+carPlayButton.addEventListener("click", togglePlayPause);
+carPreviousButton.addEventListener("click", () => changeTrackByStep(-1));
+carNextButton.addEventListener("click", () => changeTrackByStep(1));
+carLastButton.addEventListener("click", () => loadTrackBoundary(tracks.length - 1));
+carPrevVisualButton.addEventListener("click", () => changeVisualizerByStep(-1));
+carNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
 
 shuffleToggle.addEventListener("change", () => scheduleSessionSave());
 fireworkSpeed.addEventListener("input", () => {

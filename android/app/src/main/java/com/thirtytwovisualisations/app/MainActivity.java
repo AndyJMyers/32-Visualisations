@@ -36,6 +36,8 @@ public class MainActivity extends Activity {
     private static final String PREFS = "visualisations";
     private static final String PREF_TREE_URI = "treeUri";
     private static final String APP_ORIGIN = "https://visualisations.local";
+    private static final String DEFAULT_DIRECTORY_NAME = "Downloads/TVR Playlist";
+    private static final String DEFAULT_TREE_DOCUMENT_ID = "primary:Download/TVR Playlist";
 
     private WebView webView;
     private SharedPreferences preferences;
@@ -108,7 +110,7 @@ public class MainActivity extends Activity {
     private JSONObject buildLibrary() throws JSONException {
         String storedTreeUri = preferences.getString(PREF_TREE_URI, "");
         JSONObject library = new JSONObject();
-        library.put("directoryName", "Android music folder");
+        library.put("directoryName", DEFAULT_DIRECTORY_NAME);
         JSONArray tracks = new JSONArray();
         library.put("tracks", tracks);
 
@@ -120,6 +122,10 @@ public class MainActivity extends Activity {
         String rootDocumentId = DocumentsContract.getTreeDocumentId(treeUri);
         collectTracks(treeUri, rootDocumentId, "", tracks);
         return library;
+    }
+
+    private Uri defaultTreeUri() {
+        return DocumentsContract.buildTreeDocumentUri("com.android.externalstorage.documents", DEFAULT_TREE_DOCUMENT_ID);
     }
 
     private void collectTracks(Uri treeUri, String documentId, String prefix, JSONArray tracks) throws JSONException {
@@ -330,7 +336,7 @@ public class MainActivity extends Activity {
             try {
                 return buildLibrary().toString();
             } catch (Exception error) {
-                return "{\"directoryName\":\"Android music folder\",\"tracks\":[],\"error\":\"Android library could not be read.\"}";
+                return "{\"directoryName\":\"Downloads/TVR Playlist\",\"tracks\":[],\"error\":\"Android library could not be read.\"}";
             }
         }
 
@@ -341,6 +347,7 @@ public class MainActivity extends Activity {
                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                    intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, defaultTreeUri());
                     startActivityForResult(intent, REQUEST_OPEN_TREE);
                 } catch (ActivityNotFoundException error) {
                     notifyFolderSelection(false);

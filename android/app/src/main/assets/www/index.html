@@ -33,6 +33,40 @@
 
         <audio id="audio" crossorigin="anonymous"></audio>
 
+        <section class="car-deck" aria-label="In-car playback controls">
+          <div class="car-utility-row">
+            <button id="carFolderButton" class="car-icon-button" type="button" aria-label="Choose directory">
+              <span class="car-symbol">▱</span>
+              <span class="car-button-kicker">Dir</span>
+            </button>
+            <button id="carPrevVisualButton" class="car-icon-button" type="button" aria-label="Previous visualisation">
+              <span class="car-symbol">‹</span>
+              <span class="car-button-kicker">Visual</span>
+            </button>
+            <button id="carNextVisualButton" class="car-icon-button" type="button" aria-label="Next visualisation">
+              <span class="car-symbol">›</span>
+              <span class="car-button-kicker">Visual</span>
+            </button>
+          </div>
+          <div class="car-transport-row">
+            <button id="carFirstButton" type="button" aria-label="First song">
+              <span class="car-button-main">|‹</span>
+            </button>
+            <button id="carPreviousButton" type="button" aria-label="Previous song">
+              <span class="car-button-main">‹‹</span>
+            </button>
+            <button id="carPlayButton" class="car-play-button" type="button" aria-label="Play or pause">
+              <span class="car-button-main">▶ / ‖</span>
+            </button>
+            <button id="carNextButton" type="button" aria-label="Next song">
+              <span class="car-button-main">››</span>
+            </button>
+            <button id="carLastButton" type="button" aria-label="Last song">
+              <span class="car-button-main">›|</span>
+            </button>
+          </div>
+        </section>
+
         <section class="controls" aria-label="Playback controls">
           <button id="previousButton" type="button" aria-label="Previous track">Prev</button>
           <button id="playButton" type="button">Play</button>
