@@ -165,6 +165,18 @@ const defaultLibraryApi = "http://127.0.0.1:4173/api/tracks";
 const directoryStoreName = "waveDeckDirectory";
 const sessionStoreName = "waveDeckSession";
 const androidBridge = window.AndroidWaveDeck || null;
+const isAndroidCarMode = Boolean(androidBridge);
+const performanceProfile = isAndroidCarMode
+  ? {
+      maxPixelRatio: 1.6,
+      populationScale: 0.72,
+      maxPopulation: 8,
+    }
+  : {
+      maxPixelRatio: 2.4,
+      populationScale: 1,
+      maxPopulation: 12,
+    };
 const fireworksBands = [
   { start: 1, end: 5, threshold: 0.42, name: "bass" },
   { start: 6, end: 14, threshold: 0.35, name: "lowMid" },
@@ -1067,8 +1079,23 @@ function handSizeMultiplier() {
   return Number(handSize.value) || 1;
 }
 
-function handCountValueNumber() {
+function requestedHandCountValue() {
   return Number(handCount.value) || 6;
+}
+
+function visualPopulationValue() {
+  const requested = requestedHandCountValue();
+  const scaled = Math.round(requested * performanceProfile.populationScale);
+  return Math.max(1, Math.min(performanceProfile.maxPopulation, scaled));
+}
+
+function handCountValueNumber() {
+  return visualPopulationValue();
+}
+
+function canvasPixelRatio() {
+  const ratio = window.devicePixelRatio || 1;
+  return Math.min(ratio, performanceProfile.maxPixelRatio);
 }
 
 function handGraspAmount() {
@@ -1096,6 +1123,9 @@ let sessionSaveTimer = 0;
 let restoredSession = null;
 let sessionRestoredToTrack = false;
 let lastPersistedSecond = -1;
+let continuousPlaybackRequested = false;
+let playbackTransitioning = false;
+let playbackGeneration = 0;
 
 function currentAudioState() {
   if (!audio.src || currentIndex < 0) {
@@ -1624,6 +1654,12 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
     return;
   }
 
+  const shouldAutoplay = autoplay || continuousPlaybackRequested;
+  playbackGeneration += 1;
+  if (shouldAutoplay) {
+    playbackTransitioning = true;
+  }
+
   if (
     currentIndex >= 0
     && tracks[currentIndex]?.url
@@ -1638,7 +1674,10 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
   const track = tracks[currentIndex];
   const trackUrl = track.audioUrl || URL.createObjectURL(track.file);
   track.url = trackUrl;
+  audio.autoplay = shouldAutoplay;
+  audio.preload = "auto";
   audio.src = trackUrl;
+  audio.load();
   if (Number.isFinite(resumeAt) && resumeAt > 0) {
     const applyResumeTime = () => {
       const safeDuration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : resumeAt + 1;
@@ -1651,8 +1690,8 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
   renderTracks();
   scheduleSessionSave();
 
-  if (autoplay) {
-    playCurrent();
+  if (shouldAutoplay) {
+    playLoadedTrackWithRetry(playbackGeneration);
   }
 }
 
@@ -1665,21 +1704,98 @@ async function playCurrent() {
     loadTrack(0, false);
   }
 
+  continuousPlaybackRequested = true;
+  const generation = playbackGeneration;
   setupAudioGraph();
   await audioContext.resume();
+  if (isAndroidCarMode) {
+    await waitForAudioReady(1800, generation);
+  }
   await audio.play();
+  if (generation !== playbackGeneration) {
+    return;
+  }
+  playbackTransitioning = false;
   setStatus("playing");
   scheduleSessionSave(120);
   drawVisualizer();
 }
 
+function waitForAudioReady(timeoutMs = 2400, generation = playbackGeneration) {
+  if (audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const cleanup = () => {
+      audio.removeEventListener("canplay", settle);
+      audio.removeEventListener("loadeddata", settle);
+      window.clearTimeout(timer);
+    };
+    const settle = () => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      cleanup();
+      resolve();
+    };
+    const timer = window.setTimeout(settle, timeoutMs);
+
+    audio.addEventListener("canplay", settle, { once: true });
+    audio.addEventListener("loadeddata", settle, { once: true });
+  });
+}
+
+async function playLoadedTrackWithRetry(generation = playbackGeneration) {
+  try {
+    if (generation !== playbackGeneration) {
+      return;
+    }
+    await playCurrent();
+  } catch (error) {
+    console.warn("Playback start deferred", error);
+    await waitForAudioReady(2600, generation);
+    try {
+      if (generation !== playbackGeneration) {
+        return;
+      }
+      await playCurrent();
+    } catch (retryError) {
+      console.warn("Playback start failed", retryError);
+      continuousPlaybackRequested = false;
+      playbackTransitioning = false;
+      setStatus("paused");
+      setAndroidStatus("Android: tap play to continue");
+    }
+  }
+}
+
+function continueToNextTrack() {
+  if (tracks.length === 0) {
+    return;
+  }
+
+  const next = nextIndex();
+  continuousPlaybackRequested = true;
+  pulseStageLabel("track", trackDisplayTitle(tracks[next]));
+  loadTrack(next, true);
+  scheduleSessionSave(120);
+}
+
 function pauseCurrent() {
+  continuousPlaybackRequested = false;
+  playbackTransitioning = false;
   audio.pause();
   setStatus("paused");
   scheduleSessionSave(120);
 }
 
 function stopCurrent() {
+  continuousPlaybackRequested = false;
+  playbackTransitioning = false;
   audio.pause();
   audio.currentTime = 0;
   setStatus("stopped");
@@ -11911,11 +12027,19 @@ function drawIdleFireworks() {
 }
 
 function resizeCanvas() {
-  const ratio = window.devicePixelRatio || 1;
+  const ratio = canvasPixelRatio();
   const rect = visualizer.getBoundingClientRect();
   const isVisualFullscreen = document.querySelector(".player").classList.contains("visual-fullscreen");
-  const cssWidth = isVisualFullscreen ? window.innerWidth : rect.width;
-  const cssHeight = isVisualFullscreen ? window.innerHeight : rect.height;
+  let cssWidth = isVisualFullscreen ? window.innerWidth : rect.width;
+  let cssHeight = isVisualFullscreen ? window.innerHeight : rect.height;
+
+  if (isAndroidCarMode && !isVisualFullscreen) {
+    const deckHeight = document.querySelector(".car-deck")?.getBoundingClientRect().height || 0;
+    const nowPlayingHeight = document.querySelector(".now-playing")?.getBoundingClientRect().height || 0;
+    cssWidth = window.innerWidth;
+    cssHeight = Math.max(120, window.innerHeight - deckHeight - nowPlayingHeight);
+  }
+
   visualizer.width = Math.floor(cssWidth * ratio);
   visualizer.height = Math.floor(cssHeight * ratio);
   pacDancers = [];
@@ -12208,7 +12332,8 @@ function togglePlayPause() {
   if (!audio.paused) {
     pauseCurrent();
   } else {
-    playCurrent().catch(() => setStatus("paused"));
+    continuousPlaybackRequested = true;
+    playLoadedTrackWithRetry();
   }
 }
 
@@ -12235,10 +12360,14 @@ fireworkSpeed.addEventListener("input", () => {
 });
 
 audio.addEventListener("ended", () => {
-  loadTrack(nextIndex());
-  scheduleSessionSave(120);
+  continueToNextTrack();
 });
 audio.addEventListener("pause", () => {
+  if (playbackTransitioning || continuousPlaybackRequested) {
+    scheduleSessionSave(120);
+    return;
+  }
+
   if (audio.currentTime > 0 && audio.currentTime < audio.duration) {
     setStatus("paused");
   }
@@ -12255,6 +12384,8 @@ audio.addEventListener("timeupdate", () => {
 audio.addEventListener("loadedmetadata", () => scheduleSessionSave(120));
 audio.addEventListener("error", () => {
   const code = audio.error?.code ? ` ${audio.error.code}` : "";
+  continuousPlaybackRequested = false;
+  playbackTransitioning = false;
   setAndroidStatus(`Android: audio error${code}`);
 });
 

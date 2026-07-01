@@ -121,16 +121,20 @@ The `android/` project is an offline-first WebView wrapper for carrying the
 same 32 visualisations onto an Android phone. It bundles the web app inside
 the APK and uses Android's folder picker to remember a local WAV directory.
 
-Before building the Android app, sync the shared web assets:
+Before building the Android app, sync the shared web assets and build the APK:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\sync-android-assets.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\build-android-debug.ps1
 ```
 
-Then open `android/` in Android Studio, let Gradle sync, and build or install
-the `app` module. On first launch, tap **Open folder** and choose the phone
-directory containing the WAV files. After that the app should work without
-internet connectivity; Bluetooth routing is handled by Android itself.
+The APK is written to `android/app/build/outputs/apk/debug/app-debug.apk`. You
+can also open `android/` in Android Studio, let Gradle sync, and build or
+install the `app` module there. On first launch, tap **Open folder** and choose
+the phone directory containing the WAV files. After that the app should work
+without internet connectivity; Bluetooth routing is handled by Android itself.
+
+Car mode has a few deliberately strict maintenance rules in
+[`docs/MAINTENANCE.md`](docs/MAINTENANCE.md).
 
 ## Controls
 

@@ -531,9 +531,12 @@ select {
 }
 
 body.android-car {
+  --car-now-playing-height: 54px;
+  --car-deck-height: calc(142px + env(safe-area-inset-bottom));
   overflow: hidden;
   background: #020304;
   font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+  touch-action: manipulation;
 }
 
 .android-car .shell {
@@ -543,10 +546,11 @@ body.android-car {
 }
 
 .android-car .player {
+  position: relative;
   width: 100vw;
   height: 100vh;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto auto;
+  display: block;
+  overflow: hidden;
   border: 0;
   border-radius: 0;
   background: #020304;
@@ -561,16 +565,20 @@ body.android-car {
 }
 
 .android-car #visualizer {
-  grid-row: 1;
+  position: absolute;
+  inset: 0 0 auto 0;
   width: 100%;
-  height: 100%;
+  height: calc(100vh - var(--car-now-playing-height) - var(--car-deck-height));
+  height: calc(100dvh - var(--car-now-playing-height) - var(--car-deck-height));
   min-height: 0;
   background: #030506;
 }
 
 .android-car .now-playing {
-  grid-row: 2;
-  min-height: 46px;
+  position: absolute;
+  inset: auto 0 var(--car-deck-height) 0;
+  height: var(--car-now-playing-height);
+  min-height: 0;
   padding: 6px 12px;
   gap: 10px;
   border-block: 1px solid #1e2529;
@@ -606,9 +614,11 @@ body.android-car {
 }
 
 .android-car .car-deck {
-  grid-row: 3;
+  position: absolute;
+  inset: auto 0 0 0;
+  height: var(--car-deck-height);
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: 54px 72px;
   gap: 7px;
   padding: 8px 10px max(10px, env(safe-area-inset-bottom));
   border-top: 1px solid #2a3338;
@@ -621,6 +631,8 @@ body.android-car {
 .android-car .car-transport-row {
   display: grid;
   gap: 7px;
+  min-width: 0;
+  min-height: 0;
 }
 
 .android-car .car-utility-row {
@@ -633,7 +645,8 @@ body.android-car {
 
 .android-car .car-deck button {
   min-width: 0;
-  min-height: clamp(50px, 10vh, 74px);
+  min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -694,7 +707,7 @@ body.android-car {
 }
 
 .android-car .car-icon-button {
-  min-height: clamp(40px, 7vh, 56px);
+  min-height: 0;
 }
 
 .android-car .car-icon-button .car-button-kicker {
