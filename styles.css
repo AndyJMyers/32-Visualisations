@@ -636,7 +636,7 @@ body.android-car {
 }
 
 .android-car .car-utility-row {
-  grid-template-columns: 1.1fr 0.9fr 0.9fr 1fr;
+  grid-template-columns: 1fr 0.82fr 0.82fr 0.9fr 0.86fr;
 }
 
 .android-car .car-transport-row {
@@ -725,6 +725,54 @@ body.android-car {
   color: #f2d07a;
   font-size: clamp(0.95rem, 3.6vw, 1.34rem);
   letter-spacing: 0.03em;
+}
+
+.android-car .car-gear-button {
+  --snow-line: 28%;
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(126, 234, 203, 0.58);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, #17261f, #080b09);
+}
+
+.android-car .car-gear-button::before {
+  content: "";
+  position: absolute;
+  inset: auto 7px 5px;
+  height: 15px;
+  background: linear-gradient(90deg, #8bd47a, #d7c77c, #eef2ff);
+  clip-path: polygon(0 100%, 12% 62%, 23% 100%, 35% 42%, 49% 100%, 63% 16%, 78% 100%, 88% 48%, 100% 100%);
+  opacity: 0.42;
+}
+
+.android-car .car-gear-button::after {
+  content: "";
+  position: absolute;
+  inset: auto 7px 5px;
+  height: 15px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.96) 0 var(--snow-line),
+      rgba(255, 255, 255, 0.18) calc(var(--snow-line) + 3%),
+      transparent calc(var(--snow-line) + 9%) 100%
+    );
+  clip-path: polygon(0 100%, 12% 62%, 23% 100%, 35% 42%, 49% 100%, 63% 16%, 78% 100%, 88% 48%, 100% 100%);
+  opacity: 0.88;
+}
+
+.android-car .car-gear-button .car-symbol,
+.android-car .car-gear-button .car-button-kicker {
+  position: relative;
+  z-index: 1;
+}
+
+.android-car .car-gear-button .car-symbol {
+  color: #d9ffe1;
+  font-size: clamp(0.84rem, 3vw, 1.08rem);
+  letter-spacing: 0.01em;
 }
 
 @media (max-width: 680px) {

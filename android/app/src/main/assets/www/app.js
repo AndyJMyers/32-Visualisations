@@ -36,6 +36,9 @@ const carFolderButton = document.querySelector("#carFolderButton");
 const carPrevVisualButton = document.querySelector("#carPrevVisualButton");
 const carNextVisualButton = document.querySelector("#carNextVisualButton");
 const carAlchemyButton = document.querySelector("#carAlchemyButton");
+const carAgitationButton = document.querySelector("#carAgitationButton");
+const carAgitationSymbol = document.querySelector("#carAgitationSymbol");
+const carAgitationLabel = document.querySelector("#carAgitationLabel");
 const carFirstButton = document.querySelector("#carFirstButton");
 const carPreviousButton = document.querySelector("#carPreviousButton");
 const carPlayButton = document.querySelector("#carPlayButton");
@@ -177,6 +180,14 @@ const performanceProfile = isAndroidCarMode
       populationScale: 1,
       maxPopulation: 12,
     };
+const carAgitationGears = [
+  { label: "Green", multiplier: 0.42, snowLine: "18%" },
+  { label: "Foothill", multiplier: 0.68, snowLine: "30%" },
+  { label: "Upland", multiplier: 1, snowLine: "44%" },
+  { label: "Ridge", multiplier: 1.38, snowLine: "60%" },
+  { label: "Summit", multiplier: 1.82, snowLine: "78%" },
+];
+let carAgitationGear = 2;
 const fireworksBands = [
   { start: 1, end: 5, threshold: 0.42, name: "bass" },
   { start: 6, end: 14, threshold: 0.35, name: "lowMid" },
@@ -1058,7 +1069,7 @@ function setControlsEnabled(enabled) {
     control.disabled = !enabled;
   });
 
-  [carFolderButton, carPrevVisualButton, carNextVisualButton, carAlchemyButton].forEach((control) => {
+  [carFolderButton, carPrevVisualButton, carNextVisualButton, carAlchemyButton, carAgitationButton].forEach((control) => {
     control.disabled = false;
   });
 }
@@ -1068,11 +1079,35 @@ function visualizerTheme() {
 }
 
 function fireworkSpeedMultiplier() {
-  return Number(fireworkSpeed.value) || 1;
+  const baseSpeed = Number(fireworkSpeed.value) || 1;
+  if (!isAndroidCarMode) {
+    return baseSpeed;
+  }
+
+  return baseSpeed * carAgitationGears[carAgitationGear].multiplier;
 }
 
 function updateFireworkSpeedLabel() {
   fireworkSpeedValue.textContent = `${fireworkSpeedMultiplier().toFixed(1)}x`;
+}
+
+function updateCarAgitationLabel() {
+  const gear = carAgitationGears[carAgitationGear];
+  carAgitationSymbol.textContent = `G${carAgitationGear + 1}++`;
+  carAgitationLabel.textContent = gear.label;
+  carAgitationButton.style.setProperty("--gear-level", String(carAgitationGear + 1));
+  carAgitationButton.style.setProperty("--snow-line", gear.snowLine);
+  carAgitationButton.setAttribute("aria-label", `Visual agitation gear ${carAgitationGear + 1}: ${gear.label}`);
+}
+
+function cycleCarAgitationGear() {
+  carAgitationGear = (carAgitationGear + 1) % carAgitationGears.length;
+  updateCarAgitationLabel();
+  pulseStageLabel("visual", `Gear ${carAgitationGear + 1}: ${carAgitationGears[carAgitationGear].label}`);
+  if (!animationId) {
+    drawIdleVisualizer();
+  }
+  scheduleSessionSave(120);
 }
 
 function handSizeMultiplier() {
@@ -1153,6 +1188,7 @@ function sessionSnapshot() {
       form: fireworkFormSelect.value,
       theme: themeSelect.value,
       speed: fireworkSpeed.value,
+      carAgitationGear,
       size: handSize.value,
       count: handCount.value,
       grasp: handGrasp.value,
@@ -1210,6 +1246,7 @@ function restoreControlPreferences(session) {
   shuffleToggle.checked = Boolean(controls.shuffle);
   peakToggle.checked = controls.peak !== false;
   fireworkSpeed.value = controls.speed || fireworkSpeed.value;
+  carAgitationGear = clampNumber(Number(controls.carAgitationGear ?? carAgitationGear), 0, carAgitationGears.length - 1);
   handSize.value = controls.size || handSize.value;
   handCount.value = controls.count || handCount.value;
   handGrasp.value = controls.grasp || handGrasp.value;
@@ -1226,6 +1263,7 @@ function restoreControlPreferences(session) {
   setSelectValueIfPresent(themeSelect, controls.theme);
   setSelectValueIfPresent(eyeDischargeSelect, controls.discharge);
   updateFireworkSpeedLabel();
+  updateCarAgitationLabel();
   updateHandControlLabels();
   updateSpectrumDials();
 }
@@ -12352,6 +12390,7 @@ carLastButton.addEventListener("click", () => loadTrackBoundary(tracks.length - 
 carPrevVisualButton.addEventListener("click", () => changeVisualizerByStep(-1));
 carNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
 carAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
+carAgitationButton.addEventListener("click", cycleCarAgitationGear);
 
 shuffleToggle.addEventListener("change", () => scheduleSessionSave());
 fireworkSpeed.addEventListener("input", () => {
@@ -12513,6 +12552,7 @@ restoredSession = loadSavedSession();
 restoreControlPreferences(restoredSession);
 resizeCanvas();
 updateFireworkSpeedLabel();
+updateCarAgitationLabel();
 updateHandControlLabels();
 updateSpectrumDials();
 syncVisualizerControls();
