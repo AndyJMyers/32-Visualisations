@@ -33,17 +33,15 @@ const insanityDialValue = document.querySelector("#insanityDialValue");
 const trackCount = document.querySelector("#trackCount");
 const trackList = document.querySelector("#trackList");
 const carFolderButton = document.querySelector("#carFolderButton");
-const carPrevVisualButton = document.querySelector("#carPrevVisualButton");
 const carNextVisualButton = document.querySelector("#carNextVisualButton");
+const carPreviousVisualButton = document.querySelector("#carPreviousVisualButton");
 const carAlchemyButton = document.querySelector("#carAlchemyButton");
 const carAgitationButton = document.querySelector("#carAgitationButton");
 const carAgitationSymbol = document.querySelector("#carAgitationSymbol");
 const carAgitationLabel = document.querySelector("#carAgitationLabel");
-const carFirstButton = document.querySelector("#carFirstButton");
 const carPreviousButton = document.querySelector("#carPreviousButton");
 const carPlayButton = document.querySelector("#carPlayButton");
 const carNextButton = document.querySelector("#carNextButton");
-const carLastButton = document.querySelector("#carLastButton");
 if (window.AndroidWaveDeck) {
   document.body.classList.add("android-car");
   audio.removeAttribute("crossorigin");
@@ -188,6 +186,22 @@ const carAgitationGears = [
   { label: "Summit", multiplier: 1.82, snowLine: "78%" },
 ];
 let carAgitationGear = 2;
+const moodDecks = [
+  { label: "All", short: "All", keywords: [] },
+  { label: "Love", short: "Love", keywords: ["love", "lover", "heart", "kiss", "romance", "darling", "baby"] },
+  { label: "Ballads", short: "Ballad", keywords: ["ballad", "slow", "waltz", "lullaby", "lament", "tender"] },
+  { label: "Bossa", short: "Bossa", keywords: ["bossa", "samba", "ipanema", "rio", "latin"] },
+  { label: "Louche Jazz", short: "Louche", keywords: ["jazz", "louche", "swing", "smoky", "blue note", "sax", "trumpet"] },
+  { label: "Balearic", short: "Balear", keywords: ["balearic", "ibiza", "sunset", "beach", "island", "drift"] },
+  { label: "Rock", short: "Rock", keywords: ["rock", "riff", "guitar", "garage", "motor", "tvr"] },
+  { label: "Night Drive", short: "Night", keywords: ["night", "drive", "neon", "midnight", "road", "cruise"] },
+  { label: "Sunny", short: "Sunny", keywords: ["sun", "sunny", "summer", "gold", "daylight", "bright"] },
+  { label: "Melancholy", short: "Melan", keywords: ["melancholy", "sad", "rain", "ghost", "ache", "lonely"] },
+  { label: "Ridiculous", short: "Daft", keywords: ["ridiculous", "daft", "silly", "mad", "mental", "nonsense"] },
+  { label: "High Energy", short: "High", keywords: ["fast", "hot", "wild", "energy", "dance", "storm", "fire"] },
+  { label: "After Hours", short: "After", keywords: ["after hours", "late", "dusk", "velvet", "cocktail", "lounge"] },
+];
+let activeMoodIndex = 0;
 const fireworksBands = [
   { start: 1, end: 5, threshold: 0.42, name: "bass" },
   { start: 6, end: 14, threshold: 0.35, name: "lowMid" },
@@ -793,6 +807,73 @@ function trackDisplayTitle(track) {
   return trackName(track).replace(/\.wav$/i, "");
 }
 
+function trackSearchText(track) {
+  return `${track.relativePath || ""} ${trackDisplayTitle(track)}`.toLowerCase();
+}
+
+function normalizeMoodLabel(value) {
+  const text = String(value || "").trim().toLowerCase();
+  const mood = moodDecks.find((item) => item.label.toLowerCase() === text || item.short.toLowerCase() === text);
+  return mood?.label || "";
+}
+
+function normalizeMoodList(values) {
+  return Array.from(new Set(
+    (Array.isArray(values) ? values : [values])
+      .map(normalizeMoodLabel)
+      .filter(Boolean),
+  ));
+}
+
+function manifestMoodsForTrack(manifest, track) {
+  const manifestTracks = manifest?.tracks;
+  if (!manifestTracks || !track) {
+    return [];
+  }
+
+  const keys = [
+    track.relativePath,
+    trackName(track),
+    trackDisplayTitle(track),
+  ].filter(Boolean);
+  const entryKey = keys.find((key) => manifestTracks[key]);
+  const entry = entryKey ? manifestTracks[entryKey] : null;
+
+  if (!entry) {
+    return [];
+  }
+
+  if (typeof entry === "string" || Array.isArray(entry)) {
+    return normalizeMoodList(entry);
+  }
+
+  return normalizeMoodList([entry.primaryMood, ...(entry.moods || [])]);
+}
+
+function moodMatchesTrack(mood, track) {
+  if (!mood || mood.label === "All") {
+    return true;
+  }
+
+  if (track.manifestMoods?.length > 0) {
+    return track.manifestMoods.includes(mood.label);
+  }
+
+  const text = trackSearchText(track);
+  return mood.keywords.some((keyword) => text.includes(keyword));
+}
+
+function moodTrackIndexes(index = activeMoodIndex) {
+  const mood = moodDecks[index] || moodDecks[0];
+  if (mood.label === "All") {
+    return tracks.map((_, trackIndex) => trackIndex);
+  }
+
+  return tracks
+    .map((track, trackIndex) => (moodMatchesTrack(mood, track) ? trackIndex : -1))
+    .filter((trackIndex) => trackIndex >= 0);
+}
+
 function trackIdentity(track) {
   if (!track) {
     return null;
@@ -1060,16 +1141,14 @@ function setControlsEnabled(enabled) {
     nextButton,
     shuffleToggle,
     sortSelect,
-    carFirstButton,
     carPreviousButton,
     carPlayButton,
     carNextButton,
-    carLastButton,
   ].forEach((control) => {
     control.disabled = !enabled;
   });
 
-  [carFolderButton, carPrevVisualButton, carNextVisualButton, carAlchemyButton, carAgitationButton].forEach((control) => {
+  [carFolderButton, carNextVisualButton, carPreviousVisualButton, carAlchemyButton, carAgitationButton].forEach((control) => {
     control.disabled = false;
   });
 }
@@ -1926,14 +2005,18 @@ function loadServerTracks(library) {
   resetLibraryState();
   tracks = (library.tracks || [])
     .filter((track) => track.name?.toLowerCase().endsWith(".wav") && track.audioUrl)
-    .map((track) => ({
-      name: track.name,
-      lastModified: track.lastModified || 0,
-      relativePath: track.relativePath || track.name,
-      audioUrl: track.audioUrl,
-      url: "",
-      source: "default-server",
-    }));
+    .map((track) => {
+      const loadedTrack = {
+        name: track.name,
+        lastModified: track.lastModified || 0,
+        relativePath: track.relativePath || track.name,
+        audioUrl: track.audioUrl,
+        url: "",
+        source: "default-server",
+      };
+      loadedTrack.manifestMoods = manifestMoodsForTrack(library.moodsManifest, loadedTrack);
+      return loadedTrack;
+    });
 
   directoryName.textContent = library.directoryName || defaultDirectoryName;
   sortTracks();
@@ -1946,14 +2029,18 @@ function loadAndroidTracks(library) {
   resetLibraryState();
   tracks = (library.tracks || [])
     .filter((track) => track.name?.toLowerCase().endsWith(".wav") && track.audioUrl)
-    .map((track) => ({
-      name: track.name,
-      lastModified: track.lastModified || 0,
-      relativePath: track.relativePath || track.name,
-      audioUrl: track.audioUrl,
-      url: "",
-      source: "android-bridge",
-    }));
+    .map((track) => {
+      const loadedTrack = {
+        name: track.name,
+        lastModified: track.lastModified || 0,
+        relativePath: track.relativePath || track.name,
+        audioUrl: track.audioUrl,
+        url: "",
+        source: "android-bridge",
+      };
+      loadedTrack.manifestMoods = manifestMoodsForTrack(library.moodsManifest, loadedTrack);
+      return loadedTrack;
+    });
 
   directoryName.textContent = library.directoryName || "Android music folder";
   sortTracks();
@@ -2106,6 +2193,10 @@ function changeTrackByStep(step) {
 
   if (currentIndex === -1) {
     next = step > 0 ? 0 : tracks.length - 1;
+  } else if (step > 0) {
+    next = nextIndex();
+  } else if (step < 0) {
+    next = previousIndex();
   } else if (shuffleToggle.checked) {
     next = step > 0 ? nextIndex() : previousIndex();
   } else {
@@ -12382,13 +12473,11 @@ nextButton.addEventListener("click", () => loadTrack(nextIndex()));
 previousButton.addEventListener("click", () => loadTrack(previousIndex()));
 fullscreenButton.addEventListener("click", toggleVisualFullscreen);
 carFolderButton.addEventListener("click", openLibraryPicker);
-carFirstButton.addEventListener("click", () => loadTrackBoundary(0));
 carPlayButton.addEventListener("click", togglePlayPause);
 carPreviousButton.addEventListener("click", () => changeTrackByStep(-1));
 carNextButton.addEventListener("click", () => changeTrackByStep(1));
-carLastButton.addEventListener("click", () => loadTrackBoundary(tracks.length - 1));
-carPrevVisualButton.addEventListener("click", () => changeVisualizerByStep(-1));
 carNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
+carPreviousVisualButton.addEventListener("click", () => changeVisualizerByStep(-1));
 carAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
 carAgitationButton.addEventListener("click", cycleCarAgitationGear);
 

@@ -136,6 +136,9 @@ without internet connectivity; Bluetooth routing is handled by Android itself.
 Car mode has a few deliberately strict maintenance rules in
 [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md).
 
+Mood classification and Substack song-pack notes live in
+[`docs/SONG_LIBRARY_WORKFLOW.md`](docs/SONG_LIBRARY_WORKFLOW.md).
+
 ## Controls
 
 - `Play`, `Stop`, `Prev`, `Next` and `Shuffle` handle the library.

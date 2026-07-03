@@ -57,12 +57,24 @@ async function collectTracks(directory, prefix = "") {
   return tracks;
 }
 
+async function loadMoodsManifest(directory) {
+  try {
+    const manifestPath = path.join(directory, "moods.json");
+    const text = await fsp.readFile(manifestPath, "utf8");
+    return JSON.parse(text);
+  } catch (error) {
+    return null;
+  }
+}
+
 async function serveApiTracks(res) {
   try {
     const tracks = await collectTracks(musicRootResolved);
+    const moodsManifest = await loadMoodsManifest(musicRootResolved);
     send(res, 200, JSON.stringify({
       directoryName: path.basename(musicRootResolved),
       tracks,
+      moodsManifest,
     }), { "content-type": "application/json; charset=utf-8" });
   } catch (error) {
     send(res, 404, JSON.stringify({

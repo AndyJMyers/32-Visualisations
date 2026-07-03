@@ -640,7 +640,7 @@ body.android-car {
 }
 
 .android-car .car-transport-row {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .android-car .car-deck button {
