@@ -4,6 +4,7 @@ const statusLight = document.querySelector("#statusLight");
 const statusText = document.querySelector("#statusText");
 const currentTrack = document.querySelector("#currentTrack");
 const timeReadout = document.querySelector("#timeReadout");
+const alchemyProgressFill = document.querySelector("#alchemyProgressFill");
 const visualizer = document.querySelector("#visualizer");
 const audio = document.querySelector("#audio");
 const previousButton = document.querySelector("#previousButton");
@@ -39,6 +40,8 @@ const carAlchemyButton = document.querySelector("#carAlchemyButton");
 const carAgitationButton = document.querySelector("#carAgitationButton");
 const carAgitationSymbol = document.querySelector("#carAgitationSymbol");
 const carAgitationLabel = document.querySelector("#carAgitationLabel");
+const carShuffleButton = document.querySelector("#carShuffleButton");
+const carShuffleLabel = document.querySelector("#carShuffleLabel");
 const carPreviousButton = document.querySelector("#carPreviousButton");
 const carPlayButton = document.querySelector("#carPlayButton");
 const carNextButton = document.querySelector("#carNextButton");
@@ -1144,6 +1147,7 @@ function setControlsEnabled(enabled) {
     carPreviousButton,
     carPlayButton,
     carNextButton,
+    carShuffleButton,
   ].forEach((control) => {
     control.disabled = !enabled;
   });
@@ -1177,6 +1181,22 @@ function updateCarAgitationLabel() {
   carAgitationButton.style.setProperty("--gear-level", String(carAgitationGear + 1));
   carAgitationButton.style.setProperty("--snow-line", gear.snowLine);
   carAgitationButton.setAttribute("aria-label", `Visual agitation gear ${carAgitationGear + 1}: ${gear.label}`);
+}
+
+function updateCarShuffleState() {
+  const enabled = shuffleToggle.checked;
+  carShuffleButton.classList.toggle("active", enabled);
+  carShuffleButton.setAttribute("aria-pressed", String(enabled));
+  carShuffleButton.setAttribute("aria-label", enabled ? "Shuffle on" : "Shuffle off");
+  carShuffleLabel.textContent = enabled ? "Shuffle" : "Order";
+}
+
+function updateAlchemyProgress() {
+  const duration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
+  const currentTime = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+  const progress = duration > 0 ? Math.min(1, Math.max(0, currentTime / duration)) : 0;
+
+  alchemyProgressFill.style.transform = `scaleX(${progress})`;
 }
 
 function cycleCarAgitationGear() {
@@ -1323,6 +1343,7 @@ function restoreControlPreferences(session) {
 
   setSelectValueIfPresent(sortSelect, controls.sort);
   shuffleToggle.checked = Boolean(controls.shuffle);
+  updateCarShuffleState();
   peakToggle.checked = controls.peak !== false;
   fireworkSpeed.value = controls.speed || fireworkSpeed.value;
   carAgitationGear = clampNumber(Number(controls.carAgitationGear ?? carAgitationGear), 0, carAgitationGears.length - 1);
@@ -1800,6 +1821,7 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
       const safeDuration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : resumeAt + 1;
       audio.currentTime = Math.min(resumeAt, Math.max(0, safeDuration - 0.8));
       timeReadout.textContent = `${formatDuration(audio.currentTime)} / ${formatDuration(audio.duration)}`;
+      updateAlchemyProgress();
     };
     audio.addEventListener("loadedmetadata", applyResumeTime, { once: true });
   }
@@ -1916,6 +1938,7 @@ function stopCurrent() {
   audio.pause();
   audio.currentTime = 0;
   setStatus("stopped");
+  updateAlchemyProgress();
   scheduleSessionSave(120);
 }
 
@@ -1931,6 +1954,7 @@ function resetLibraryState() {
   audio.load();
   currentTrack.textContent = "No track loaded";
   timeReadout.textContent = "0:00 / 0:00";
+  updateAlchemyProgress();
   setStatus("stopped");
 }
 
@@ -12477,11 +12501,19 @@ carPlayButton.addEventListener("click", togglePlayPause);
 carPreviousButton.addEventListener("click", () => changeTrackByStep(-1));
 carNextButton.addEventListener("click", () => changeTrackByStep(1));
 carNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
-carPreviousVisualButton.addEventListener("click", () => changeVisualizerByStep(-1));
-carAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
-carAgitationButton.addEventListener("click", cycleCarAgitationGear);
+  carPreviousVisualButton.addEventListener("click", () => changeVisualizerByStep(-1));
+  carAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
+  carAgitationButton.addEventListener("click", cycleCarAgitationGear);
+carShuffleButton.addEventListener("click", () => {
+  shuffleToggle.checked = !shuffleToggle.checked;
+  updateCarShuffleState();
+  scheduleSessionSave(120);
+});
 
-shuffleToggle.addEventListener("change", () => scheduleSessionSave());
+shuffleToggle.addEventListener("change", () => {
+  updateCarShuffleState();
+  scheduleSessionSave();
+});
 fireworkSpeed.addEventListener("input", () => {
   updateFireworkSpeedLabel();
   scheduleSessionSave();
@@ -12503,13 +12535,17 @@ audio.addEventListener("pause", () => {
 });
 audio.addEventListener("timeupdate", () => {
   timeReadout.textContent = `${formatDuration(audio.currentTime)} / ${formatDuration(audio.duration)}`;
+  updateAlchemyProgress();
   const second = Math.floor(audio.currentTime || 0);
   if (Math.abs(second - lastPersistedSecond) >= 3) {
     lastPersistedSecond = second;
     scheduleSessionSave(900);
   }
 });
-audio.addEventListener("loadedmetadata", () => scheduleSessionSave(120));
+audio.addEventListener("loadedmetadata", () => {
+  updateAlchemyProgress();
+  scheduleSessionSave(120);
+});
 audio.addEventListener("error", () => {
   const code = audio.error?.code ? ` ${audio.error.code}` : "";
   continuousPlaybackRequested = false;
@@ -12642,6 +12678,8 @@ restoreControlPreferences(restoredSession);
 resizeCanvas();
 updateFireworkSpeedLabel();
 updateCarAgitationLabel();
+updateCarShuffleState();
+updateAlchemyProgress();
 updateHandControlLabels();
 updateSpectrumDials();
 syncVisualizerControls();

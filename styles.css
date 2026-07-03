@@ -191,6 +191,31 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 
+.time-cluster {
+  display: grid;
+  gap: 5px;
+  min-width: 136px;
+}
+
+.alchemy-progress {
+  height: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(214, 168, 76, 0.32);
+  border-radius: 999px;
+  background: rgba(28, 22, 11, 0.9);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+
+.alchemy-progress-fill {
+  width: 100%;
+  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background:
+    linear-gradient(90deg, #5d3c12 0%, #d6a84c 48%, #fff0a8 100%);
+  box-shadow: 0 0 12px rgba(214, 168, 76, 0.5);
+}
+
 #visualizer {
   display: block;
   width: 100%;
@@ -531,7 +556,7 @@ select {
 }
 
 body.android-car {
-  --car-now-playing-height: 54px;
+  --car-now-playing-height: 58px;
   --car-deck-height: calc(142px + env(safe-area-inset-bottom));
   overflow: hidden;
   background: #020304;
@@ -611,6 +636,27 @@ body.android-car {
   color: #d0a64e;
   font-size: clamp(0.78rem, 2.5vw, 0.98rem);
   font-weight: 750;
+  text-align: right;
+}
+
+.android-car .time-cluster {
+  min-width: clamp(130px, 35vw, 190px);
+}
+
+.android-car .alchemy-progress {
+  height: 7px;
+  border-color: rgba(214, 168, 76, 0.58);
+  background:
+    radial-gradient(circle at 15% 50%, rgba(214, 168, 76, 0.2), transparent 32%),
+    linear-gradient(180deg, #1d1609, #060504);
+}
+
+.android-car .alchemy-progress-fill {
+  background:
+    linear-gradient(90deg, #73450e 0%, #d6a84c 44%, #fff3a7 72%, #7eeacb 100%);
+  box-shadow:
+    0 0 10px rgba(214, 168, 76, 0.75),
+    0 0 18px rgba(126, 234, 203, 0.2);
 }
 
 .android-car .car-deck {
@@ -636,7 +682,7 @@ body.android-car {
 }
 
 .android-car .car-utility-row {
-  grid-template-columns: 1fr 0.82fr 0.82fr 0.9fr 0.86fr;
+  grid-template-columns: 0.86fr 0.76fr 0.76fr 0.82fr 0.82fr 0.9fr;
 }
 
 .android-car .car-transport-row {
@@ -725,6 +771,103 @@ body.android-car {
   color: #f2d07a;
   font-size: clamp(0.95rem, 3.6vw, 1.34rem);
   letter-spacing: 0.03em;
+}
+
+.android-car .car-shuffle-button {
+  border-color: rgba(95, 103, 103, 0.72);
+  filter: brightness(0.72) saturate(0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 34%),
+    linear-gradient(180deg, #202326, #060708);
+}
+
+.android-car .car-shuffle-button.active {
+  border-color: rgba(126, 234, 203, 0.86);
+  filter: brightness(1.28) saturate(1.35);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.23), transparent 34%),
+    linear-gradient(180deg, #314328, #101909);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.52),
+    0 0 18px rgba(126, 234, 203, 0.28),
+    0 2px 8px rgba(0, 0, 0, 0.36);
+}
+
+.android-car .shuffle-deck-icon {
+  position: relative;
+  width: clamp(38px, 10.5vw, 54px);
+  height: clamp(21px, 5.8vw, 30px);
+  margin-block: -1px 1px;
+}
+
+.android-car .shuffle-card,
+.android-car .shuffle-hand {
+  position: absolute;
+  display: block;
+}
+
+.android-car .shuffle-card {
+  top: 4px;
+  width: 18px;
+  height: 24px;
+  border: 1px solid rgba(240, 234, 217, 0.78);
+  border-radius: 3px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(214, 168, 76, 0.76));
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.42);
+}
+
+.android-car .shuffle-card::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(75, 43, 10, 0.36);
+  border-radius: 2px;
+}
+
+.android-car .shuffle-card-left {
+  left: 12px;
+  transform: rotate(-16deg);
+}
+
+.android-car .shuffle-card-right {
+  right: 12px;
+  transform: rotate(16deg);
+}
+
+.android-car .shuffle-hand {
+  bottom: 1px;
+  width: 20px;
+  height: 10px;
+  border-radius: 999px 999px 7px 7px;
+  background: linear-gradient(180deg, #d6a84c, #7b521c);
+  opacity: 0.64;
+}
+
+.android-car .shuffle-hand-left {
+  left: 0;
+  transform: rotate(10deg);
+}
+
+.android-car .shuffle-hand-right {
+  right: 0;
+  transform: rotate(-10deg);
+}
+
+.android-car .car-shuffle-button.active .shuffle-card {
+  border-color: rgba(255, 245, 177, 0.96);
+  background:
+    linear-gradient(135deg, #fff7bd, #7eeacb);
+}
+
+.android-car .car-shuffle-button.active .shuffle-hand {
+  opacity: 1;
+  background: linear-gradient(180deg, #ffe3a1, #d6a84c);
+}
+
+.android-car .car-shuffle-button.active .car-button-kicker {
+  color: #7eeacb;
 }
 
 .android-car .car-gear-button {
