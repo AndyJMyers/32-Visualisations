@@ -1,1 +1,4 @@
 Git-*.exe
+android/keystore.properties
+android/signing/*.jks
+android/signing/*.keystore
