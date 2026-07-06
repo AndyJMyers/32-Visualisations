@@ -1176,12 +1176,31 @@ function updateFireworkSpeedLabel() {
 
 function updateCarAgitationLabel() {
   const gear = carAgitationGears[carAgitationGear];
-  carAgitationSymbol.textContent = `G${carAgitationGear + 1}++`;
+  carAgitationSymbol.textContent = "G++";
   carAgitationLabel.textContent = gear.label;
   carAgitationButton.style.setProperty("--gear-level", String(carAgitationGear + 1));
   carAgitationButton.style.setProperty("--snow-line", gear.snowLine);
   carAgitationButton.setAttribute("aria-label", `Visual agitation gear ${carAgitationGear + 1}: ${gear.label}`);
 }
+
+function shimmerCarButton(button) {
+  if (!button || !button.classList) {
+    return;
+  }
+
+  button.classList.remove("press-shimmer");
+  void button.offsetWidth;
+  button.classList.add("press-shimmer");
+}
+
+document.querySelectorAll(".car-deck button").forEach((button) => {
+  button.addEventListener("click", () => shimmerCarButton(button));
+  button.addEventListener("animationend", (event) => {
+    if (event.animationName === "carButtonShimmer") {
+      button.classList.remove("press-shimmer");
+    }
+  });
+});
 
 function updateCarShuffleState() {
   const enabled = shuffleToggle.checked;
@@ -1666,7 +1685,7 @@ function applyAlchemicalAdjustment() {
   updateHandControlLabels();
   updateSpectrumDials();
   syncVisualizerControls();
-  pulseStageLabel("visual", `AA: ${recipe.name}`);
+  pulseStageLabel("visual", `Alchemy: ${recipe.name}`);
   if (!animationId) {
     drawIdleVisualizer();
   }
