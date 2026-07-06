@@ -36,6 +36,10 @@ You do not have to be an insane freak to enjoy this player, but it is not contra
 - Feature graphic: `assets/feature-graphic-1024x500.png`
 - Source image: `assets/source-32-visualisations.png`
 
+## Privacy Policy
+
+Public URL: https://andyjmyers.substack.com/p/32-visualisations-privacy-policy
+
 ## Suggested Tags
 
 Music player, local music, audio visualizer, visualiser, road trip, offline music, Android music player.
