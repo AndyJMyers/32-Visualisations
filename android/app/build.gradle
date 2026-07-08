@@ -39,4 +39,8 @@ android {
             minifyEnabled false
         }
     }
+
+    androidResources {
+        noCompress "wav"
+    }
 }

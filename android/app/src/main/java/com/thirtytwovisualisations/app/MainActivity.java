@@ -41,6 +41,12 @@ public class MainActivity extends Activity {
     private static final String APP_ORIGIN = "https://visualisations.local";
     private static final String DEFAULT_DIRECTORY_NAME = "Downloads/TVR Playlist";
     private static final String DEFAULT_TREE_DOCUMENT_ID = "primary:Download/TVR Playlist";
+    private static final String SAMPLE_DIRECTORY_NAME = "32 Visualisations Sample Suite";
+    private static final String[] SAMPLE_TRACKS = new String[] {
+        "Attend Your Being.wav",
+        "Fit for Public Circulation.wav",
+        "Ugly Emu Girls.wav"
+    };
 
     private WebView webView;
     private SharedPreferences preferences;
@@ -118,7 +124,7 @@ public class MainActivity extends Activity {
         library.put("tracks", tracks);
 
         if (storedTreeUri == null || storedTreeUri.isEmpty()) {
-            return library;
+            return buildSampleLibrary();
         }
 
         Uri treeUri = Uri.parse(storedTreeUri);
@@ -128,6 +134,27 @@ public class MainActivity extends Activity {
             library.put("moodsManifest", moodsManifest);
         }
         collectTracks(treeUri, rootDocumentId, "", tracks);
+        if (tracks.length() == 0) {
+            return buildSampleLibrary();
+        }
+        return library;
+    }
+
+    private JSONObject buildSampleLibrary() throws JSONException {
+        JSONObject library = new JSONObject();
+        library.put("directoryName", SAMPLE_DIRECTORY_NAME);
+        JSONArray tracks = new JSONArray();
+        library.put("tracks", tracks);
+
+        for (String name : SAMPLE_TRACKS) {
+            JSONObject track = new JSONObject();
+            track.put("name", name);
+            track.put("relativePath", name);
+            track.put("lastModified", 0);
+            track.put("audioUrl", APP_ORIGIN + "/sample-audio?file=" + Uri.encode(name));
+            tracks.put(track);
+        }
+
         return library;
     }
 
@@ -251,6 +278,33 @@ public class MainActivity extends Activity {
             return notFound();
         }
 
+        return serveAudioDescriptor(descriptor, rangeHeader);
+    }
+
+    private boolean isSampleTrack(String fileName) {
+        if (fileName == null) {
+            return false;
+        }
+
+        for (String sampleTrack : SAMPLE_TRACKS) {
+            if (sampleTrack.equals(fileName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private WebResourceResponse serveSampleAudio(String fileName, String rangeHeader) throws IOException {
+        if (!isSampleTrack(fileName)) {
+            return notFound();
+        }
+
+        AssetFileDescriptor descriptor = getAssets().openFd("sample-music/" + fileName);
+        return serveAudioDescriptor(descriptor, rangeHeader);
+    }
+
+    private WebResourceResponse serveAudioDescriptor(AssetFileDescriptor descriptor, String rangeHeader) throws IOException {
         long length = descriptor.getLength();
         long start = 0;
         long end = length > 0 ? length - 1 : -1;
@@ -330,6 +384,12 @@ public class MainActivity extends Activity {
                     return serveAudio(Uri.parse(audioUri), rangeHeader);
                 }
 
+                if ("/sample-audio".equals(path)) {
+                    String fileName = uri.getQueryParameter("file");
+                    String rangeHeader = request.getRequestHeaders().get("Range");
+                    return serveSampleAudio(fileName, rangeHeader);
+                }
+
                 String assetPath = "www" + path;
                 String mimeType = "text/plain";
                 if (assetPath.endsWith(".html")) {
@@ -394,7 +454,11 @@ public class MainActivity extends Activity {
             try {
                 return buildLibrary().toString();
             } catch (Exception error) {
-                return "{\"directoryName\":\"Downloads/TVR Playlist\",\"tracks\":[],\"error\":\"Android library could not be read.\"}";
+                try {
+                    return buildSampleLibrary().toString();
+                } catch (Exception sampleError) {
+                    return "{\"directoryName\":\"32 Visualisations Sample Suite\",\"tracks\":[],\"error\":\"Android library could not be read.\"}";
+                }
             }
         }
 

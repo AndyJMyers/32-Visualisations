@@ -6,8 +6,11 @@ const path = require("path");
 const port = Number(process.env.PORT) || 4173;
 const host = "127.0.0.1";
 const appRoot = __dirname;
-const musicRoot = process.env.WAVE_DECK_LIBRARY || "C:\\Andy ChatGPT DALL-E aisongs";
+const sampleMusicRoot = path.join(appRoot, "sample-music");
+const musicRoot = process.env.WAVE_DECK_LIBRARY
+  || (fs.existsSync(sampleMusicRoot) ? sampleMusicRoot : "C:\\Andy ChatGPT DALL-E aisongs");
 const musicRootResolved = path.resolve(musicRoot);
+const sampleMusicRootResolved = path.resolve(sampleMusicRoot);
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -71,8 +74,11 @@ async function serveApiTracks(res) {
   try {
     const tracks = await collectTracks(musicRootResolved);
     const moodsManifest = await loadMoodsManifest(musicRootResolved);
+    const directoryName = musicRootResolved === sampleMusicRootResolved
+      ? "32 Visualisations Sample Suite"
+      : path.basename(musicRootResolved);
     send(res, 200, JSON.stringify({
-      directoryName: path.basename(musicRootResolved),
+      directoryName,
       tracks,
       moodsManifest,
     }), { "content-type": "application/json; charset=utf-8" });
