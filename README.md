@@ -10,6 +10,8 @@ It began as a desktop WAV player with a taste for **Mental. Saturation. Overstim
 
 No streaming account. No subscription. No rented library quietly disappearing when the bill stops. Just your files, your device, your speakers, and thirty-two vivid ways to make sound visible.
 
+The app also includes a small original three-track sample suite so a fresh install has something to play immediately. It is a showcase, not an exhaustive back catalogue.
+
 ## The Story
 
 Streaming made music convenient, but it also made listening feel rented, flattened, and strangely disposable. 32 Visualisations goes the other way.
@@ -25,6 +27,7 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 ## What It Does
 
 - Plays local `.wav` files from a folder.
+- Includes a bundled three-song original sample suite for first launch and demonstration.
 - Runs as a desktop browser app or an offline-first Android WebView app.
 - Provides a fixed set of **32** audio-reactive visualisations.
 - Offers car-style Android controls for play/pause, previous/next track, previous/next visualisation, shuffle, `A++`, and `G++`.
@@ -81,7 +84,7 @@ Some are contemplative. Some are playable. Some should possibly be discussed wit
 
 The Android app is the mobile-first version of the same visualisation world. It is designed for in-car use: portrait layout, large controls at the bottom, familiar transport actions, and a little visual theatre when buttons are pressed.
 
-The app uses Android's folder picker to choose a local music folder. Once installed and pointed at music, it is intended to work offline. Bluetooth routing is handled by Android itself.
+The app opens with the bundled three-track sample suite, then uses Android's folder picker to choose a local music folder when you want the full road-trip library. Once installed and pointed at music, it is intended to work offline. Bluetooth routing is handled by Android itself.
 
 Current Play preparation lives in:
 
@@ -130,6 +133,8 @@ WAVE_DECK_LIBRARY="/path/to/wav-library" node server.js
 ```
 
 Then open [http://127.0.0.1:4173/](http://127.0.0.1:4173/).
+
+If `WAVE_DECK_LIBRARY` is not set, the local server uses the bundled `sample-music/` showcase suite.
 
 The **Open folder** control can also select a different local directory in browsers that support the File System Access API.
 

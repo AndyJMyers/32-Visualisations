@@ -16,6 +16,8 @@ Play local audio from your Android device and watch it come alive through a coll
 
 Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, change visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger.
 
+Includes a small original three-track sample suite so the app can play immediately after install. The main purpose remains simple and old-fashioned in the best way: choose your own local music folder and let your files drive the visuals.
+
 Pay once, keep playing. No streaming account. No subscription. No algorithmic sermon. No disposable wallpaper pretending to be a music experience. Just your files, your speakers, and a screen full of motion.
 
 You do not have to be an insane freak to enjoy this player, but it is not contra-indicated.
@@ -23,6 +25,7 @@ You do not have to be an insane freak to enjoy this player, but it is not contra
 ## Feature Bullets
 
 - Play local audio from folders on your Android device.
+- Includes a small original sample suite for first launch.
 - Explore a set of 32 vivid music visualisations.
 - Simple portrait interface designed for quick, familiar control.
 - Shuffle, track skip, visualisation skip, and alchemical setting changes.
