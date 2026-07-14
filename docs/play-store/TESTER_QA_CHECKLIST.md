@@ -85,14 +85,14 @@ Try the main cockpit controls:
 
 - Shuffle on/off.
 - `A++` for alchemical adjustment.
-- `G++` for visual agitation/gear.
+- `Speed` for visual intensity.
 - Play/pause again.
 - Next/previous track again.
 
 Check:
 
 - Did `A++` visibly change the mood/settings?
-- Did `G++` make the visualisations feel more or less intense?
+- Did `Speed` make the visualisations feel more or less intense?
 - Did the gold/flame button feedback feel satisfying and clear?
 - Could you imagine using these controls without staring at them for too long?
 
@@ -134,7 +134,7 @@ Short comments are fine:
 - "Installed fine and played three WAV files."
 - "Folder selection was confusing on my phone."
 - "A++ was fun but I did not know what it meant until I pressed it."
-- "G++ made the visuals much livelier."
+- "Speed made the visuals much livelier."
 - "The button flash felt great."
 - "It crashed when I skipped tracks quickly."
 - "I would happily use this in the car."

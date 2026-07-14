@@ -30,9 +30,9 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Includes a bundled three-song original sample suite for first launch and demonstration.
 - Runs as a desktop browser app or an offline-first Android WebView app.
 - Provides a fixed set of **32** audio-reactive visualisations.
-- Offers car-style Android controls for play/pause, previous/next track, previous/next visualisation, shuffle, `A++`, and `G++`.
+- Offers car-style Android controls for play/pause, previous/next track, next visualisation, shuffle, `A++`, and `Speed`.
 - Uses `A++` to apply artistically chosen visual settings.
-- Uses `G++` to cycle visual agitation through a five-step gear.
+- Uses `Speed` to cycle visual agitation through five colour-coded steps.
 - Keeps your music local.
 - Works without internet connectivity once installed.
 
@@ -194,9 +194,9 @@ Desktop:
 Android car mode:
 
 - `Dir` chooses a folder.
-- Visual next/previous changes the visualisation.
+- `Visual` advances to the next visualisation.
 - `A++` applies alchemical adjustment.
-- `G++` changes the visual agitation gear.
+- `Speed` changes the visual agitation step.
 - Shuffle switches between order and shuffle.
 - The transport row handles previous, play/pause, and next.
 

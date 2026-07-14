@@ -35,7 +35,6 @@ const trackCount = document.querySelector("#trackCount");
 const trackList = document.querySelector("#trackList");
 const carFolderButton = document.querySelector("#carFolderButton");
 const carNextVisualButton = document.querySelector("#carNextVisualButton");
-const carPreviousVisualButton = document.querySelector("#carPreviousVisualButton");
 const carAlchemyButton = document.querySelector("#carAlchemyButton");
 const carAgitationButton = document.querySelector("#carAgitationButton");
 const carAgitationSymbol = document.querySelector("#carAgitationSymbol");
@@ -182,11 +181,11 @@ const performanceProfile = isAndroidCarMode
       maxPopulation: 12,
     };
 const carAgitationGears = [
-  { label: "Green", multiplier: 0.42, snowLine: "18%" },
-  { label: "Foothill", multiplier: 0.68, snowLine: "30%" },
-  { label: "Upland", multiplier: 1, snowLine: "44%" },
-  { label: "Ridge", multiplier: 1.38, snowLine: "60%" },
-  { label: "Summit", multiplier: 1.82, snowLine: "78%" },
+  { label: "Cool", multiplier: 0.42 },
+  { label: "Rolling", multiplier: 0.68 },
+  { label: "Cruise", multiplier: 1 },
+  { label: "Hot", multiplier: 1.38 },
+  { label: "Redline", multiplier: 1.82 },
 ];
 let carAgitationGear = 2;
 const moodDecks = [
@@ -1152,7 +1151,7 @@ function setControlsEnabled(enabled) {
     control.disabled = !enabled;
   });
 
-  [carFolderButton, carNextVisualButton, carPreviousVisualButton, carAlchemyButton, carAgitationButton].forEach((control) => {
+  [carFolderButton, carNextVisualButton, carAlchemyButton, carAgitationButton].forEach((control) => {
     control.disabled = false;
   });
 }
@@ -1176,11 +1175,42 @@ function updateFireworkSpeedLabel() {
 
 function updateCarAgitationLabel() {
   const gear = carAgitationGears[carAgitationGear];
-  carAgitationSymbol.textContent = "G++";
-  carAgitationLabel.textContent = gear.label;
-  carAgitationButton.style.setProperty("--gear-level", String(carAgitationGear + 1));
-  carAgitationButton.style.setProperty("--snow-line", gear.snowLine);
-  carAgitationButton.setAttribute("aria-label", `Visual agitation gear ${carAgitationGear + 1}: ${gear.label}`);
+  const progress = carAgitationGear / Math.max(1, carAgitationGears.length - 1);
+  const speedStyles = [
+    {
+      border: "rgba(80, 166, 255, 0.78)",
+      background: "linear-gradient(180deg, rgba(255,255,255,0.18), transparent 34%), linear-gradient(135deg, #083f9a, #0b5fc7 58%, #052449)",
+      glow: "0 0 13px rgba(80, 166, 255, 0.22)",
+    },
+    {
+      border: "rgba(72, 215, 214, 0.78)",
+      background: "linear-gradient(180deg, rgba(255,255,255,0.18), transparent 34%), linear-gradient(135deg, #07538f, #0c9b9a 58%, #063a42)",
+      glow: "0 0 14px rgba(72, 215, 214, 0.23)",
+    },
+    {
+      border: "rgba(126, 234, 203, 0.78)",
+      background: "linear-gradient(180deg, rgba(255,255,255,0.18), transparent 34%), linear-gradient(135deg, #0b4c9b, #10876a 58%, #083125)",
+      glow: "0 0 15px rgba(126, 234, 203, 0.24)",
+    },
+    {
+      border: "rgba(255, 178, 64, 0.84)",
+      background: "linear-gradient(180deg, rgba(255,255,255,0.2), transparent 34%), linear-gradient(135deg, #3655a7, #c56b10 58%, #5a2205)",
+      glow: "0 0 17px rgba(255, 178, 64, 0.28)",
+    },
+    {
+      border: "rgba(255, 82, 66, 0.9)",
+      background: "linear-gradient(180deg, rgba(255,255,255,0.22), transparent 34%), linear-gradient(135deg, #252c96, #db2f1c 58%, #5f0705)",
+      glow: "0 0 20px rgba(255, 82, 66, 0.34)",
+    },
+  ];
+  const speedStyle = speedStyles[carAgitationGear] || speedStyles[0];
+  carAgitationSymbol.textContent = ">";
+  carAgitationLabel.textContent = "Speed";
+  carAgitationButton.style.setProperty("--speed-level", String(progress));
+  carAgitationButton.style.borderColor = speedStyle.border;
+  carAgitationButton.style.background = speedStyle.background;
+  carAgitationButton.style.boxShadow = `inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -3px 8px rgba(0, 0, 0, 0.56), ${speedStyle.glow}, 0 2px 8px rgba(0, 0, 0, 0.36)`;
+  carAgitationButton.setAttribute("aria-label", `Visual speed ${carAgitationGear + 1}: ${gear.label}`);
 }
 
 function shimmerCarButton(button) {
@@ -1221,7 +1251,7 @@ function updateAlchemyProgress() {
 function cycleCarAgitationGear() {
   carAgitationGear = (carAgitationGear + 1) % carAgitationGears.length;
   updateCarAgitationLabel();
-  pulseStageLabel("visual", `Gear ${carAgitationGear + 1}: ${carAgitationGears[carAgitationGear].label}`);
+  pulseStageLabel("visual", `Speed ${carAgitationGear + 1}: ${carAgitationGears[carAgitationGear].label}`);
   if (!animationId) {
     drawIdleVisualizer();
   }
@@ -1813,8 +1843,10 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
 
   const shouldAutoplay = autoplay || continuousPlaybackRequested;
   playbackGeneration += 1;
+  const generation = playbackGeneration;
   if (shouldAutoplay) {
     playbackTransitioning = true;
+    continuousPlaybackRequested = true;
   }
 
   if (
@@ -1849,7 +1881,7 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
   scheduleSessionSave();
 
   if (shouldAutoplay) {
-    playLoadedTrackWithRetry(playbackGeneration);
+    playLoadedTrackWithRetry(generation);
   }
 }
 
@@ -1937,6 +1969,7 @@ function continueToNextTrack() {
   }
 
   const next = nextIndex();
+  playbackTransitioning = true;
   continuousPlaybackRequested = true;
   pulseStageLabel("track", trackDisplayTitle(tracks[next]));
   loadTrack(next, true);
@@ -12505,7 +12538,11 @@ function togglePlayPause() {
     pauseCurrent();
   } else {
     continuousPlaybackRequested = true;
-    playLoadedTrackWithRetry();
+    if (currentIndex < 0 || !audio.src) {
+      loadTrack(0, true);
+    } else {
+      playLoadedTrackWithRetry();
+    }
   }
 }
 
@@ -12520,9 +12557,8 @@ carPlayButton.addEventListener("click", togglePlayPause);
 carPreviousButton.addEventListener("click", () => changeTrackByStep(-1));
 carNextButton.addEventListener("click", () => changeTrackByStep(1));
 carNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
-  carPreviousVisualButton.addEventListener("click", () => changeVisualizerByStep(-1));
-  carAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
-  carAgitationButton.addEventListener("click", cycleCarAgitationGear);
+carAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
+carAgitationButton.addEventListener("click", cycleCarAgitationGear);
 carShuffleButton.addEventListener("click", () => {
   shuffleToggle.checked = !shuffleToggle.checked;
   updateCarShuffleState();
