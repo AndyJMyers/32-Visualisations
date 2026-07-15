@@ -210,7 +210,7 @@ Android car mode:
 
 This project is still under active development, so any hallucinations you experience may not be entirely your own fault this time.
 
-The Android app is being prepared for Google Play testing. The current technical blocker is Google Play Console account verification, not the app build.
+The Android app is being prepared for Google Play testing. A Google Play Alpha Release build has been tagged, with Play Console assets, release notes, privacy policy, and tester materials now in place.
 
 If you enjoyed this, why not gain merit in this life by [buying this holy man a pint of mead or ale](https://buy.stripe.com/5kQ5kDcX8cwc52J70rds400), according to your purse?
 

@@ -71,4 +71,4 @@ This privacy policy may be updated from time to time if the app changes or if le
 
 ## Contact
 
-For questions about this privacy policy, use the contact details provided on the Google Play store listing, the project page, or the publisher's public software page.
+For questions about this privacy policy, use the developer contact details shown on the Google Play store listing or the publisher's public software page at https://andyjmyers.substack.com/.

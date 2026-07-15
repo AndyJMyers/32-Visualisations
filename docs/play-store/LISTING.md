@@ -20,7 +20,7 @@ Includes a small original three-track sample suite so the app can play immediate
 
 Pay once, keep playing. No streaming account. No subscription. No algorithmic sermon. No disposable wallpaper pretending to be a music experience. Just your files, your speakers, and a screen full of motion.
 
-You do not have to be an insane freak to enjoy this player, but it is not contra-indicated.
+You do not have to be entirely normal to enjoy this player, and that is rather the point.
 
 ## Feature Bullets
 
@@ -36,7 +36,8 @@ You do not have to be an insane freak to enjoy this player, but it is not contra
 ## Store Assets
 
 - App icon: `assets/icon-512.png`
-- Feature graphic: `assets/feature-graphic-1024x500.png`
+- Feature graphic: `assets/feature-graphic-wow-1024x500.png`
+- Phone screenshots: `pitch/panels/`
 - Source image: `assets/source-32-visualisations.png`
 
 ## Privacy Policy
