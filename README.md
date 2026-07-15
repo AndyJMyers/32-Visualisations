@@ -107,6 +107,22 @@ The human-friendly test plan is here:
 
 Google may require 14 continuous days of closed testing for new personal developer accounts. That does not mean heavy testing every day. It means a real group of testers opting in, installing, and giving the app a fair try while the release path matures.
 
+Automated system tests can be run from the repository root with:
+
+```powershell
+node tools/system-test.js
+```
+
+The system tests start a temporary local server against the bundled sample suite, then verify the web app loads, the sample tracks are discovered, ranged WAV audio is served, and unsafe audio requests are blocked.
+
+After a release build, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\verify-android-release.ps1
+```
+
+The release build script also runs this verification after Gradle finishes.
+
 ## Running Locally
 
 ### Requirements

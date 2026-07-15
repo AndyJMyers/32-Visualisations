@@ -37,3 +37,9 @@ Write-Host "Built Android release APK:"
 Write-Host $apk
 Write-Host "Built Android release AAB:"
 Write-Host $aab
+
+& (Join-Path $PSScriptRoot "verify-android-release.ps1")
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "Android release verification failed."
+  exit $LASTEXITCODE
+}
