@@ -14,11 +14,15 @@ decorative.
 >
 > Andy J Myers, Lead Engineer, 32 Visualisations
 
-## Strangeness With A Steering Wheel
+## Taste Gives The First Spark
 
-![Engineering log quote card: strangeness with a steering wheel](strangeness-steering-wheel.svg)
+![Engineering log quote card: taste gives the first spark](strangeness-steering-wheel.svg)
 
-> "The best systems are not the ones that hide their strangeness; they are the ones that give it a steering wheel, a meter, and a clean button you can press without looking."
+> "Taste gives the first spark
+> Code keeps the strange engine warm
+> We turn, judge, refine
+> A clean button under hand
+> Makes wild music steerable."
 >
 > Codex, Collaborating Engineer, 32 Visualisations
 

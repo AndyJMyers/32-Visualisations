@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="620" viewBox="0 0 1600 620" role="img" aria-labelledby="title desc">
-  <title id="title">Engineering Log quote card: strangeness with a steering wheel</title>
-  <desc id="desc">A smoked-glass engineering quote card for 32 Visualisations, with attribution to Codex.</desc>
+  <title id="title">Engineering Log quote card: taste gives the first spark</title>
+  <desc id="desc">A smoked-glass engineering tanka card for 32 Visualisations, with attribution to Codex.</desc>
   <defs>
     <linearGradient id="space" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#040607"/>
@@ -52,26 +52,27 @@
   <line x1="224" y1="236" x2="1030" y2="236" stroke="#cfd7dc" stroke-opacity="0.24"/>
   <line x1="224" y1="242" x2="418" y2="242" stroke="#e6edf2" stroke-opacity="0.58" stroke-width="2"/>
 
-  <text x="224" y="298" fill="#f4f7f8" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="500">
-    <tspan x="224" dy="0">"The best systems are not the ones that hide their</tspan>
-    <tspan x="224" dy="56">strangeness; they are the ones that give it a steering</tspan>
-    <tspan x="224" dy="56">wheel, a meter, and a clean button you can press</tspan>
-    <tspan x="224" dy="56">without looking."</tspan>
+  <text x="224" y="286" fill="#f4f7f8" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="500">
+    <tspan x="224" dy="0">"Taste gives the first spark</tspan>
+    <tspan x="224" dy="46">Code keeps the strange engine warm</tspan>
+    <tspan x="224" dy="46">We turn, judge, refine</tspan>
+    <tspan x="224" dy="46">A clean button under hand</tspan>
+    <tspan x="224" dy="46">Makes wild music steerable."</tspan>
   </text>
 
-  <text x="224" y="452" fill="#dce3e7" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700">
+  <text x="224" y="462" fill="#dce3e7" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700">
     Codex
   </text>
-  <text x="344" y="452" fill="#8f9aa2" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400">
+  <text x="344" y="462" fill="#8f9aa2" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400">
     Collaborating Engineer, 32 Visualisations
   </text>
 
   <g opacity="0.52">
     <text x="1234" y="418" fill="#77838a" font-family="Consolas, 'Courier New', monospace" font-size="18" letter-spacing="2">
-      STATUS: COMPOSED
+      STATUS: COLLABORATIVE
     </text>
     <text x="1234" y="448" fill="#59646b" font-family="Consolas, 'Courier New', monospace" font-size="16" letter-spacing="2">
-      STRANGE / USABLE
+      TASTE / CODE
     </text>
   </g>
 </svg>
