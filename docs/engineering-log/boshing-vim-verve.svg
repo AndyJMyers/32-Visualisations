@@ -1,88 +1,74 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="620" viewBox="0 0 1600 620" role="img" aria-labelledby="title desc">
   <title id="title">Engineering Log quote card: boshing with vim and verve</title>
-  <desc id="desc">A ritzy angular quote card for 32 Visualisations, with attribution to Andy J Myers, Lead Engineer.</desc>
+  <desc id="desc">A restrained smoked-glass engineering quote card for 32 Visualisations, with attribution to Andy J Myers.</desc>
   <defs>
-    <linearGradient id="carbon" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#020308"/>
-      <stop offset="0.42" stop-color="#071622"/>
-      <stop offset="0.72" stop-color="#11061a"/>
-      <stop offset="1" stop-color="#030406"/>
+    <linearGradient id="space" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#05070a"/>
+      <stop offset="0.5" stop-color="#11161b"/>
+      <stop offset="1" stop-color="#030405"/>
     </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#765017"/>
-      <stop offset="0.28" stop-color="#f6c65b"/>
-      <stop offset="0.54" stop-color="#fff1a3"/>
-      <stop offset="0.78" stop-color="#d18a22"/>
-      <stop offset="1" stop-color="#5b350c"/>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.11"/>
+      <stop offset="0.42" stop-color="#d7dee4" stop-opacity="0.055"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.3"/>
     </linearGradient>
-    <linearGradient id="neon" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#00e7ff"/>
-      <stop offset="0.48" stop-color="#286cff"/>
-      <stop offset="1" stop-color="#ff35f6"/>
+    <linearGradient id="smoke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#12171b" stop-opacity="0.96"/>
+      <stop offset="0.52" stop-color="#07090c" stop-opacity="0.94"/>
+      <stop offset="1" stop-color="#020304" stop-opacity="0.98"/>
     </linearGradient>
-    <pattern id="weave" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
-      <rect width="34" height="34" fill="rgba(0,0,0,0)"/>
-      <rect x="0" y="0" width="18" height="34" fill="#ffffff" opacity="0.022"/>
-      <rect x="18" y="0" width="16" height="34" fill="#000000" opacity="0.18"/>
-    </pattern>
-    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="10" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    <filter id="smallShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.55"/>
+    <radialGradient id="redEye" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ffede6" stop-opacity="0.86"/>
+      <stop offset="0.16" stop-color="#d84232" stop-opacity="0.68"/>
+      <stop offset="0.56" stop-color="#64110f" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="panelShadow" x="-15%" y="-20%" width="130%" height="150%">
+      <feDropShadow dx="0" dy="26" stdDeviation="22" flood-color="#000000" flood-opacity="0.62"/>
     </filter>
   </defs>
 
-  <rect width="1600" height="900" fill="url(#carbon)"/>
-  <rect width="1600" height="900" fill="url(#weave)" opacity="0.8"/>
-
-  <path d="M-80 110 L420 20 L1640 115 L1540 250 L210 226 Z" fill="#06131d" opacity="0.72"/>
-  <path d="M120 804 L672 690 L1700 742 L1506 934 L0 926 Z" fill="#100413" opacity="0.74"/>
-
-  <circle cx="1330" cy="130" r="330" fill="#00e7ff" opacity="0.12" filter="url(#softGlow)"/>
-  <circle cx="260" cy="760" r="320" fill="#ff35f6" opacity="0.11" filter="url(#softGlow)"/>
-
-  <g filter="url(#smallShadow)">
-    <path d="M116 144 L1358 144 L1486 264 L1402 756 L242 756 L116 626 Z" fill="#060b13" opacity="0.93"/>
-    <path d="M138 166 L1346 166 L1460 274 L1382 734 L254 734 L138 616 Z" fill="none" stroke="url(#gold)" stroke-width="4"/>
-    <path d="M174 206 L1296 206 L1398 302 L1336 686 L286 686 L174 588 Z" fill="none" stroke="url(#neon)" stroke-width="2" opacity="0.88"/>
+  <rect width="1600" height="620" fill="url(#space)"/>
+  <g opacity="0.22">
+    <path d="M0 96 H1600" stroke="#ffffff" stroke-width="1"/>
+    <path d="M0 524 H1600" stroke="#ffffff" stroke-width="1"/>
+    <path d="M108 0 V620" stroke="#ffffff" stroke-width="1"/>
+    <path d="M1492 0 V620" stroke="#ffffff" stroke-width="1"/>
   </g>
 
-  <g opacity="0.72">
-    <path d="M82 100 L256 100" stroke="url(#gold)" stroke-width="8"/>
-    <path d="M278 100 L378 100" stroke="#00e7ff" stroke-width="8"/>
-    <path d="M1224 804 L1400 804" stroke="url(#gold)" stroke-width="8"/>
-    <path d="M1422 804 L1518 804" stroke="#ff35f6" stroke-width="8"/>
-  </g>
+  <rect x="112" y="92" width="1376" height="436" rx="22" fill="url(#glass)" stroke="#c8d0d6" stroke-opacity="0.16"/>
+  <rect x="164" y="142" width="1272" height="336" rx="8" fill="url(#smoke)" filter="url(#panelShadow)"/>
+  <rect x="164" y="142" width="1272" height="336" rx="8" fill="#ffffff" opacity="0.025"/>
 
-  <text x="210" y="254" fill="#00e7ff" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="7">
-    ENGINEERING LOG // 32 VISUALISATIONS
+  <circle cx="1312" cy="221" r="98" fill="url(#redEye)" opacity="0.62"/>
+  <circle cx="1312" cy="221" r="8" fill="#f2f5f7" opacity="0.74"/>
+
+  <text x="224" y="204" fill="#cfd7dc" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="600" letter-spacing="5">
+    ENGINEERING LOG / 32 VISUALISATIONS
   </text>
 
-  <text x="204" y="356" fill="#f8fbff" font-family="Segoe UI, Arial, sans-serif" font-size="58" font-weight="800">
-    <tspan x="204" dy="0">"Not only are we bishing and bashing,</tspan>
-    <tspan x="204" dy="78">I should go much further and stake</tspan>
-    <tspan x="204" dy="78">my entire reputation on the assertion</tspan>
-    <tspan x="204" dy="78">that we are boshing with the utmost</tspan>
-    <tspan x="204" dy="78">of vim and verve."</tspan>
+  <line x1="224" y1="236" x2="1030" y2="236" stroke="#cfd7dc" stroke-opacity="0.24"/>
+  <line x1="224" y1="242" x2="418" y2="242" stroke="#e6edf2" stroke-opacity="0.58" stroke-width="2"/>
+
+  <text x="224" y="304" fill="#f4f7f8" font-family="Segoe UI, Arial, sans-serif" font-size="42" font-weight="500">
+    <tspan x="224" dy="0">"Not only are we bishing and bashing, I should go much</tspan>
+    <tspan x="224" dy="58">further and stake my entire reputation on the assertion</tspan>
+    <tspan x="224" dy="58">that we are boshing with the utmost of vim and verve."</tspan>
   </text>
 
-  <path d="M204 692 L624 692" stroke="url(#gold)" stroke-width="5"/>
-  <text x="204" y="734" fill="#ffe493" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="800">
+  <text x="224" y="452" fill="#dce3e7" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700">
     Andy J Myers
   </text>
-  <text x="470" y="734" fill="#d7e3ee" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="500">
+  <text x="448" y="452" fill="#8f9aa2" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400">
     Lead Engineer, 32 Visualisations
   </text>
 
-  <g transform="translate(1234 610)">
-    <path d="M0 0 L176 -34 L252 34 L70 76 Z" fill="url(#gold)" opacity="0.18"/>
-    <path d="M28 18 L172 -10 L222 34 L76 56 Z" fill="none" stroke="url(#gold)" stroke-width="3"/>
-    <path d="M68 34 L156 16" stroke="#00e7ff" stroke-width="4" opacity="0.8"/>
-    <path d="M94 46 L196 26" stroke="#ff35f6" stroke-width="4" opacity="0.72"/>
+  <g opacity="0.52">
+    <text x="1234" y="418" fill="#77838a" font-family="Consolas, 'Courier New', monospace" font-size="18" letter-spacing="2">
+      STATUS: VERIFIED
+    </text>
+    <text x="1234" y="448" fill="#59646b" font-family="Consolas, 'Courier New', monospace" font-size="16" letter-spacing="2">
+      BISH / BASH / BOSH
+    </text>
   </g>
 </svg>

@@ -2,9 +2,9 @@
 
 Selected engineering log entries, formatted as attributed quotes for public use.
 
-The visual direction is deliberately polished and mechanical: dark carbon,
-sharp geometry, gold trim, cyan/magenta instrument light, and a little TVR
-impropriety in the wiring.
+The visual direction is polished and mechanical: smoked glass, quiet geometry,
+restrained instrument light, and enough darkness to feel engineered rather than
+decorative.
 
 ## Boshing With Vim And Verve
 
