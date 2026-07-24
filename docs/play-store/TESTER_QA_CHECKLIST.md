@@ -84,14 +84,14 @@ Check:
 Try the main cockpit controls:
 
 - Shuffle on/off.
-- `A++` for alchemical adjustment.
+- `Alchemy` for alchemical adjustment.
 - `Speed` for visual intensity.
 - Play/pause again.
 - Next/previous track again.
 
 Check:
 
-- Did `A++` visibly change the mood/settings?
+- Did `Alchemy` visibly change the mood/settings?
 - Did `Speed` make the visualisations feel more or less intense?
 - Did the gold/flame button feedback feel satisfying and clear?
 - Could you imagine using these controls without staring at them for too long?
@@ -133,7 +133,7 @@ Short comments are fine:
 
 - "Installed fine and played three local audio files."
 - "Folder selection was confusing on my phone."
-- "A++ was fun but I did not know what it meant until I pressed it."
+- "Alchemy was fun and changed the visual settings noticeably."
 - "Speed made the visuals much livelier."
 - "The button flash felt great."
 - "It crashed when I skipped tracks quickly."

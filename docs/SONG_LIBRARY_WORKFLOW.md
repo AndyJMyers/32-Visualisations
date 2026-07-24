@@ -2,7 +2,7 @@
 
 Historical note: this was the proposed mood-classification workflow. The current
 Android car UI has deliberately dropped the Mood button in favour of simpler
-track skip, visualisation, `A++`, and `Speed` controls.
+track skip, visualisation, `Alchemy`, and `Speed` controls.
 
 The car player should stay simple. Mood intelligence belongs in a desktop
 preflight step, before the music folder is copied to the phone or published.

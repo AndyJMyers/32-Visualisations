@@ -117,7 +117,7 @@ Recommended first release path:
 
 1. Upload the signed release `.aab` to internal testing.
 2. Install through Play testing.
-3. Verify folder selection, playback, visualisation cycling, shuffle, `A++`, `Speed`, and button feedback.
+3. Verify folder selection, playback, visualisation cycling, shuffle, `Alchemy`, `Speed`, and button feedback.
 4. Move to closed testing if Google requires it.
 5. Prepare production release after the required testing gate is satisfied.
 
