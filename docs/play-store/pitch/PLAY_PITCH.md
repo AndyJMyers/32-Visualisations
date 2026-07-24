@@ -2,18 +2,24 @@
 
 ## Positioning
 
-32 Visualisations is a boutique local music player for people who want their own music to look as good as it sounds, without signing up to another rented library.
+32 Visualisations is a boutique Android music player for people who still own their music and want it to look as good as it sounds.
 
-The public voice should lead with art, atmosphere, and authorship. The app is paid, but the price should remain a quiet Play Store fact rather than a sales headline: a small fee, no subscription, and a lifetime of playing your own music.
+The public voice should lead with utility, then beauty, then strangeness: local music, offline use, simple controls, 32 vivid visualisations. The app is paid, but the price should remain a quiet Play Store fact rather than a sales headline: a small fee, no subscription, and a lifetime of playing your own music.
 
 ## Core Lines
 
-- Your music, alive in motion.
+- Your music. Local. Offline. Alive in motion.
 - A crafted local music player for people who still believe sound deserves ceremony.
 - No streaming account. No subscription. Your own music, made strange.
 - Pay once. Keep playing.
 - 32 vivid audio-reactive visualisations.
 - A cockpit for sound.
+
+## Presentation Order
+
+1. Useful: local Android music player, offline once installed, fair paid app.
+2. Beautiful: 32 responsive visualisations and a polished cockpit interface.
+3. Strange: alchemical settings, maximal colour, personality after clarity.
 
 ## Play Panels
 

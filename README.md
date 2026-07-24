@@ -1,12 +1,12 @@
 # 32 Visualisations
 
-**Own your music. Pay once. Watch it come alive.**
+**Your music. Local. Offline. One fair price. Turned all the way up.**
 
 ![32 Visualisations hero artwork](docs/play-store/pitch/github-hero-1600x600.png)
 
-32 Visualisations is a boutique local music player and audio-reactive visualisation cabinet for people who still believe their own music collection matters.
+32 Visualisations is a boutique Android music player for people who still own their music and want it to look as good as it sounds.
 
-It began as a desktop local music player with a taste for **Mental. Saturation. Overstimulation.** It has grown into an Android road-trip music player built for local files, big stereos, strange colour, and cockpit-simple controls.
+It plays local audio from your device, works without an internet connection once installed, and turns your files into 32 vivid audio-reactive visualisations. It began as a desktop local music player with a taste for **Mental. Saturation. Overstimulation.** It has grown into an Android road-trip music player built for big stereos, strange colour, and cockpit-simple controls.
 
 No streaming account. No subscription. No rented library quietly disappearing when the bill stops. Just your files, your device, your speakers, and thirty-two vivid ways to make sound visible.
 
@@ -16,7 +16,7 @@ The app also includes a small original three-track sample suite so a fresh insta
 
 Streaming made music convenient, but it also made listening feel rented, flattened, and strangely disposable. 32 Visualisations goes the other way.
 
-You choose a folder of local audio files. The app plays them. The screen becomes part equaliser, part theatre, part questionable private cinema for waveforms. Some visualisations are elegant. Some are ridiculous. Some behave as if the music has been left alone with a chemistry set.
+You choose a folder of local audio files. The app plays them. The controls stay large, familiar, and car-friendly. The screen becomes part equaliser, part theatre, part questionable private cinema for waveforms. Some visualisations are elegant. Some are ridiculous. Some behave as if the music has been left alone with a chemistry set.
 
 The guiding idea is simple:
 
@@ -34,15 +34,16 @@ More attributed engineering log entries live in [docs/engineering-log/](docs/eng
 
 ## What It Does
 
-- Plays local audio files from a folder, including `.wav`, `.mp3`, `.m4a`, `.aac`, `.flac`, `.ogg`, and `.opus`.
+- Plays local audio files from a folder on your Android device.
+- Works without internet connectivity once installed.
+- Supports `.wav`, `.mp3`, `.m4a`, `.aac`, `.flac`, `.ogg`, and `.opus`.
+- Provides a fixed set of **32** audio-reactive visualisations.
 - Includes a bundled three-song original sample suite for first launch and demonstration.
 - Runs as a desktop browser app or an offline-first Android WebView app.
-- Provides a fixed set of **32** audio-reactive visualisations.
 - Offers car-style Android controls for play/pause, previous/next track, next visualisation, shuffle, `Alchemy`, and `Speed`.
 - Uses `Alchemy` to apply artistically chosen visual settings.
 - Uses `Speed` to cycle visual agitation through five colour-coded steps.
 - Keeps your music local.
-- Works without internet connectivity once installed.
 
 The number is fixed. Thirty-two is binary, balanced, mellow in its intonation and just faintly occult. New visualisations may therefore require ceremonial retirement of old ones.
 
