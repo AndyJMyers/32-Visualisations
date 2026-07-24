@@ -28,10 +28,6 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 
 ![Engineering log quote card: boshing with vim and verve](docs/engineering-log/boshing-vim-verve.svg)
 
-> "Not only are we bishing and bashing, I should go much further and stake my entire reputation on the assertion that we are boshing with the utmost of vim and verve."
->
-> Andy J Myers, Lead Engineer, 32 Visualisations
-
 More attributed engineering log entries live in [docs/engineering-log/](docs/engineering-log/).
 
 ## What It Does
