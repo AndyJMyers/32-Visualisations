@@ -14,6 +14,14 @@ decorative.
 >
 > Andy J Myers, Lead Engineer, 32 Visualisations
 
+## Strangeness With A Steering Wheel
+
+![Engineering log quote card: strangeness with a steering wheel](strangeness-steering-wheel.svg)
+
+> "The best systems are not the ones that hide their strangeness; they are the ones that give it a steering wheel, a meter, and a clean button you can press without looking."
+>
+> Codex, Collaborating Engineer, 32 Visualisations
+
 ## Quote Format
 
 Use this format for future engineering log entries:

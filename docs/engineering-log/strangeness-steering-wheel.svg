@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="620" viewBox="0 0 1600 620" role="img" aria-labelledby="title desc">
+  <title id="title">Engineering Log quote card: strangeness with a steering wheel</title>
+  <desc id="desc">A smoked-glass engineering quote card for 32 Visualisations, with attribution to Codex.</desc>
+  <defs>
+    <linearGradient id="space" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#040607"/>
+      <stop offset="0.48" stop-color="#101419"/>
+      <stop offset="1" stop-color="#020303"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.1"/>
+      <stop offset="0.45" stop-color="#d3dce2" stop-opacity="0.045"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.32"/>
+    </linearGradient>
+    <linearGradient id="smoke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#15191d" stop-opacity="0.96"/>
+      <stop offset="0.5" stop-color="#080a0d" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#020304" stop-opacity="0.98"/>
+    </linearGradient>
+    <radialGradient id="instrument" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#f0fbff" stop-opacity="0.78"/>
+      <stop offset="0.18" stop-color="#4e9eb5" stop-opacity="0.42"/>
+      <stop offset="0.62" stop-color="#12303a" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="panelShadow" x="-15%" y="-20%" width="130%" height="150%">
+      <feDropShadow dx="0" dy="26" stdDeviation="22" flood-color="#000000" flood-opacity="0.62"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="620" fill="url(#space)"/>
+  <g opacity="0.18">
+    <path d="M0 96 H1600" stroke="#ffffff" stroke-width="1"/>
+    <path d="M0 524 H1600" stroke="#ffffff" stroke-width="1"/>
+    <path d="M108 0 V620" stroke="#ffffff" stroke-width="1"/>
+    <path d="M1492 0 V620" stroke="#ffffff" stroke-width="1"/>
+  </g>
+
+  <rect x="112" y="92" width="1376" height="436" rx="22" fill="url(#glass)" stroke="#c8d0d6" stroke-opacity="0.14"/>
+  <rect x="164" y="142" width="1272" height="336" rx="8" fill="url(#smoke)" filter="url(#panelShadow)"/>
+  <rect x="164" y="142" width="1272" height="336" rx="8" fill="#ffffff" opacity="0.022"/>
+
+  <circle cx="1304" cy="222" r="104" fill="url(#instrument)" opacity="0.72"/>
+  <circle cx="1304" cy="222" r="54" fill="none" stroke="#b9c5cc" stroke-opacity="0.22" stroke-width="2"/>
+  <path d="M1304 222 L1340 194" stroke="#e4edf2" stroke-opacity="0.62" stroke-width="3"/>
+  <circle cx="1304" cy="222" r="6" fill="#e4edf2" opacity="0.7"/>
+
+  <text x="224" y="204" fill="#cfd7dc" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="600" letter-spacing="5">
+    ENGINEERING LOG / 32 VISUALISATIONS
+  </text>
+
+  <line x1="224" y1="236" x2="1030" y2="236" stroke="#cfd7dc" stroke-opacity="0.24"/>
+  <line x1="224" y1="242" x2="418" y2="242" stroke="#e6edf2" stroke-opacity="0.58" stroke-width="2"/>
+
+  <text x="224" y="298" fill="#f4f7f8" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="500">
+    <tspan x="224" dy="0">"The best systems are not the ones that hide their</tspan>
+    <tspan x="224" dy="56">strangeness; they are the ones that give it a steering</tspan>
+    <tspan x="224" dy="56">wheel, a meter, and a clean button you can press</tspan>
+    <tspan x="224" dy="56">without looking."</tspan>
+  </text>
+
+  <text x="224" y="452" fill="#dce3e7" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700">
+    Codex
+  </text>
+  <text x="344" y="452" fill="#8f9aa2" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400">
+    Collaborating Engineer, 32 Visualisations
+  </text>
+
+  <g opacity="0.52">
+    <text x="1234" y="418" fill="#77838a" font-family="Consolas, 'Courier New', monospace" font-size="18" letter-spacing="2">
+      STATUS: COMPOSED
+    </text>
+    <text x="1234" y="448" fill="#59646b" font-family="Consolas, 'Courier New', monospace" font-size="16" letter-spacing="2">
+      STRANGE / USABLE
+    </text>
+  </g>
+</svg>
