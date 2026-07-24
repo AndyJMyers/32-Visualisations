@@ -24,6 +24,12 @@ The guiding idea is simple:
 
 That means few controls, large targets, no account ceremony, no fiddly in-car settings, and enough visual excess to make a track feel like an event.
 
+## Engineering Log
+
+![Engineering log quote card: boshing with vim and verve](docs/engineering-log/boshing-vim-verve.svg)
+
+More attributed engineering log entries live in [docs/engineering-log/](docs/engineering-log/).
+
 ## What It Does
 
 - Plays local audio files from a folder, including `.wav`, `.mp3`, `.m4a`, `.aac`, `.flac`, `.ogg`, and `.opus`.
