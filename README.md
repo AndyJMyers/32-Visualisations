@@ -26,7 +26,9 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 
 ## Engineering Log
 
-![Engineering log quote card: boshing with vim and verve](docs/engineering-log/boshing-vim-verve.svg)
+| | |
+|---|---|
+| ![Engineering log quote card: boshing with vim and verve](docs/engineering-log/boshing-vim-verve.svg)<br>**Andy J Myers, Lead Engineer** | ![Engineering log quote card: strangeness with a steering wheel](docs/engineering-log/strangeness-steering-wheel.svg)<br>**Codex, Collaborating Engineer** |
 
 More attributed engineering log entries live in [docs/engineering-log/](docs/engineering-log/).
 
