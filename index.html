@@ -12,10 +12,10 @@
         <header class="topbar">
           <div>
             <p class="eyebrow">Wave Deck</p>
-            <h1 id="directoryName">Choose a WAV directory</h1>
+            <h1 id="directoryName">Choose an audio directory</h1>
           </div>
           <label class="folder-button" title="Open folder" aria-label="Open folder">
-            <input id="folderInput" type="file" accept=".wav,audio/wav,audio/wave" webkitdirectory multiple>
+            <input id="folderInput" type="file" accept=".wav,.mp3,.m4a,.aac,.flac,.ogg,.opus,audio/*" webkitdirectory multiple>
             <span>Open folder</span>
           </label>
         </header>
@@ -214,7 +214,7 @@
           <span id="trackCount">0 tracks</span>
         </section>
 
-        <ol id="trackList" class="track-list" aria-label="WAV files in selected directory"></ol>
+        <ol id="trackList" class="track-list" aria-label="Audio files in selected directory"></ol>
       </section>
     </main>
 

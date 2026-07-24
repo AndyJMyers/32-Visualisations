@@ -11,12 +11,21 @@ const musicRoot = process.env.WAVE_DECK_LIBRARY
   || (fs.existsSync(sampleMusicRoot) ? sampleMusicRoot : "C:\\Andy ChatGPT DALL-E aisongs");
 const musicRootResolved = path.resolve(musicRoot);
 const sampleMusicRootResolved = path.resolve(sampleMusicRoot);
+const audioMimeTypes = {
+  ".wav": "audio/wav",
+  ".mp3": "audio/mpeg",
+  ".m4a": "audio/mp4",
+  ".aac": "audio/aac",
+  ".flac": "audio/flac",
+  ".ogg": "audio/ogg",
+  ".opus": "audio/ogg",
+};
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
-  ".wav": "audio/wav",
+  ...audioMimeTypes,
 };
 
 function send(res, status, body, headers = {}) {
@@ -36,6 +45,10 @@ function isInsideMusicRoot(filePath) {
   return candidate === root || candidate.startsWith(`${root}${path.sep}`);
 }
 
+function audioMimeType(filePath) {
+  return audioMimeTypes[path.extname(filePath).toLowerCase()] || null;
+}
+
 async function collectTracks(directory, prefix = "") {
   const entries = await fsp.readdir(directory, { withFileTypes: true });
   const tracks = [];
@@ -46,13 +59,14 @@ async function collectTracks(directory, prefix = "") {
 
     if (entry.isDirectory()) {
       tracks.push(...await collectTracks(absolutePath, relativePath));
-    } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".wav")) {
+    } else if (entry.isFile() && audioMimeType(entry.name)) {
       const stat = await fsp.stat(absolutePath);
       tracks.push({
         name: entry.name,
         relativePath,
         lastModified: stat.mtimeMs,
         audioUrl: `http://${host}:${port}/audio?file=${encodeURIComponent(absolutePath)}`,
+        mimeType: audioMimeType(entry.name),
       });
     }
   }
@@ -86,7 +100,7 @@ async function serveApiTracks(res) {
     send(res, 404, JSON.stringify({
       directoryName: path.basename(musicRootResolved),
       tracks: [],
-      error: "Default WAV directory could not be read.",
+      error: "Default audio directory could not be read.",
     }), { "content-type": "application/json; charset=utf-8" });
   }
 }
@@ -94,8 +108,9 @@ async function serveApiTracks(res) {
 function serveAudio(req, res, url) {
   const file = url.searchParams.get("file") || "";
   const filePath = path.resolve(file);
+  const contentType = audioMimeType(filePath);
 
-  if (!isInsideMusicRoot(filePath) || path.extname(filePath).toLowerCase() !== ".wav") {
+  if (!isInsideMusicRoot(filePath) || !contentType) {
     send(res, 403, "Forbidden");
     return;
   }
@@ -121,7 +136,7 @@ function serveAudio(req, res, url) {
             "cache-control": "no-store",
             "content-length": safeEnd - start + 1,
             "content-range": `bytes ${start}-${safeEnd}/${stat.size}`,
-            "content-type": "audio/wav",
+            "content-type": contentType,
           });
           if (req.method === "HEAD") {
             res.end();
@@ -138,7 +153,7 @@ function serveAudio(req, res, url) {
       "accept-ranges": "bytes",
       "cache-control": "no-store",
       "content-length": stat.size,
-      "content-type": "audio/wav",
+      "content-type": contentType,
     });
     if (req.method === "HEAD") {
       res.end();
@@ -193,5 +208,5 @@ http.createServer((req, res) => {
   }
 }).listen(port, host, () => {
   console.log(`Wave Deck serving http://${host}:${port}/`);
-  console.log(`Default WAV directory: ${musicRootResolved}`);
+  console.log(`Default audio directory: ${musicRootResolved}`);
 });

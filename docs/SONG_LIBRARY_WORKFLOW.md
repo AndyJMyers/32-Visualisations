@@ -1,17 +1,21 @@
 # Song Library Workflow
 
+Historical note: this was the proposed mood-classification workflow. The current
+Android car UI has deliberately dropped the Mood button in favour of simpler
+track skip, visualisation, `A++`, and `Speed` controls.
+
 The car player should stay simple. Mood intelligence belongs in a desktop
 preflight step, before the music folder is copied to the phone or published.
 
 ## Preflight Mood Pass
 
 The preflight pass should scan a song folder and write a `moods.json` manifest
-beside the WAV files. Android then reads that manifest rather than trying to
+beside the audio files. Android then reads that manifest rather than trying to
 analyse audio while driving.
 
 Inputs:
 
-- WAV filenames and folder names.
+- Audio filenames and folder names.
 - Optional song-history notes from production sessions.
 - Optional manual overrides from artistic direction.
 - Lightweight audio structure: duration, loudness, dynamic range, brightness,
@@ -91,7 +95,7 @@ important, get the wording reviewed properly.
 
 1. Add a desktop script that scans a folder and produces `moods.json`.
 2. Start with filename, folder and optional manual notes.
-3. Add WAV feature analysis once the manifest path is working.
+3. Add audio feature analysis once the manifest path is working.
 4. Teach Android to load `moods.json` from the chosen folder.
 5. Keep the car UI as one forward-cycling Mood button.
 
@@ -101,6 +105,6 @@ Current command:
 powershell -ExecutionPolicy Bypass -File .\tools\update-moods.ps1 "D:\Music\TVR Playlist"
 ```
 
-The script preserves existing entries, classifies only new WAV files with local
+The script preserves existing entries, classifies only new audio files with local
 filename/folder rules, writes uncertain tracks into `review`, and creates
 `COPYRIGHT.txt` if the folder does not already have one.

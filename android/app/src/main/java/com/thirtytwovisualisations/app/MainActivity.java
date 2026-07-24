@@ -47,6 +47,17 @@ public class MainActivity extends Activity {
         "Fit for Public Circulation.wav",
         "Ugly Emu Girls.wav"
     };
+    private static final Map<String, String> AUDIO_MIME_TYPES = new HashMap<>();
+
+    static {
+        AUDIO_MIME_TYPES.put(".wav", "audio/wav");
+        AUDIO_MIME_TYPES.put(".mp3", "audio/mpeg");
+        AUDIO_MIME_TYPES.put(".m4a", "audio/mp4");
+        AUDIO_MIME_TYPES.put(".aac", "audio/aac");
+        AUDIO_MIME_TYPES.put(".flac", "audio/flac");
+        AUDIO_MIME_TYPES.put(".ogg", "audio/ogg");
+        AUDIO_MIME_TYPES.put(".opus", "audio/ogg");
+    }
 
     private WebView webView;
     private SharedPreferences preferences;
@@ -185,17 +196,32 @@ public class MainActivity extends Activity {
 
                 if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType)) {
                     collectTracks(treeUri, childDocumentId, prefix + name + "/", tracks);
-                } else if (name != null && name.toLowerCase().endsWith(".wav")) {
+                } else if (audioMimeTypeForName(name) != null) {
+                    String audioMimeType = audioMimeTypeForName(name);
                     Uri audioUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, childDocumentId);
                     JSONObject track = new JSONObject();
                     track.put("name", name);
                     track.put("relativePath", prefix + name);
                     track.put("lastModified", lastModified);
-                    track.put("audioUrl", APP_ORIGIN + "/audio?uri=" + Uri.encode(audioUri.toString()));
+                    track.put("audioUrl", APP_ORIGIN + "/audio?uri=" + Uri.encode(audioUri.toString()) + "&mime=" + Uri.encode(audioMimeType));
+                    track.put("mimeType", audioMimeType);
                     tracks.put(track);
                 }
             }
         }
+    }
+
+    private String audioMimeTypeForName(String name) {
+        if (name == null) {
+            return null;
+        }
+
+        int dot = name.lastIndexOf('.');
+        if (dot < 0) {
+            return null;
+        }
+
+        return AUDIO_MIME_TYPES.get(name.substring(dot).toLowerCase());
     }
 
     private JSONObject readMoodsManifest(Uri treeUri, String rootDocumentId) {
@@ -272,13 +298,13 @@ public class MainActivity extends Activity {
         return new WebResourceResponse("text/plain", "UTF-8", 404, "Not found", new HashMap<>(), null);
     }
 
-    private WebResourceResponse serveAudio(Uri audioUri, String rangeHeader) throws IOException {
+    private WebResourceResponse serveAudio(Uri audioUri, String rangeHeader, String mimeType) throws IOException {
         AssetFileDescriptor descriptor = getContentResolver().openAssetFileDescriptor(audioUri, "r");
         if (descriptor == null) {
             return notFound();
         }
 
-        return serveAudioDescriptor(descriptor, rangeHeader);
+        return serveAudioDescriptor(descriptor, rangeHeader, mimeType);
     }
 
     private boolean isSampleTrack(String fileName) {
@@ -301,10 +327,10 @@ public class MainActivity extends Activity {
         }
 
         AssetFileDescriptor descriptor = getAssets().openFd("sample-music/" + fileName);
-        return serveAudioDescriptor(descriptor, rangeHeader);
+        return serveAudioDescriptor(descriptor, rangeHeader, "audio/wav");
     }
 
-    private WebResourceResponse serveAudioDescriptor(AssetFileDescriptor descriptor, String rangeHeader) throws IOException {
+    private WebResourceResponse serveAudioDescriptor(AssetFileDescriptor descriptor, String rangeHeader, String mimeType) throws IOException {
         long length = descriptor.getLength();
         long start = 0;
         long end = length > 0 ? length - 1 : -1;
@@ -352,7 +378,7 @@ public class MainActivity extends Activity {
         }
 
         return response(
-            "audio/wav",
+            mimeType != null ? mimeType : "audio/*",
             null,
             partial ? 206 : 200,
             partial ? "Partial Content" : "OK",
@@ -381,7 +407,7 @@ public class MainActivity extends Activity {
                         return notFound();
                     }
                     String rangeHeader = request.getRequestHeaders().get("Range");
-                    return serveAudio(Uri.parse(audioUri), rangeHeader);
+                    return serveAudio(Uri.parse(audioUri), rangeHeader, uri.getQueryParameter("mime"));
                 }
 
                 if ("/sample-audio".equals(path)) {

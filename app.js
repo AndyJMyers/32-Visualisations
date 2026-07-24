@@ -144,6 +144,7 @@ let oilSlideFrame = 0;
 let oilBlobs = [];
 let oysterFrame = 0;
 let oysters = [];
+let oysterSeaLife = [];
 let lingerieFrame = 0;
 let lingerieGarments = [];
 let snakeCongaFrame = 0;
@@ -782,6 +783,8 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
   hour: "2-digit",
   minute: "2-digit",
 });
+const supportedAudioExtensions = [".wav", ".mp3", ".m4a", ".aac", ".flac", ".ogg", ".opus"];
+const supportedAudioExtensionPattern = /\.(wav|mp3|m4a|aac|flac|ogg|opus)$/i;
 
 function formatDuration(seconds) {
   if (!Number.isFinite(seconds)) {
@@ -794,7 +797,12 @@ function formatDuration(seconds) {
 }
 
 function trackTitle(file) {
-  return file.name.replace(/\.wav$/i, "");
+  return file.name.replace(supportedAudioExtensionPattern, "");
+}
+
+function isSupportedAudioFileName(name) {
+  const lowerName = String(name || "").toLowerCase();
+  return supportedAudioExtensions.some((extension) => lowerName.endsWith(extension));
 }
 
 function trackName(track) {
@@ -806,7 +814,7 @@ function trackModified(track) {
 }
 
 function trackDisplayTitle(track) {
-  return trackName(track).replace(/\.wav$/i, "");
+  return trackName(track).replace(supportedAudioExtensionPattern, "");
 }
 
 function trackSearchText(track) {
@@ -1105,7 +1113,7 @@ function renderTracks() {
   if (tracks.length === 0) {
     const empty = document.createElement("li");
     empty.className = "empty";
-    empty.textContent = "No WAV files found in this directory.";
+    empty.textContent = "No supported audio files found in this directory.";
     trackList.append(empty);
     setControlsEnabled(false);
     return;
@@ -1829,6 +1837,7 @@ function restartVisualizer() {
   oilBlobs = [];
   oysterFrame = 0;
   oysters = [];
+  oysterSeaLife = [];
   lingerieFrame = 0;
   lingerieGarments = [];
   snakeCongaFrame = 0;
@@ -1900,7 +1909,7 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
   scheduleSessionSave();
 
   if (shouldAutoplay) {
-    playLoadedTrackWithRetry(generation);
+    playLoadedTrackWithRetry(generation, { preservePlaybackIntent: true });
   }
 }
 
@@ -2080,11 +2089,11 @@ async function loadDirectoryHandle() {
   return handle;
 }
 
-async function collectWavFilesFromHandle(directoryHandle) {
+async function collectAudioFilesFromHandle(directoryHandle) {
   const files = [];
   const walk = async (handle, prefix = "") => {
     for await (const entry of handle.values()) {
-      if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".wav")) {
+      if (entry.kind === "file" && isSupportedAudioFileName(entry.name)) {
         const file = await entry.getFile();
         files.push({ file, relativePath: `${prefix}${entry.name}`, source: "directory-handle" });
       } else if (entry.kind === "directory") {
@@ -2100,7 +2109,7 @@ async function collectWavFilesFromHandle(directoryHandle) {
 function loadTrackFiles(files, name, source) {
   resetLibraryState();
   tracks = files
-    .filter((entry) => entry.file?.name?.toLowerCase().endsWith(".wav"))
+    .filter((entry) => isSupportedAudioFileName(entry.file?.name))
     .map((entry) => ({
       file: entry.file,
       url: "",
@@ -2118,7 +2127,7 @@ function loadTrackFiles(files, name, source) {
 function loadServerTracks(library) {
   resetLibraryState();
   tracks = (library.tracks || [])
-    .filter((track) => track.name?.toLowerCase().endsWith(".wav") && track.audioUrl)
+    .filter((track) => isSupportedAudioFileName(track.name) && track.audioUrl)
     .map((track) => {
       const loadedTrack = {
         name: track.name,
@@ -2142,7 +2151,7 @@ function loadServerTracks(library) {
 function loadAndroidTracks(library) {
   resetLibraryState();
   tracks = (library.tracks || [])
-    .filter((track) => track.name?.toLowerCase().endsWith(".wav") && track.audioUrl)
+    .filter((track) => isSupportedAudioFileName(track.name) && track.audioUrl)
     .map((track) => {
       const loadedTrack = {
         name: track.name,
@@ -2165,7 +2174,7 @@ function loadAndroidTracks(library) {
   } else if (tracks.length > 0) {
     setAndroidStatus(`Android: ${tracks.length} ${tracks.length === 1 ? "track" : "tracks"}`);
   } else {
-    setAndroidStatus("Android: no WAV files found");
+    setAndroidStatus("Android: no supported audio files found");
   }
   scheduleSessionSave();
 }
@@ -2234,7 +2243,7 @@ async function openRememberedDirectory({ prompt = false } = {}) {
       return false;
     }
 
-    const files = await collectWavFilesFromHandle(handle);
+    const files = await collectAudioFilesFromHandle(handle);
     loadTrackFiles(files, handle.name || defaultDirectoryName, "directory-handle");
     await saveDirectoryHandle(handle);
     return true;
@@ -7967,11 +7976,11 @@ function drawHypnoticFlightFrame(canvasContext, buffer) {
 
 const kaleidoscopePalettes = {
   vivid: [
-    [184, 100, 58],
-    [310, 100, 62],
-    [42, 100, 58],
-    [116, 92, 52],
-    [232, 100, 64],
+    [184, 100, 42],
+    [310, 100, 46],
+    [42, 100, 44],
+    [116, 96, 30],
+    [232, 100, 38],
   ],
   woodland: [
     [92, 42, 42],
@@ -7988,11 +7997,11 @@ const kaleidoscopePalettes = {
     [12, 64, 58],
   ],
   psychedelia: [
-    [288, 100, 58],
-    [32, 100, 56],
-    [172, 100, 50],
-    [236, 100, 62],
-    [86, 100, 54],
+    [288, 100, 38],
+    [32, 100, 42],
+    [172, 100, 34],
+    [236, 100, 40],
+    [86, 100, 36],
   ],
   tea: [
     [18, 84, 54],
@@ -8048,7 +8057,7 @@ function kaleidoscopeColour(palette, index, intensity = 0, alpha = 1, hueShift =
   return hsla(
     colour[0] + hueShift + intensity * 54,
     clampNumber(colour[1] + intensity * 12, 0, 100),
-    clampNumber(colour[2] + intensity * 16, 0, 100),
+    clampNumber(colour[2] + intensity * 10, 0, 82),
     alpha,
   );
 }
@@ -8200,6 +8209,13 @@ function drawKaleidoscopeScene(canvasContext, width, height, bassEnergy, midsEne
   canvasContext.fillStyle = background;
   canvasContext.fillRect(0, 0, width, height);
 
+  const pigmentWash = canvasContext.createRadialGradient(centerX, centerY, radius * 0.08, centerX, centerY, radius);
+  pigmentWash.addColorStop(0, hsla(palette[3][0] + kaleidoscopeFrame * 0.05, 100, 6, 0.22 + bassEnergy * 0.08));
+  pigmentWash.addColorStop(0.56, "rgba(0, 0, 0, 0)");
+  pigmentWash.addColorStop(1, hsla(palette[1][0] - kaleidoscopeFrame * 0.04, 100, 4, 0.42 + handGraspAmount() * 0.1));
+  canvasContext.fillStyle = pigmentWash;
+  canvasContext.fillRect(0, 0, width, height);
+
   canvasContext.save();
   canvasContext.translate(centerX, centerY);
   canvasContext.rotate(kaleidoscopeFrame * 0.0025 * (0.5 + trip));
@@ -8237,8 +8253,9 @@ function drawKaleidoscopeScene(canvasContext, width, height, bassEnergy, midsEne
   canvasContext.globalCompositeOperation = "lighter";
   const aperture = Math.min(width, height) * (0.04 + bassEnergy * 0.035 + trip * 0.025);
   const core = canvasContext.createRadialGradient(centerX, centerY, 0, centerX, centerY, aperture * 3.2);
-  core.addColorStop(0, "rgba(255, 255, 255, 0.72)");
-  core.addColorStop(0.35, kaleidoscopeColour(palette, 1, trebleEnergy, 0.34));
+  core.addColorStop(0, "rgba(255, 255, 255, 0.36)");
+  core.addColorStop(0.28, kaleidoscopeColour(palette, 1, trebleEnergy, 0.3));
+  core.addColorStop(0.56, hsla(palette[4][0] + kaleidoscopeFrame * 0.03, 100, 7, 0.32));
   core.addColorStop(1, "rgba(0, 0, 0, 0)");
   canvasContext.fillStyle = core;
   canvasContext.beginPath();
@@ -9097,6 +9114,167 @@ function setupOysters(width, height) {
   }
 }
 
+function setupOysterSeaLife(width, height) {
+  const target = Math.max(6, Math.min(14, Math.round(handCountValueNumber() * 0.7) + 4));
+  const types = ["fish", "jellyfish", "fish", "crab", "fish", "lobster", "jellyfish"];
+
+  if (oysterSeaLife.length === target) {
+    return;
+  }
+
+  oysterSeaLife = Array.from({ length: target }, (_, index) => ({
+    index,
+    type: types[index % types.length],
+    x: Math.random() * width,
+    y: height * (0.12 + Math.random() * 0.7),
+    speed: 0.18 + Math.random() * 0.42,
+    scale: 0.72 + Math.random() * 0.8,
+    hue: [186, 212, 26, 336, 158, 12, 284][index % 7] + Math.random() * 18 - 9,
+    phase: Math.random() * Math.PI * 2,
+    direction: index % 2 === 0 ? 1 : -1,
+  }));
+}
+
+function drawOysterFish(canvasContext, creature, size, energy) {
+  const tail = Math.sin(oysterFrame * 0.12 + creature.phase) * size * (0.16 + energy * 0.12);
+  const fin = Math.sin(oysterFrame * 0.08 + creature.phase * 1.4) * size * 0.06;
+
+  canvasContext.fillStyle = hsla(creature.hue, 86, 42 + energy * 18, 0.78);
+  canvasContext.strokeStyle = hsla(creature.hue + 54, 90, 68, 0.62);
+  canvasContext.lineWidth = Math.max(1, size * 0.06);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, size * 0.72, size * 0.32, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.stroke();
+
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.72, 0);
+  canvasContext.lineTo(-size * 1.12, -size * 0.32 + tail);
+  canvasContext.lineTo(-size * 1.04, size * 0.3 + tail);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.fillStyle = hsla(creature.hue + 34, 92, 62, 0.58);
+  canvasContext.beginPath();
+  canvasContext.moveTo(-size * 0.06, -size * 0.12);
+  canvasContext.quadraticCurveTo(size * 0.22, -size * 0.54 + fin, size * 0.36, -size * 0.08);
+  canvasContext.closePath();
+  canvasContext.fill();
+
+  canvasContext.fillStyle = "rgba(245, 255, 248, 0.72)";
+  canvasContext.beginPath();
+  canvasContext.arc(size * 0.42, -size * 0.08, size * 0.055, 0, Math.PI * 2);
+  canvasContext.fill();
+}
+
+function drawOysterJellyfish(canvasContext, creature, size, energy) {
+  const pulse = Math.sin(oysterFrame * 0.06 + creature.phase) * 0.5 + 0.5;
+  const glow = canvasContext.createRadialGradient(0, 0, size * 0.1, 0, 0, size * 1.2);
+  glow.addColorStop(0, hsla(creature.hue, 88, 68, 0.3 + energy * 0.16));
+  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  canvasContext.fillStyle = glow;
+  canvasContext.fillRect(-size * 1.3, -size * 1.1, size * 2.6, size * 2.6);
+
+  canvasContext.fillStyle = hsla(creature.hue, 82, 58 + pulse * 12, 0.42);
+  canvasContext.strokeStyle = hsla(creature.hue + 36, 92, 76, 0.48);
+  canvasContext.lineWidth = Math.max(1, size * 0.045);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, -size * 0.12, size * 0.62, size * 0.42, 0, Math.PI, Math.PI * 2);
+  canvasContext.quadraticCurveTo(size * 0.52, size * 0.12, 0, size * 0.18);
+  canvasContext.quadraticCurveTo(-size * 0.52, size * 0.12, -size * 0.62, -size * 0.12);
+  canvasContext.fill();
+  canvasContext.stroke();
+
+  canvasContext.strokeStyle = hsla(creature.hue + 18, 92, 72, 0.46);
+  for (let strand = -2; strand <= 2; strand += 1) {
+    canvasContext.beginPath();
+    canvasContext.moveTo(strand * size * 0.16, size * 0.12);
+    canvasContext.bezierCurveTo(
+      strand * size * 0.18 + Math.sin(oysterFrame * 0.05 + strand) * size * 0.12,
+      size * (0.48 + pulse * 0.08),
+      strand * size * 0.12,
+      size * 0.86,
+      strand * size * 0.22,
+      size * (1.12 + energy * 0.18),
+    );
+    canvasContext.stroke();
+  }
+}
+
+function drawOysterCrustacean(canvasContext, creature, size, energy) {
+  const isLobster = creature.type === "lobster";
+  const clawOpen = Math.sin(oysterFrame * 0.08 + creature.phase) * size * (0.08 + energy * 0.08);
+
+  canvasContext.fillStyle = hsla(creature.hue, 84, isLobster ? 34 + energy * 16 : 28 + energy * 12, 0.8);
+  canvasContext.strokeStyle = hsla(creature.hue + 22, 88, 58, 0.64);
+  canvasContext.lineWidth = Math.max(1, size * 0.055);
+  canvasContext.beginPath();
+  canvasContext.ellipse(0, 0, size * (isLobster ? 0.72 : 0.58), size * 0.36, 0, 0, Math.PI * 2);
+  canvasContext.fill();
+  canvasContext.stroke();
+
+  [-1, 1].forEach((side) => {
+    for (let leg = 0; leg < 3; leg += 1) {
+      const y = -size * 0.1 + leg * size * 0.14;
+      canvasContext.beginPath();
+      canvasContext.moveTo(side * size * 0.38, y);
+      canvasContext.lineTo(side * size * (0.68 + leg * 0.08), y + size * (0.18 + leg * 0.04));
+      canvasContext.stroke();
+    }
+
+    canvasContext.beginPath();
+    canvasContext.moveTo(side * size * 0.42, -size * 0.18);
+    canvasContext.quadraticCurveTo(side * size * 0.82, -size * 0.48, side * size * 1.04, -size * 0.26);
+    canvasContext.stroke();
+    canvasContext.beginPath();
+    canvasContext.ellipse(side * size * 1.12, -size * 0.26, size * 0.22, size * 0.14 + clawOpen * 0.2, side * 0.4, 0, Math.PI * 2);
+    canvasContext.fill();
+    canvasContext.stroke();
+  });
+
+  if (isLobster) {
+    canvasContext.beginPath();
+    canvasContext.moveTo(-size * 0.62, 0);
+    canvasContext.lineTo(-size * 1.06, -size * 0.22);
+    canvasContext.lineTo(-size * 1.12, size * 0.22);
+    canvasContext.closePath();
+    canvasContext.fill();
+  }
+}
+
+function drawOysterSeaLife(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy) {
+  setupOysterSeaLife(width, height);
+  const tide = fireworkSpeedMultiplier() * (0.38 + bassEnergy * 0.42);
+
+  oysterSeaLife.forEach((creature) => {
+    const size = Math.min(width, height) * 0.028 * creature.scale * (creature.type === "jellyfish" ? 1.18 : 1);
+    const depthSway = Math.sin(oysterFrame * 0.018 + creature.phase) * height * (0.008 + midsEnergy * 0.012);
+    creature.x += creature.direction * creature.speed * tide;
+    creature.y += Math.sin(oysterFrame * 0.01 + creature.phase) * 0.035;
+
+    if (creature.direction > 0 && creature.x > width + size * 3) {
+      creature.x = -size * 3;
+    } else if (creature.direction < 0 && creature.x < -size * 3) {
+      creature.x = width + size * 3;
+    }
+
+    canvasContext.save();
+    canvasContext.translate(creature.x, creature.y + depthSway);
+    canvasContext.scale(creature.direction, 1);
+    canvasContext.globalAlpha = creature.type === "jellyfish" ? 0.82 : 0.74;
+    canvasContext.globalCompositeOperation = creature.type === "jellyfish" ? "lighter" : "source-over";
+
+    if (creature.type === "jellyfish") {
+      drawOysterJellyfish(canvasContext, creature, size, trebleEnergy);
+    } else if (creature.type === "crab" || creature.type === "lobster") {
+      drawOysterCrustacean(canvasContext, creature, size, bassEnergy);
+    } else {
+      drawOysterFish(canvasContext, creature, size, midsEnergy);
+    }
+    canvasContext.restore();
+  });
+}
+
 function drawOysterBackground(canvasContext, width, height, bassEnergy, trebleEnergy) {
   const palette = oysterPalette();
   const water = canvasContext.createLinearGradient(0, 0, 0, height);
@@ -9246,6 +9424,7 @@ function drawOysterPearlsScene(canvasContext, width, height, bassEnergy, midsEne
   oysterFrame += (0.045 + fireworkSpeedMultiplier() * 0.038) * (0.72 + bassEnergy * 0.18);
   setupOysters(width, height);
   drawOysterBackground(canvasContext, width, height, bassEnergy, trebleEnergy);
+  drawOysterSeaLife(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
 
   oysters
     .slice()
@@ -9723,7 +9902,7 @@ function setupLingerieGarments(width, height) {
   const targetCount = Math.max(8, Math.round(handCountValueNumber() * 1.8));
   if (lingerieGarments.length === targetCount) return;
 
-  const types = ["stockings", "briefs", "slip", "corset", "stockings", "garter"];
+  const types = ["stockings", "knickers", "bra", "suspenders", "stockings", "garter"];
   lingerieGarments = Array.from({ length: targetCount }, (_, index) => {
     const columns = Math.ceil(Math.sqrt(targetCount * 1.7));
     const column = index % columns;
@@ -9868,49 +10047,78 @@ function drawLingerieGarment(canvasContext, garment, energy, bassEnergy, trebleE
       canvasContext.bezierCurveTo(side * size * 0.2, -size * 0.05, side * size * 0.02, size * 0.34, side * size * 0.2, size * 0.67);
       canvasContext.stroke();
     });
-  } else if (garment.type === "briefs") {
+  } else if (garment.type === "briefs" || garment.type === "knickers") {
     canvasContext.beginPath();
-    canvasContext.moveTo(-size * 0.62, -size * 0.28);
-    canvasContext.quadraticCurveTo(0, -size * (0.42 + energy * 0.12), size * 0.62, -size * 0.28);
-    canvasContext.lineTo(size * 0.22, size * 0.46);
-    canvasContext.quadraticCurveTo(0, size * (0.26 + flutter * 0.08), -size * 0.22, size * 0.46);
+    canvasContext.moveTo(-size * 0.46, -size * 0.2);
+    canvasContext.quadraticCurveTo(0, -size * (0.36 + energy * 0.08), size * 0.46, -size * 0.2);
+    canvasContext.lineTo(size * 0.16, size * 0.34);
+    canvasContext.quadraticCurveTo(0, size * (0.18 + flutter * 0.05), -size * 0.16, size * 0.34);
     canvasContext.closePath();
     canvasContext.fill();
     canvasContext.stroke();
 
     canvasContext.strokeStyle = hsla(hue + 34, 88, 84, 0.82);
-    canvasContext.lineWidth = Math.max(1, size * 0.025);
+    canvasContext.lineWidth = Math.max(1, size * 0.018);
     for (let scallop = -5; scallop <= 5; scallop += 1) {
       canvasContext.beginPath();
-      canvasContext.arc(scallop * size * 0.1, -size * 0.29, size * 0.06, 0, Math.PI);
+      canvasContext.arc(scallop * size * 0.076, -size * 0.2, size * 0.045, 0, Math.PI);
       canvasContext.stroke();
     }
+    canvasContext.setLineDash([size * 0.035, size * 0.025]);
+    canvasContext.beginPath();
+    canvasContext.moveTo(-size * 0.34, -size * 0.03);
+    canvasContext.quadraticCurveTo(0, size * 0.13, size * 0.34, -size * 0.03);
+    canvasContext.stroke();
+    canvasContext.setLineDash([]);
     canvasContext.fillStyle = hsla(hue + 44, 88, 78, 0.9);
     canvasContext.beginPath();
-    canvasContext.moveTo(0, -size * 0.2);
-    canvasContext.quadraticCurveTo(-size * 0.22, -size * 0.4, -size * 0.25, -size * 0.16);
-    canvasContext.quadraticCurveTo(-size * 0.12, -size * 0.08, 0, -size * 0.2);
-    canvasContext.quadraticCurveTo(size * 0.22, -size * 0.4, size * 0.25, -size * 0.16);
-    canvasContext.quadraticCurveTo(size * 0.12, -size * 0.08, 0, -size * 0.2);
+    canvasContext.moveTo(0, -size * 0.15);
+    canvasContext.quadraticCurveTo(-size * 0.18, -size * 0.31, -size * 0.19, -size * 0.09);
+    canvasContext.quadraticCurveTo(-size * 0.09, -size * 0.04, 0, -size * 0.15);
+    canvasContext.quadraticCurveTo(size * 0.18, -size * 0.31, size * 0.19, -size * 0.09);
+    canvasContext.quadraticCurveTo(size * 0.09, -size * 0.04, 0, -size * 0.15);
     canvasContext.fill();
-  } else if (garment.type === "slip") {
+  } else if (garment.type === "bra") {
+    canvasContext.strokeStyle = hsla(hue + 32, 84, 80, 0.74);
+    canvasContext.lineWidth = Math.max(1, size * 0.028);
     canvasContext.beginPath();
-    canvasContext.moveTo(-size * 0.3, -size * 0.66);
-    canvasContext.quadraticCurveTo(0, -size * 0.45, size * 0.3, -size * 0.66);
-    canvasContext.lineTo(size * (0.58 + flutter * 0.08), size * 0.7);
-    canvasContext.quadraticCurveTo(0, size * (0.54 - energy * 0.08), -size * (0.58 - flutter * 0.08), size * 0.7);
-    canvasContext.closePath();
+    canvasContext.moveTo(-size * 0.48, -size * 0.06);
+    canvasContext.quadraticCurveTo(-size * 0.42, -size * 0.62, -size * 0.1, -size * 0.66);
+    canvasContext.moveTo(size * 0.48, -size * 0.06);
+    canvasContext.quadraticCurveTo(size * 0.42, -size * 0.62, size * 0.1, -size * 0.66);
+    canvasContext.stroke();
+    [-1, 1].forEach((side) => {
+      canvasContext.beginPath();
+      canvasContext.ellipse(side * size * 0.24, -size * 0.02, size * 0.27, size * 0.22, side * 0.2, Math.PI * 0.02, Math.PI * 1.98);
+      canvasContext.fill();
+      canvasContext.stroke();
+      canvasContext.setLineDash([size * 0.04, size * 0.035]);
+      canvasContext.beginPath();
+      canvasContext.arc(side * size * 0.24, -size * 0.02, size * 0.17, Math.PI * 0.08, Math.PI * 0.92);
+      canvasContext.stroke();
+      canvasContext.setLineDash([]);
+    });
+    canvasContext.beginPath();
+    canvasContext.moveTo(-size * 0.02, -size * 0.02);
+    canvasContext.quadraticCurveTo(0, size * 0.08 + flutter * size * 0.03, size * 0.02, -size * 0.02);
+    canvasContext.stroke();
+  } else if (garment.type === "suspenders") {
+    canvasContext.strokeStyle = hsla(hue + 48, 82, 78, 0.72);
+    canvasContext.lineWidth = Math.max(1, size * 0.03);
+    canvasContext.beginPath();
+    canvasContext.ellipse(0, -size * 0.36, size * 0.5, size * 0.16, flutter * 0.12, 0, Math.PI * 2);
     canvasContext.fill();
     canvasContext.stroke();
-    canvasContext.strokeStyle = hsla(hue + 32, 82, 82, 0.72);
-    canvasContext.beginPath();
-    canvasContext.moveTo(-size * 0.3, -size * 0.64);
-    canvasContext.quadraticCurveTo(-size * 0.42, -size * 0.92, -size * 0.17, -size * 0.98);
-    canvasContext.moveTo(size * 0.3, -size * 0.64);
-    canvasContext.quadraticCurveTo(size * 0.42, -size * 0.92, size * 0.17, -size * 0.98);
-    canvasContext.moveTo(-size * 0.29, -size * 0.62);
-    canvasContext.quadraticCurveTo(0, -size * 0.22, size * 0.29, -size * 0.62);
-    canvasContext.stroke();
+    [-1, 1].forEach((side) => {
+      canvasContext.beginPath();
+      canvasContext.moveTo(side * size * 0.28, -size * 0.24);
+      canvasContext.bezierCurveTo(side * size * 0.36, size * 0.04, side * size * 0.2, size * 0.32, side * size * 0.32, size * 0.58);
+      canvasContext.stroke();
+      canvasContext.beginPath();
+      canvasContext.rect(side * size * 0.25, size * 0.55, side * size * 0.16, size * 0.08);
+      canvasContext.fill();
+      canvasContext.stroke();
+    });
   } else if (garment.type === "corset") {
     canvasContext.beginPath();
     canvasContext.moveTo(-size * 0.5, -size * 0.62);
@@ -9981,7 +10189,13 @@ function drawLingerieScene(canvasContext, energies, active) {
       );
       canvasContext.stroke();
     }
-    if (active && garment.type === "briefs" && !garment.blown && energy > 0.38 && Math.random() < energy * mischief * 0.018 * speed) {
+    if (
+      active
+      && (garment.type === "briefs" || garment.type === "knickers")
+      && !garment.blown
+      && energy > 0.38
+      && Math.random() < energy * mischief * 0.018 * speed
+    ) {
       garment.blown = true;
       garment.vx = (2.2 + energy * 6 + mischief * 5) * (Math.sin(garment.phase) < 0 ? -1 : 1);
       garment.vy = -1.2 - trebleEnergy * 4;
@@ -12334,6 +12548,7 @@ function resizeCanvas() {
   oilBlobs = [];
   oysterFrame = 0;
   oysters = [];
+  oysterSeaLife = [];
   lingerieFrame = 0;
   lingerieGarments = [];
   snakeCongaFrame = 0;
@@ -12536,6 +12751,7 @@ handCount.addEventListener("input", () => {
   oilBlobs = [];
   oysterFrame = 0;
   oysters = [];
+  oysterSeaLife = [];
   lingerieFrame = 0;
   lingerieGarments = [];
   snakeCongaFrame = 0;

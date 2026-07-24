@@ -115,8 +115,8 @@ async function run() {
     const payload = JSON.parse(tracksResponse.body.toString("utf8"));
     assert(payload.directoryName === "32 Visualisations Sample Suite", `Unexpected directory name: ${payload.directoryName}`);
     assert(Array.isArray(payload.tracks), "Tracks payload is not an array.");
-    assert(payload.tracks.length === 3, `Expected 3 sample WAV tracks, got ${payload.tracks.length}.`);
-    assert(payload.tracks.every((track) => track.name.toLowerCase().endsWith(".wav")), "Every sample track should be a WAV.");
+    assert(payload.tracks.length === 3, `Expected 3 sample audio tracks, got ${payload.tracks.length}.`);
+    assert(payload.tracks.every((track) => track.name.toLowerCase().endsWith(".wav")), "Every bundled sample track should be a WAV.");
     assert(payload.tracks.every((track) => track.audioUrl.includes(`127.0.0.1:${port}/audio?file=`)), "Track audio URLs should point at the test server.");
 
     const sampleTrack = payload.tracks[0];
@@ -129,7 +129,7 @@ async function run() {
     assert(audioRange.body.length === 32, `Expected 32 bytes from ranged audio request, got ${audioRange.body.length}.`);
 
     const forbidden = await request(port, `/audio?file=${encodeURIComponent(path.join(repoRoot, "README.md"))}`);
-    assert(forbidden.statusCode === 403, `Expected non-WAV/non-library audio request to return 403, got ${forbidden.statusCode}.`);
+    assert(forbidden.statusCode === 403, `Expected non-audio/non-library audio request to return 403, got ${forbidden.statusCode}.`);
 
     const missing = await request(port, "/not-a-real-file");
     assert(missing.statusCode === 404, `Expected missing static file to return 404, got ${missing.statusCode}.`);

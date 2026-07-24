@@ -10,7 +10,7 @@ You will need:
 
 - An Android phone.
 - The Google Play test link.
-- A few local audio files on your phone, ideally `.wav` files.
+- A few local audio files on your phone. Supported formats include `.wav`, `.mp3`, `.m4a`, `.aac`, `.flac`, `.ogg`, and `.opus`.
 - Headphones, Bluetooth speaker, car stereo, or any setup that lets you enjoy the music.
 
 Please note your phone model and Android version if you know them.
@@ -131,7 +131,7 @@ Please send back a few notes:
 
 Short comments are fine:
 
-- "Installed fine and played three WAV files."
+- "Installed fine and played three local audio files."
 - "Folder selection was confusing on my phone."
 - "A++ was fun but I did not know what it meant until I pressed it."
 - "Speed made the visuals much livelier."

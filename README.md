@@ -6,7 +6,7 @@
 
 32 Visualisations is a boutique local music player and audio-reactive visualisation cabinet for people who still believe their own music collection matters.
 
-It began as a desktop WAV player with a taste for **Mental. Saturation. Overstimulation.** It has grown into an Android road-trip music player built for local files, big stereos, strange colour, and cockpit-simple controls.
+It began as a desktop local music player with a taste for **Mental. Saturation. Overstimulation.** It has grown into an Android road-trip music player built for local files, big stereos, strange colour, and cockpit-simple controls.
 
 No streaming account. No subscription. No rented library quietly disappearing when the bill stops. Just your files, your device, your speakers, and thirty-two vivid ways to make sound visible.
 
@@ -26,7 +26,7 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 
 ## What It Does
 
-- Plays local `.wav` files from a folder.
+- Plays local audio files from a folder, including `.wav`, `.mp3`, `.m4a`, `.aac`, `.flac`, `.ogg`, and `.opus`.
 - Includes a bundled three-song original sample suite for first launch and demonstration.
 - Runs as a desktop browser app or an offline-first Android WebView app.
 - Provides a fixed set of **32** audio-reactive visualisations.
@@ -113,7 +113,7 @@ Automated system tests can be run from the repository root with:
 node tools/system-test.js
 ```
 
-The system tests start a temporary local server against the bundled sample suite, then verify the web app loads, the sample tracks are discovered, ranged WAV audio is served, and unsafe audio requests are blocked.
+The system tests start a temporary local server against the bundled sample suite, then verify the web app loads, the sample tracks are discovered, ranged audio is served, and unsafe audio requests are blocked.
 
 After a release build, run:
 
@@ -128,7 +128,7 @@ The release build script also runs this verification after Gradle finishes.
 ### Requirements
 
 - A current version of Node.js
-- A directory containing `.wav` files
+- A directory containing supported audio files
 - A modern browser
 
 ### Start
@@ -138,14 +138,14 @@ Set the library directory and run the server from the repository root.
 PowerShell:
 
 ```powershell
-$env:WAVE_DECK_LIBRARY = "D:\Music\WAV"
+$env:WAVE_DECK_LIBRARY = "D:\Music\Road Trip"
 node server.js
 ```
 
 macOS or Linux:
 
 ```bash
-WAVE_DECK_LIBRARY="/path/to/wav-library" node server.js
+WAVE_DECK_LIBRARY="/path/to/music-library" node server.js
 ```
 
 Then open [http://127.0.0.1:4173/](http://127.0.0.1:4173/).
@@ -156,15 +156,15 @@ The **Open folder** control can also select a different local directory in brows
 
 ### Run With Codex
 
-Clone the repository, open its folder in the [Codex app](https://developers.openai.com/codex/app), and select **Local**. Then give Codex the location of your WAV library:
+Clone the repository, open its folder in the [Codex app](https://developers.openai.com/codex/app), and select **Local**. Then give Codex the location of your music library:
 
 ```text
-Start 32 Visualisations using my WAV library at "D:\Music\WAV". Keep the
+Start 32 Visualisations using my music library at "D:\Music\Road Trip". Keep the
 server running at http://127.0.0.1:4173/, verify that the page and track
 library load, and give me the link.
 ```
 
-Use the equivalent `/path/to/wav-library` on macOS or Linux. Codex will set the library environment variable, start the local Node.js server, and check that it is reachable. It may ask for approval before launching a persistent local process.
+Use the equivalent `/path/to/music-library` on macOS or Linux. Codex will set the library environment variable, start the local Node.js server, and check that it is reachable. It may ask for approval before launching a persistent local process.
 
 ## Building Android
 
