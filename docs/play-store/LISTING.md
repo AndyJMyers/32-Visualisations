@@ -14,7 +14,7 @@ Your music. Local. Offline. Alive in motion.
 
 Play local audio from your Android device, choose your own music folder, and watch your files come alive through 32 vivid, responsive visualisations. Once installed and pointed at music, it is built to work offline: no streaming account, no subscription, no rented library.
 
-Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, change visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger.
+Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, cycle visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger.
 
 The app is designed for atmosphere: glowing waveforms, kinetic motion, rich colour, and a cockpit-like interface that feels more like a custom instrument than a standard player.
 
@@ -30,7 +30,7 @@ You do not have to be entirely normal to enjoy this player, and that is rather t
 - Works without internet access once installed.
 - Explore a fixed set of 32 vivid music visualisations.
 - Simple portrait interface designed for quick, familiar control.
-- Shuffle, track skip, visualisation skip, Speed, and Alchemy controls.
+- Shuffle, track skip, forward-only Visual, Speed, and Alchemy controls.
 - Includes a small original sample suite for first launch.
 - Audio-reactive visuals built for colour, movement, and atmosphere.
 - Paid once through Google Play, with no subscription.

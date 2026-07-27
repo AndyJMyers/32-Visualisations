@@ -8,7 +8,7 @@ Use this as the working sheet while completing Google Play Console. If the Conso
 - **Default language:** English
 - **App or game:** App
 - **Free or paid:** Paid
-- **Target price:** GBP 2.99
+- **Target price:** GBP 4.99
 - **Contains ads:** No
 - **Privacy policy URL:** https://andyjmyers.substack.com/p/32-visualisations-privacy-policy
 
@@ -24,7 +24,7 @@ Your music. Local. Offline. Alive in motion.
 
 Play local audio from your Android device, choose your own music folder, and watch your files come alive through 32 vivid, responsive visualisations. Once installed and pointed at music, it is built to work offline: no streaming account, no subscription, no rented library.
 
-Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, change visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger.
+Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, cycle visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger.
 
 The app is designed for atmosphere: glowing waveforms, kinetic motion, rich colour, and a cockpit-like interface that feels more like a custom instrument than a standard player.
 
@@ -119,7 +119,7 @@ Recommended first release path:
 
 1. Upload the signed release `.aab` to internal testing.
 2. Install through Play testing.
-3. Verify folder selection, playback, visualisation cycling, shuffle, `Alchemy`, `Speed`, and button feedback.
+3. Verify folder selection, playback, forward-only visualisation cycling, shuffle, `Alchemy`, `Speed`, and button feedback.
 4. Move to closed testing if Google requires it.
 5. Prepare production release after the required testing gate is satisfied.
 

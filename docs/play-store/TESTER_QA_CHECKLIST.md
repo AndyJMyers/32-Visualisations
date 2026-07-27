@@ -66,11 +66,12 @@ Now enjoy yourself a bit.
 
 While music is playing:
 
-1. Press visualisation next several times.
-2. Press visualisation previous several times.
-3. Let a few visualisations run for 20-30 seconds each.
-4. Try at least one fast/loud track if you have one.
-5. Try one quieter or gentler track if you have one.
+1. Press `Visual` several times to cycle forward through the visualisations.
+2. Let a few visualisations run for 20-30 seconds each.
+3. Try at least one fast/loud track if you have one.
+4. Try one quieter or gentler track if you have one.
+
+Note: `Visual`, `Alchemy`, and `Speed` are deliberately forward-only controls. If you want to return to an earlier visual state, keep cycling. This keeps the in-car interface simple and consistent.
 
 Check:
 
@@ -84,14 +85,14 @@ Check:
 Try the main cockpit controls:
 
 - Shuffle on/off.
-- `Alchemy` for alchemical adjustment.
-- `Speed` for visual intensity.
+- `Alchemy` to cycle forward through artistically chosen visual recipes.
+- `Speed` to cycle forward through visual intensity levels.
 - Play/pause again.
 - Next/previous track again.
 
 Check:
 
-- Did `Alchemy` visibly change the mood/settings?
+- Did `Alchemy` visibly change the visual recipe?
 - Did `Speed` make the visualisations feel more or less intense?
 - Did the gold/flame button feedback feel satisfying and clear?
 - Could you imagine using these controls without staring at them for too long?
@@ -109,7 +110,7 @@ Try one or two of these if convenient:
 Check:
 
 - Did playback continue or recover in a sensible way?
-- Did the app return to the same track/settings?
+- Did the app return to the same track and visual state?
 - Did anything unexpected happen?
 
 ## 7. Final Impression - 2 Minutes
@@ -133,7 +134,7 @@ Short comments are fine:
 
 - "Installed fine and played three local audio files."
 - "Folder selection was confusing on my phone."
-- "Alchemy was fun and changed the visual settings noticeably."
+- "Alchemy was fun and changed the visual recipe noticeably."
 - "Speed made the visuals much livelier."
 - "The button flash felt great."
 - "It crashed when I skipped tracks quickly."
