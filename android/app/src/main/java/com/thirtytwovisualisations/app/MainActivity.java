@@ -25,12 +25,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,7 +36,7 @@ public class MainActivity extends Activity {
     private static final String PREFS = "visualisations";
     private static final String PREF_TREE_URI = "treeUri";
     private static final String APP_ORIGIN = "https://visualisations.local";
-    private static final String DEFAULT_DIRECTORY_NAME = "Downloads/TVR Playlist";
+    private static final String DEFAULT_DIRECTORY_NAME = "TVR Playlist";
     private static final String DEFAULT_TREE_DOCUMENT_ID = "primary:Download/TVR Playlist";
     private static final String SAMPLE_DIRECTORY_NAME = "32 Visualisations Sample Suite";
     private static final String[] SAMPLE_TRACKS = new String[] {
@@ -140,10 +137,6 @@ public class MainActivity extends Activity {
 
         Uri treeUri = Uri.parse(storedTreeUri);
         String rootDocumentId = DocumentsContract.getTreeDocumentId(treeUri);
-        JSONObject moodsManifest = readMoodsManifest(treeUri, rootDocumentId);
-        if (moodsManifest != null) {
-            library.put("moodsManifest", moodsManifest);
-        }
         collectTracks(treeUri, rootDocumentId, "", tracks);
         if (tracks.length() == 0) {
             return buildSampleLibrary();
@@ -222,57 +215,6 @@ public class MainActivity extends Activity {
         }
 
         return AUDIO_MIME_TYPES.get(name.substring(dot).toLowerCase());
-    }
-
-    private JSONObject readMoodsManifest(Uri treeUri, String rootDocumentId) {
-        ContentResolver resolver = getContentResolver();
-        Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, rootDocumentId);
-        String[] projection = new String[] {
-            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-            DocumentsContract.Document.COLUMN_MIME_TYPE
-        };
-
-        try (Cursor cursor = resolver.query(childrenUri, projection, null, null, null)) {
-            if (cursor == null) {
-                return null;
-            }
-
-            while (cursor.moveToNext()) {
-                String documentId = cursor.getString(0);
-                String name = cursor.getString(1);
-                String mimeType = cursor.getString(2);
-
-                if (
-                    name != null
-                    && "moods.json".equalsIgnoreCase(name)
-                    && !DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType)
-                ) {
-                    Uri manifestUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId);
-                    try (InputStream stream = resolver.openInputStream(manifestUri)) {
-                        if (stream == null) {
-                            return null;
-                        }
-                        return new JSONObject(readText(stream));
-                    }
-                }
-            }
-        } catch (Exception error) {
-            return null;
-        }
-
-        return null;
-    }
-
-    private String readText(InputStream stream) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                builder.append(line).append('\n');
-            }
-        }
-        return builder.toString();
     }
 
     private WebResourceResponse response(String mimeType, String encoding, InputStream stream) {

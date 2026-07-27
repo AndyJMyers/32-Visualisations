@@ -164,7 +164,7 @@ let moodState = {
 };
 
 const peakHoldMs = 3200;
-const defaultDirectoryName = "Andy ChatGPT DALL-E aisongs";
+const defaultDirectoryName = "TVR Playlist";
 const defaultLibraryApi = "http://127.0.0.1:4173/api/tracks";
 const directoryStoreName = "waveDeckDirectory";
 const sessionStoreName = "waveDeckSession";
@@ -189,22 +189,6 @@ const carAgitationGears = [
   { label: "Redline", multiplier: 1.82 },
 ];
 let carAgitationGear = 2;
-const moodDecks = [
-  { label: "All", short: "All", keywords: [] },
-  { label: "Love", short: "Love", keywords: ["love", "lover", "heart", "kiss", "romance", "darling", "baby"] },
-  { label: "Ballads", short: "Ballad", keywords: ["ballad", "slow", "waltz", "lullaby", "lament", "tender"] },
-  { label: "Bossa", short: "Bossa", keywords: ["bossa", "samba", "ipanema", "rio", "latin"] },
-  { label: "Louche Jazz", short: "Louche", keywords: ["jazz", "louche", "swing", "smoky", "blue note", "sax", "trumpet"] },
-  { label: "Balearic", short: "Balear", keywords: ["balearic", "ibiza", "sunset", "beach", "island", "drift"] },
-  { label: "Rock", short: "Rock", keywords: ["rock", "riff", "guitar", "garage", "motor", "tvr"] },
-  { label: "Night Drive", short: "Night", keywords: ["night", "drive", "neon", "midnight", "road", "cruise"] },
-  { label: "Sunny", short: "Sunny", keywords: ["sun", "sunny", "summer", "gold", "daylight", "bright"] },
-  { label: "Melancholy", short: "Melan", keywords: ["melancholy", "sad", "rain", "ghost", "ache", "lonely"] },
-  { label: "Ridiculous", short: "Daft", keywords: ["ridiculous", "daft", "silly", "mad", "mental", "nonsense"] },
-  { label: "High Energy", short: "High", keywords: ["fast", "hot", "wild", "energy", "dance", "storm", "fire"] },
-  { label: "After Hours", short: "After", keywords: ["after hours", "late", "dusk", "velvet", "cocktail", "lounge"] },
-];
-let activeMoodIndex = 0;
 const fireworksBands = [
   { start: 1, end: 5, threshold: 0.42, name: "bass" },
   { start: 6, end: 14, threshold: 0.35, name: "lowMid" },
@@ -819,69 +803,6 @@ function trackDisplayTitle(track) {
 
 function trackSearchText(track) {
   return `${track.relativePath || ""} ${trackDisplayTitle(track)}`.toLowerCase();
-}
-
-function normalizeMoodLabel(value) {
-  const text = String(value || "").trim().toLowerCase();
-  const mood = moodDecks.find((item) => item.label.toLowerCase() === text || item.short.toLowerCase() === text);
-  return mood?.label || "";
-}
-
-function normalizeMoodList(values) {
-  return Array.from(new Set(
-    (Array.isArray(values) ? values : [values])
-      .map(normalizeMoodLabel)
-      .filter(Boolean),
-  ));
-}
-
-function manifestMoodsForTrack(manifest, track) {
-  const manifestTracks = manifest?.tracks;
-  if (!manifestTracks || !track) {
-    return [];
-  }
-
-  const keys = [
-    track.relativePath,
-    trackName(track),
-    trackDisplayTitle(track),
-  ].filter(Boolean);
-  const entryKey = keys.find((key) => manifestTracks[key]);
-  const entry = entryKey ? manifestTracks[entryKey] : null;
-
-  if (!entry) {
-    return [];
-  }
-
-  if (typeof entry === "string" || Array.isArray(entry)) {
-    return normalizeMoodList(entry);
-  }
-
-  return normalizeMoodList([entry.primaryMood, ...(entry.moods || [])]);
-}
-
-function moodMatchesTrack(mood, track) {
-  if (!mood || mood.label === "All") {
-    return true;
-  }
-
-  if (track.manifestMoods?.length > 0) {
-    return track.manifestMoods.includes(mood.label);
-  }
-
-  const text = trackSearchText(track);
-  return mood.keywords.some((keyword) => text.includes(keyword));
-}
-
-function moodTrackIndexes(index = activeMoodIndex) {
-  const mood = moodDecks[index] || moodDecks[0];
-  if (mood.label === "All") {
-    return tracks.map((_, trackIndex) => trackIndex);
-  }
-
-  return tracks
-    .map((track, trackIndex) => (moodMatchesTrack(mood, track) ? trackIndex : -1))
-    .filter((trackIndex) => trackIndex >= 0);
 }
 
 function trackIdentity(track) {
@@ -2128,18 +2049,14 @@ function loadServerTracks(library) {
   resetLibraryState();
   tracks = (library.tracks || [])
     .filter((track) => isSupportedAudioFileName(track.name) && track.audioUrl)
-    .map((track) => {
-      const loadedTrack = {
-        name: track.name,
-        lastModified: track.lastModified || 0,
-        relativePath: track.relativePath || track.name,
-        audioUrl: track.audioUrl,
-        url: "",
-        source: "default-server",
-      };
-      loadedTrack.manifestMoods = manifestMoodsForTrack(library.moodsManifest, loadedTrack);
-      return loadedTrack;
-    });
+    .map((track) => ({
+      name: track.name,
+      lastModified: track.lastModified || 0,
+      relativePath: track.relativePath || track.name,
+      audioUrl: track.audioUrl,
+      url: "",
+      source: "default-server",
+    }));
 
   directoryName.textContent = library.directoryName || defaultDirectoryName;
   sortTracks();
@@ -2152,18 +2069,14 @@ function loadAndroidTracks(library) {
   resetLibraryState();
   tracks = (library.tracks || [])
     .filter((track) => isSupportedAudioFileName(track.name) && track.audioUrl)
-    .map((track) => {
-      const loadedTrack = {
-        name: track.name,
-        lastModified: track.lastModified || 0,
-        relativePath: track.relativePath || track.name,
-        audioUrl: track.audioUrl,
-        url: "",
-        source: "android-bridge",
-      };
-      loadedTrack.manifestMoods = manifestMoodsForTrack(library.moodsManifest, loadedTrack);
-      return loadedTrack;
-    });
+    .map((track) => ({
+      name: track.name,
+      lastModified: track.lastModified || 0,
+      relativePath: track.relativePath || track.name,
+      audioUrl: track.audioUrl,
+      url: "",
+      source: "android-bridge",
+    }));
 
   directoryName.textContent = library.directoryName || "Android music folder";
   sortTracks();
@@ -12591,7 +12504,7 @@ window.waveDeckAndroidFolderSelected = () => {
 
 window.waveDeckAndroidFolderCancelled = () => {
   if (tracks.length === 0) {
-    directoryName.textContent = "Choose Downloads/TVR Playlist";
+    directoryName.textContent = `Choose ${defaultDirectoryName}`;
   }
 };
 

@@ -105,6 +105,23 @@ async function run() {
     assert(indexHtml.includes('id="audio"'), "Index page is missing the audio element.");
     assert(indexHtml.includes('id="carPlayButton"'), "Index page is missing the Android car play control.");
     assert(indexHtml.includes('src="app.js"'), "Index page is missing the app script.");
+    [
+      'id="carFolderButton"',
+      'id="carNextVisualButton"',
+      'id="carAlchemyButton"',
+      'id="carAgitationButton"',
+      'id="carShuffleButton"',
+      'id="carPreviousButton"',
+      'id="carNextButton"',
+    ].forEach((control) => {
+      assert(indexHtml.includes(control), `Index page is missing ${control}.`);
+    });
+    ["Dir", "Visual", "Alchemy", "Speed"].forEach((label) => {
+      assert(indexHtml.includes(`>${label}<`), `Car controls are missing the ${label} label.`);
+    });
+    ["MOOD", "A++", "G++", "Visual &lt;"].forEach((staleLabel) => {
+      assert(!indexHtml.includes(staleLabel), `Car controls still contain stale label ${staleLabel}.`);
+    });
 
     const appJs = await request(port, "/app.js");
     assert(appJs.statusCode === 200, `Expected /app.js to return 200, got ${appJs.statusCode}.`);
@@ -115,6 +132,7 @@ async function run() {
     const payload = JSON.parse(tracksResponse.body.toString("utf8"));
     assert(payload.directoryName === "32 Visualisations Sample Suite", `Unexpected directory name: ${payload.directoryName}`);
     assert(Array.isArray(payload.tracks), "Tracks payload is not an array.");
+    assert(!Object.prototype.hasOwnProperty.call(payload, "moodsManifest"), "Tracks payload still exposes retired moodsManifest data.");
     assert(payload.tracks.length === 3, `Expected 3 sample audio tracks, got ${payload.tracks.length}.`);
     assert(payload.tracks.every((track) => track.name.toLowerCase().endsWith(".wav")), "Every bundled sample track should be a WAV.");
     assert(payload.tracks.every((track) => track.audioUrl.includes(`127.0.0.1:${port}/audio?file=`)), "Track audio URLs should point at the test server.");

@@ -8,7 +8,7 @@ const host = "127.0.0.1";
 const appRoot = __dirname;
 const sampleMusicRoot = path.join(appRoot, "sample-music");
 const musicRoot = process.env.WAVE_DECK_LIBRARY
-  || (fs.existsSync(sampleMusicRoot) ? sampleMusicRoot : "C:\\Andy ChatGPT DALL-E aisongs");
+  || (fs.existsSync(sampleMusicRoot) ? sampleMusicRoot : "C:\\TVR Playlist");
 const musicRootResolved = path.resolve(musicRoot);
 const sampleMusicRootResolved = path.resolve(sampleMusicRoot);
 const audioMimeTypes = {
@@ -74,27 +74,15 @@ async function collectTracks(directory, prefix = "") {
   return tracks;
 }
 
-async function loadMoodsManifest(directory) {
-  try {
-    const manifestPath = path.join(directory, "moods.json");
-    const text = await fsp.readFile(manifestPath, "utf8");
-    return JSON.parse(text);
-  } catch (error) {
-    return null;
-  }
-}
-
 async function serveApiTracks(res) {
   try {
     const tracks = await collectTracks(musicRootResolved);
-    const moodsManifest = await loadMoodsManifest(musicRootResolved);
     const directoryName = musicRootResolved === sampleMusicRootResolved
       ? "32 Visualisations Sample Suite"
       : path.basename(musicRootResolved);
     send(res, 200, JSON.stringify({
       directoryName,
       tracks,
-      moodsManifest,
     }), { "content-type": "application/json; charset=utf-8" });
   } catch (error) {
     send(res, 404, JSON.stringify({
