@@ -133,8 +133,8 @@ async function run() {
     assert(payload.directoryName === "32 Visualisations Sample Suite", `Unexpected directory name: ${payload.directoryName}`);
     assert(Array.isArray(payload.tracks), "Tracks payload is not an array.");
     assert(!Object.prototype.hasOwnProperty.call(payload, "moodsManifest"), "Tracks payload still exposes retired moodsManifest data.");
-    assert(payload.tracks.length === 3, `Expected 3 sample audio tracks, got ${payload.tracks.length}.`);
-    assert(payload.tracks.every((track) => track.name.toLowerCase().endsWith(".wav")), "Every bundled sample track should be a WAV.");
+    assert(payload.tracks.length === 3, `Expected 3 repository test audio tracks, got ${payload.tracks.length}.`);
+    assert(payload.tracks.every((track) => track.name.toLowerCase().endsWith(".wav")), "Every repository test track should be a WAV.");
     assert(payload.tracks.every((track) => track.audioUrl.includes(`127.0.0.1:${port}/audio?file=`)), "Track audio URLs should point at the test server.");
 
     const sampleTrack = payload.tracks[0];

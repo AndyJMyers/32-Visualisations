@@ -7,8 +7,7 @@ const port = Number(process.env.PORT) || 4173;
 const host = "127.0.0.1";
 const appRoot = __dirname;
 const sampleMusicRoot = path.join(appRoot, "sample-music");
-const musicRoot = process.env.WAVE_DECK_LIBRARY
-  || (fs.existsSync(sampleMusicRoot) ? sampleMusicRoot : "C:\\TVR Playlist");
+const musicRoot = process.env.WAVE_DECK_LIBRARY || "C:\\TVR Playlist";
 const musicRootResolved = path.resolve(musicRoot);
 const sampleMusicRootResolved = path.resolve(sampleMusicRoot);
 const audioMimeTypes = {

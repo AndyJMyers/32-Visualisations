@@ -8,9 +8,7 @@
 
 It plays local audio from your device, works without an internet connection once installed, and turns your files into 32 vivid audio-reactive visualisations. It began as a desktop local music player with a taste for **Mental. Saturation. Overstimulation.** It has grown into an Android road-trip music player built for big stereos, strange colour, and cockpit-simple controls.
 
-No streaming account. No subscription. No rented library quietly disappearing when the bill stops. Just your files, your device, your speakers, and thirty-two vivid ways to make sound visible.
-
-The app also includes a small original three-track sample suite so a fresh install has something to play immediately. It is a showcase, not an exhaustive back catalogue.
+No streaming account. No subscription. No bundled catalogue pretending to know your taste. Just your files, your device, your speakers, and thirty-two vivid ways to make sound visible.
 
 ## The Story
 
@@ -38,7 +36,6 @@ More attributed engineering log entries live in [docs/engineering-log/](docs/eng
 - Works without internet connectivity once installed.
 - Supports `.wav`, `.mp3`, `.m4a`, `.aac`, `.flac`, `.ogg`, and `.opus`.
 - Provides a fixed set of **32** audio-reactive visualisations.
-- Includes a bundled three-song original sample suite for first launch and demonstration.
 - Runs as a desktop browser app or an offline-first Android WebView app.
 - Offers car-style Android controls for play/pause, previous/next track, next visualisation, shuffle, `Alchemy`, and `Speed`.
 - Uses `Alchemy` to apply artistically chosen visual settings.
@@ -93,7 +90,11 @@ Some are contemplative. Some are playable. Some should possibly be discussed wit
 
 The Android app is the mobile-first version of the same visualisation world. It is designed for in-car use: portrait layout, large controls at the bottom, familiar transport actions, and a little visual theatre when buttons are pressed.
 
-The app opens with the bundled three-track sample suite, then uses Android's folder picker to choose a local music folder when you want the full road-trip library. Once installed and pointed at music, it is intended to work offline. Bluetooth routing is handled by Android itself.
+The app opens ready for your own local music. Use Android's folder picker to choose a music folder, then play offline from files already on the device. Bluetooth routing is handled by Android itself.
+
+## Optional Sample Audio
+
+The repository includes three original WAV files in [sample-music/](sample-music/) for desktop/server demonstration and automated tests. They are not packaged inside the Android app. The Play build stays lean and expects the listener to bring their own music library.
 
 Current Play preparation lives in:
 
@@ -122,7 +123,7 @@ Automated system tests can be run from the repository root with:
 node tools/system-test.js
 ```
 
-The system tests start a temporary local server against the bundled sample suite, then verify the web app loads, the sample tracks are discovered, ranged audio is served, and unsafe audio requests are blocked.
+The system tests start a temporary local server against repository test audio, then verify the web app loads, tracks are discovered, ranged audio is served, and unsafe audio requests are blocked.
 
 After a release build, run:
 
@@ -159,7 +160,7 @@ WAVE_DECK_LIBRARY="/path/to/music-library" node server.js
 
 Then open [http://127.0.0.1:4173/](http://127.0.0.1:4173/).
 
-If `WAVE_DECK_LIBRARY` is not set, the local server uses the bundled `sample-music/` showcase suite.
+If `WAVE_DECK_LIBRARY` is not set, the local server looks for `C:\TVR Playlist`.
 
 The **Open folder** control can also select a different local directory in browsers that support the File System Access API.
 

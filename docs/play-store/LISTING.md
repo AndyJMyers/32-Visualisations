@@ -18,7 +18,7 @@ Built for road trips, big stereos, and locally owned music libraries, 32 Visuali
 
 The app is designed for atmosphere: glowing waveforms, kinetic motion, rich colour, and a cockpit-like interface that feels more like a custom instrument than a standard player.
 
-Includes a small original three-track sample suite so the app can play immediately after install. The main purpose remains simple and old-fashioned in the best way: choose your own local music folder and let your files drive the visuals.
+The purpose is simple and old-fashioned in the best way: choose your own local music folder and let your files drive the visuals. The app does not bundle a music catalogue or upload your library.
 
 Pay once, keep playing. No streaming account. No subscription. No algorithmic sermon. No disposable wallpaper pretending to be a music experience. Just your files, your speakers, and a screen full of motion.
 
@@ -31,7 +31,6 @@ You do not have to be entirely normal to enjoy this player, and that is rather t
 - Explore a fixed set of 32 vivid music visualisations.
 - Simple portrait interface designed for quick, familiar control.
 - Shuffle, track skip, forward-only Visual, Speed, and Alchemy controls.
-- Includes a small original sample suite for first launch.
 - Audio-reactive visuals built for colour, movement, and atmosphere.
 - Paid once through Google Play, with no subscription.
 
