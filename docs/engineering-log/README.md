@@ -26,6 +26,15 @@ decorative.
 >
 > Codex, Collaborating Engineer, 32 Visualisations
 
+## Production Timeline
+
+### 5 August 2026
+
+Song material submitted for streaming, 32 Visualisations moved through active
+testing, and Recursive Records began to cohere as the umbrella for the
+music/software/art output. Retirement turns out not to be idleness, but the
+removal of excuses.
+
 ## Quote Format
 
 Use this format for future engineering log entries:

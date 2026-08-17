@@ -115,6 +115,15 @@ Explanation if asked:
 
 ## Release Track
 
+Current closed testing state:
+
+- **Active track:** Closed testing - Alpha
+- **Current Play build:** version `1.0.3`, version code `6`
+- **Package:** `com.thirtytwovisualisations.app`
+- **Target SDK:** Android API 36
+- **Tester gate:** Play Console shows the closed testing release published and at least 12 testers opted in.
+- **Remaining gate:** Run the closed test with at least 12 opted-in testers for 14 continuous days, then apply for production access.
+
 Recommended first release path:
 
 1. Upload the signed release `.aab` to internal testing.

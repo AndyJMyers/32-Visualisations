@@ -119,6 +119,7 @@ async function run() {
     ["Dir", "Visual", "Alchemy", "Speed"].forEach((label) => {
       assert(indexHtml.includes(`>${label}<`), `Car controls are missing the ${label} label.`);
     });
+    // Retired labels should stay retired; the car UI is intentionally forward-only.
     ["MOOD", "A++", "G++", "Visual &lt;"].forEach((staleLabel) => {
       assert(!indexHtml.includes(staleLabel), `Car controls still contain stale label ${staleLabel}.`);
     });

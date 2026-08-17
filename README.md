@@ -229,14 +229,13 @@ Android car mode:
 ## Project Notes
 
 - Android maintenance rules: [docs/MAINTENANCE.md](docs/MAINTENANCE.md)
-- Song library workflow notes: [docs/SONG_LIBRARY_WORKFLOW.md](docs/SONG_LIBRARY_WORKFLOW.md)
 - Play Store materials: [docs/play-store/](docs/play-store/)
 
 ## Status
 
 This project is still under active development, so any hallucinations you experience may not be entirely your own fault this time.
 
-The Android app is being prepared for Google Play testing. A Google Play Alpha Release build has been tagged, with Play Console assets, release notes, privacy policy, and tester materials now in place.
+The Android app is in Google Play closed testing. Version `1.0.3` / build `6` targets Android API 36 and is available to selected testers while the 14-day closed-test gate runs.
 
 If you enjoyed this, why not gain merit in this life by [buying this holy man a pint of mead or ale](https://buy.stripe.com/5kQ5kDcX8cwc52J70rds400), according to your purse?
 
