@@ -956,6 +956,130 @@ html.android-car body {
   color: #f3fbff;
 }
 
+@media (orientation: landscape) and (max-height: 680px) {
+  body.android-car,
+  html.android-car body {
+    --car-side-panel-width: clamp(210px, 31vw, 300px);
+    --car-now-playing-height: 68px;
+    --car-deck-height: calc(100dvh - var(--car-now-playing-height));
+  }
+
+  .android-car .shell,
+  .android-car .player {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .android-car #visualizer {
+    inset: 0 var(--car-side-panel-width) 0 0;
+    width: calc(100vw - var(--car-side-panel-width));
+    height: 100vh;
+    height: 100dvh;
+    border-right: 1px solid #20282d;
+  }
+
+  .android-car .now-playing {
+    inset: 0 0 auto auto;
+    width: var(--car-side-panel-width);
+    height: var(--car-now-playing-height);
+    padding: 7px 10px;
+    gap: 8px;
+    border-block: 0;
+    border-left: 1px solid #2a3338;
+    border-bottom: 1px solid #2a3338;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 48%),
+      linear-gradient(90deg, rgba(126, 234, 203, 0.08), transparent 42%),
+      #07090a;
+  }
+
+  .android-car .track-copy span {
+    font-size: clamp(0.52rem, 1.45vw, 0.64rem);
+  }
+
+  .android-car .track-copy strong {
+    font-size: clamp(0.72rem, 1.85vw, 0.92rem);
+  }
+
+  .android-car #timeReadout {
+    font-size: clamp(0.66rem, 1.65vw, 0.84rem);
+  }
+
+  .android-car .time-cluster {
+    min-width: clamp(92px, 13vw, 132px);
+  }
+
+  .android-car .alchemy-progress {
+    height: 6px;
+  }
+
+  .android-car .car-deck {
+    inset: var(--car-now-playing-height) 0 0 auto;
+    width: var(--car-side-panel-width);
+    height: var(--car-deck-height);
+    grid-template-rows: minmax(0, 1fr) 74px;
+    gap: 8px;
+    padding: 9px 10px 10px;
+    border-top: 0;
+    border-left: 1px solid #2a3338;
+    background:
+      linear-gradient(90deg, #181c1f 0%, #090b0c 54%, #020303 100%);
+    box-shadow: -12px 0 30px rgba(0, 0, 0, 0.55);
+  }
+
+  .android-car .car-utility-row {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(5, minmax(0, 1fr));
+  }
+
+  .android-car .car-transport-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .android-car .car-deck button {
+    border-radius: 12px;
+    padding: 5px 4px;
+  }
+
+  .android-car .car-icon-button {
+    grid-template-rows: auto;
+    grid-template-columns: minmax(34px, 0.32fr) 1fr minmax(18px, auto);
+    justify-items: stretch;
+    gap: 8px;
+  }
+
+  .android-car .car-icon-button .car-symbol {
+    align-self: center;
+    justify-self: center;
+    font-size: clamp(1rem, 3.1vw, 1.44rem);
+  }
+
+  .android-car .car-icon-button .car-button-kicker {
+    align-self: center;
+    justify-self: start;
+    font-size: clamp(0.58rem, 1.6vw, 0.74rem);
+  }
+
+  .android-car .car-icon-button::before {
+    content: "";
+    justify-self: center;
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: 50%;
+    background: rgba(214, 168, 76, 0.72);
+    box-shadow: 0 0 10px rgba(214, 168, 76, 0.44);
+  }
+
+  .android-car .car-button-main {
+    font-size: clamp(1.05rem, 3.7vw, 1.52rem);
+  }
+
+  .android-car .shuffle-deck-icon {
+    width: clamp(32px, 7vw, 44px);
+    height: clamp(18px, 4.2vw, 25px);
+  }
+}
+
 @media (max-width: 680px) {
   .shell {
     width: 100%;

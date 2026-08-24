@@ -252,7 +252,7 @@ Paste-ready release notes for the next closed testing build:
 
 ```text
 <en-GB>
-Fixed Android playback issues found during testing: the first Play press now starts the first selected track correctly, and playback now advances through the selected folder after each completed track. Also includes Play listing and documentation updates from closed-test review.
+Fixed Android playback issues found during testing: the first Play press now starts the first selected track correctly, playback advances through the selected folder after each completed track, and Android startup now opens directly into the in-car interface without briefly flashing the desktop controls.
 </en-GB>
 ```
 

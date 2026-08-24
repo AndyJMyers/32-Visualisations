@@ -82,6 +82,8 @@ function waitForServer(child, port) {
 
 async function run() {
   assert(fs.existsSync(sampleMusicRoot), "sample-music folder is missing.");
+  const androidManifest = fs.readFileSync(path.join(repoRoot, "android", "app", "src", "main", "AndroidManifest.xml"), "utf8");
+  assert(!androidManifest.includes('android:screenOrientation="portrait"'), "Android activity should not be locked to portrait.");
 
   const port = await findFreePort();
   const child = spawn(process.execPath, ["server.js"], {
@@ -132,12 +134,19 @@ async function run() {
     const appScript = appJs.body.toString("utf8");
     assert(appScript.includes("function isAtNaturalTrackEnd()"), "Playback script is missing the natural-end continuation guard.");
     assert(appScript.includes('document.documentElement.classList.add("android-car")'), "Playback script should keep the early Android car class in sync.");
+    assert(appScript.includes("isLandscapeCarMode"), "Playback script should resize the Android canvas for landscape car mode.");
     assert(appScript.includes("audio.addEventListener(\"pause\""), "Playback script is missing the pause-state handler.");
     assert(appScript.includes("continuousPlaybackRequested && isAtNaturalTrackEnd()"), "Playback script no longer advances when Android pauses at the natural end of a track.");
     assert(
       /if \(currentIndex < 0 \|\| !audio\.src\) {\s*loadTrack\(0, false\);\s*}\s*continuousPlaybackRequested = true;\s*playlistAdvancePending = true;\s*playLoadedTrackWithRetry/.test(appScript),
       "Initial Play should select the first track before setting playback intent, then start from the Play-button action."
     );
+
+    const css = await request(port, "/styles.css");
+    assert(css.statusCode === 200, `Expected /styles.css to return 200, got ${css.statusCode}.`);
+    const cssText = css.body.toString("utf8");
+    assert(cssText.includes("@media (orientation: landscape) and (max-height: 680px)"), "Stylesheet is missing Android landscape car layout.");
+    assert(cssText.includes("--car-side-panel-width"), "Landscape car layout should reserve a side control panel.");
 
     const tracksResponse = await request(port, "/api/tracks");
     assert(tracksResponse.statusCode === 200, `Expected /api/tracks to return 200, got ${tracksResponse.statusCode}.`);

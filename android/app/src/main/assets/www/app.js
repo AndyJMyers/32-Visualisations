@@ -12422,10 +12422,19 @@ function resizeCanvas() {
   let cssHeight = isVisualFullscreen ? window.innerHeight : rect.height;
 
   if (isAndroidCarMode && !isVisualFullscreen) {
-    const deckHeight = document.querySelector(".car-deck")?.getBoundingClientRect().height || 0;
-    const nowPlayingHeight = document.querySelector(".now-playing")?.getBoundingClientRect().height || 0;
-    cssWidth = window.innerWidth;
-    cssHeight = Math.max(120, window.innerHeight - deckHeight - nowPlayingHeight);
+    const isLandscapeCarMode = window.matchMedia("(orientation: landscape) and (max-height: 680px)").matches;
+    const deckRect = document.querySelector(".car-deck")?.getBoundingClientRect();
+    const nowPlayingRect = document.querySelector(".now-playing")?.getBoundingClientRect();
+    if (isLandscapeCarMode) {
+      const sidePanelWidth = Math.max(deckRect?.width || 0, nowPlayingRect?.width || 0);
+      cssWidth = Math.max(180, window.innerWidth - sidePanelWidth);
+      cssHeight = window.innerHeight;
+    } else {
+      const deckHeight = deckRect?.height || 0;
+      const nowPlayingHeight = nowPlayingRect?.height || 0;
+      cssWidth = window.innerWidth;
+      cssHeight = Math.max(120, window.innerHeight - deckHeight - nowPlayingHeight);
+    }
   }
 
   visualizer.width = Math.floor(cssWidth * ratio);
