@@ -252,7 +252,7 @@ Paste-ready release notes for the next closed testing build:
 
 ```text
 <en-GB>
-Fixed Android playback issues found during testing: the first Play press now starts the first selected track correctly, playback advances through the selected folder after each completed track, and Android startup now opens directly into the in-car interface without briefly flashing the desktop controls.
+Added Android landscape support for in-car use: the app now rotates into a dedicated landscape cockpit layout with the visualisation on the left and the core playback controls on the right. Also keeps the existing playback fixes for first-track start, continuous folder playback, and clean Android startup.
 </en-GB>
 ```
 
