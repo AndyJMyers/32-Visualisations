@@ -555,7 +555,8 @@ select {
   max-height: 24vh;
 }
 
-body.android-car {
+body.android-car,
+html.android-car body {
   --car-now-playing-height: 58px;
   --car-deck-height: calc(142px + env(safe-area-inset-bottom));
   overflow: hidden;

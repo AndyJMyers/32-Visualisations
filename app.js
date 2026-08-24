@@ -45,6 +45,7 @@ const carPreviousButton = document.querySelector("#carPreviousButton");
 const carPlayButton = document.querySelector("#carPlayButton");
 const carNextButton = document.querySelector("#carNextButton");
 if (window.AndroidWaveDeck) {
+  document.documentElement.classList.add("android-car");
   document.body.classList.add("android-car");
   audio.removeAttribute("crossorigin");
 } else {

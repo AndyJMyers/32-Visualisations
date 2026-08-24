@@ -4,9 +4,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Wave Deck</title>
+    <script>
+      if (window.AndroidWaveDeck) {
+        document.documentElement.classList.add("android-car");
+      }
+    </script>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
+    <script>
+      if (window.AndroidWaveDeck) {
+        document.body.classList.add("android-car");
+      }
+    </script>
     <main class="shell">
       <section class="player" aria-label="Music player">
         <header class="topbar">

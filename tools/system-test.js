@@ -105,6 +105,8 @@ async function run() {
     assert(indexHtml.includes('id="audio"'), "Index page is missing the audio element.");
     assert(indexHtml.includes('id="carPlayButton"'), "Index page is missing the Android car play control.");
     assert(indexHtml.includes('src="app.js"'), "Index page is missing the app script.");
+    assert(indexHtml.includes('document.documentElement.classList.add("android-car")'), "Index page should mark Android car mode before CSS loads.");
+    assert(indexHtml.includes('document.body.classList.add("android-car")'), "Index page should mark Android car mode before body content paints.");
     [
       'id="carFolderButton"',
       'id="carNextVisualButton"',
@@ -129,6 +131,7 @@ async function run() {
     assert(appJs.headers["content-type"]?.includes("text/javascript"), "Expected app.js JavaScript content type.");
     const appScript = appJs.body.toString("utf8");
     assert(appScript.includes("function isAtNaturalTrackEnd()"), "Playback script is missing the natural-end continuation guard.");
+    assert(appScript.includes('document.documentElement.classList.add("android-car")'), "Playback script should keep the early Android car class in sync.");
     assert(appScript.includes("audio.addEventListener(\"pause\""), "Playback script is missing the pause-state handler.");
     assert(appScript.includes("continuousPlaybackRequested && isAtNaturalTrackEnd()"), "Playback script no longer advances when Android pauses at the natural end of a track.");
     assert(
