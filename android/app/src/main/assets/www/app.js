@@ -1938,6 +1938,23 @@ function continueToNextTrack() {
   scheduleSessionSave(120);
 }
 
+function isAtNaturalTrackEnd() {
+  const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+  const currentTime = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+  return currentIndex >= 0
+    && tracks.length > 0
+    && duration > 0
+    && (audio.ended || currentTime >= duration - 0.35);
+}
+
+function handleTrackEnded() {
+  if (playbackTransitioning) {
+    return;
+  }
+
+  continueToNextTrack();
+}
+
 function pauseCurrent() {
   clearPlaylistAdvanceRetry();
   playlistAdvancePending = false;
@@ -12704,13 +12721,13 @@ function togglePlayPause() {
   if (!audio.paused) {
     pauseCurrent();
   } else {
-    continuousPlaybackRequested = true;
     if (currentIndex < 0 || !audio.src) {
-      loadTrack(0, true);
-    } else {
-      playlistAdvancePending = true;
-      playLoadedTrackWithRetry(playbackGeneration, { preservePlaybackIntent: true });
+      loadTrack(0, false);
     }
+
+    continuousPlaybackRequested = true;
+    playlistAdvancePending = true;
+    playLoadedTrackWithRetry(playbackGeneration, { preservePlaybackIntent: true });
   }
 }
 
@@ -12742,9 +12759,7 @@ fireworkSpeed.addEventListener("input", () => {
   scheduleSessionSave();
 });
 
-audio.addEventListener("ended", () => {
-  continueToNextTrack();
-});
+audio.addEventListener("ended", handleTrackEnded);
 audio.addEventListener("canplay", () => {
   if (playlistAdvancePending && continuousPlaybackRequested) {
     playLoadedTrackWithRetry(playbackGeneration, { preservePlaybackIntent: true });
@@ -12759,6 +12774,11 @@ audio.addEventListener("playing", () => {
   scheduleSessionSave(120);
 });
 audio.addEventListener("pause", () => {
+  if (continuousPlaybackRequested && isAtNaturalTrackEnd()) {
+    handleTrackEnded();
+    return;
+  }
+
   if (playbackTransitioning || continuousPlaybackRequested) {
     scheduleSessionSave(120);
     return;

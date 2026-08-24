@@ -127,6 +127,14 @@ async function run() {
     const appJs = await request(port, "/app.js");
     assert(appJs.statusCode === 200, `Expected /app.js to return 200, got ${appJs.statusCode}.`);
     assert(appJs.headers["content-type"]?.includes("text/javascript"), "Expected app.js JavaScript content type.");
+    const appScript = appJs.body.toString("utf8");
+    assert(appScript.includes("function isAtNaturalTrackEnd()"), "Playback script is missing the natural-end continuation guard.");
+    assert(appScript.includes("audio.addEventListener(\"pause\""), "Playback script is missing the pause-state handler.");
+    assert(appScript.includes("continuousPlaybackRequested && isAtNaturalTrackEnd()"), "Playback script no longer advances when Android pauses at the natural end of a track.");
+    assert(
+      /if \(currentIndex < 0 \|\| !audio\.src\) {\s*loadTrack\(0, false\);\s*}\s*continuousPlaybackRequested = true;\s*playlistAdvancePending = true;\s*playLoadedTrackWithRetry/.test(appScript),
+      "Initial Play should select the first track before setting playback intent, then start from the Play-button action."
+    );
 
     const tracksResponse = await request(port, "/api/tracks");
     assert(tracksResponse.statusCode === 200, `Expected /api/tracks to return 200, got ${tracksResponse.statusCode}.`);
