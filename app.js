@@ -9,7 +9,6 @@ const visualizer = document.querySelector("#visualizer");
 const audio = document.querySelector("#audio");
 const previousButton = document.querySelector("#previousButton");
 const playButton = document.querySelector("#playButton");
-const stopButton = document.querySelector("#stopButton");
 const nextButton = document.querySelector("#nextButton");
 const fullscreenButton = document.querySelector("#fullscreenButton");
 const shuffleToggle = document.querySelector("#shuffleToggle");
@@ -386,7 +385,7 @@ const defaultVisualizerControls = {
 };
 
 const defaultVisualizerLabels = {
-  form: "Form",
+  form: "Alchemy",
   theme: "Colour",
   speed: "Speed",
   size: "Reach",
@@ -996,16 +995,19 @@ function setStatus(status) {
   if (status === "playing") {
     statusLight.classList.add("playing");
     statusText.textContent = "Playing";
-    playButton.textContent = "Pause";
+    playButton.classList.add("is-playing");
+    playButton.setAttribute("aria-pressed", "true");
     carPlayButton.querySelector(".car-button-main").textContent = "‖";
   } else if (status === "paused") {
     statusLight.classList.add("paused");
     statusText.textContent = "Paused";
-    playButton.textContent = "Play";
+    playButton.classList.remove("is-playing");
+    playButton.setAttribute("aria-pressed", "false");
     carPlayButton.querySelector(".car-button-main").textContent = "▶ / ‖";
   } else {
     statusText.textContent = "Stopped";
-    playButton.textContent = "Play";
+    playButton.classList.remove("is-playing");
+    playButton.setAttribute("aria-pressed", "false");
     carPlayButton.querySelector(".car-button-main").textContent = "▶ / ‖";
   }
 }
@@ -1069,7 +1071,6 @@ function setControlsEnabled(enabled) {
   [
     previousButton,
     playButton,
-    stopButton,
     nextButton,
     shuffleToggle,
     sortSelect,
@@ -1516,8 +1517,9 @@ function syncVisualizerControls() {
 
 function setFullscreenLabel() {
   const active = document.querySelector(".player").classList.contains("visual-fullscreen");
-  fullscreenButton.textContent = active ? "X" : "F";
-  fullscreenButton.title = active ? "Exit fullscreen (Esc)" : "Visual fullscreen (F4)";
+  fullscreenButton.setAttribute("aria-label", active
+    ? "Exit visual fullscreen. Keyboard shortcut: escape"
+    : "Toggle visual fullscreen. Keyboard shortcut: f");
 }
 
 function scheduleCanvasResize() {
@@ -2060,6 +2062,7 @@ function loadTrackFiles(files, name, source) {
   sortTracks();
   renderTracks();
   restoreTrackFromSession(restoredSession);
+  ensureInitialTrackLoaded();
   scheduleSessionSave();
 }
 
@@ -2080,6 +2083,7 @@ function loadServerTracks(library) {
   sortTracks();
   renderTracks();
   restoreTrackFromSession(restoredSession);
+  ensureInitialTrackLoaded();
   scheduleSessionSave();
 }
 
@@ -2100,6 +2104,7 @@ function loadAndroidTracks(library) {
   sortTracks();
   renderTracks();
   restoreTrackFromSession(restoredSession);
+  ensureInitialTrackLoaded();
   if (library.error) {
     setAndroidStatus(`Android: ${library.error}`);
   } else if (tracks.length > 0) {
@@ -2108,6 +2113,13 @@ function loadAndroidTracks(library) {
     setAndroidStatus("Android: no supported audio files found");
   }
   scheduleSessionSave();
+}
+
+function ensureInitialTrackLoaded() {
+  if (tracks.length > 0 && currentIndex < 0) {
+    loadTrack(0, false);
+    setStatus("paused");
+  }
 }
 
 function loadAndroidBridgeLibrary() {
@@ -12743,9 +12755,8 @@ function togglePlayPause() {
 
 playButton.addEventListener("click", togglePlayPause);
 
-stopButton.addEventListener("click", stopCurrent);
-nextButton.addEventListener("click", () => loadTrack(nextIndex()));
-previousButton.addEventListener("click", () => loadTrack(previousIndex()));
+nextButton.addEventListener("click", () => changeTrackByStep(1));
+previousButton.addEventListener("click", () => changeTrackByStep(-1));
 fullscreenButton.addEventListener("click", toggleVisualFullscreen);
 carFolderButton.addEventListener("click", openLibraryPicker);
 carPlayButton.addEventListener("click", togglePlayPause);
@@ -12900,13 +12911,19 @@ function handleGlobalKey(event) {
     return;
   }
 
-  if (key === "ArrowRight") {
+  if ((key === " " || code === "Space") && tagName !== "button") {
+    event.preventDefault();
+    togglePlayPause();
+    return;
+  }
+
+  if (key === "ArrowRight" || key === ">") {
     event.preventDefault();
     changeTrackByStep(1);
     return;
   }
 
-  if (key === "ArrowLeft") {
+  if (key === "ArrowLeft" || key === "<") {
     event.preventDefault();
     changeTrackByStep(-1);
     return;

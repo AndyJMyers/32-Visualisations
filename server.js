@@ -7,7 +7,14 @@ const port = Number(process.env.PORT) || 4173;
 const host = "127.0.0.1";
 const appRoot = __dirname;
 const sampleMusicRoot = path.join(appRoot, "sample-music");
-const musicRoot = process.env.WAVE_DECK_LIBRARY || "C:\\TVR Playlist";
+const defaultLibraryCandidates = [
+  "C:\\TVR Playlist",
+  path.join(process.env.USERPROFILE || "", "OneDrive", "TVR MUSIC PLAYLIST"),
+  sampleMusicRoot,
+];
+const musicRoot = process.env.WAVE_DECK_LIBRARY
+  || defaultLibraryCandidates.find((candidate) => fs.existsSync(candidate))
+  || sampleMusicRoot;
 const musicRootResolved = path.resolve(musicRoot);
 const sampleMusicRootResolved = path.resolve(sampleMusicRoot);
 const audioMimeTypes = {
@@ -78,7 +85,7 @@ async function serveApiTracks(res) {
     const tracks = await collectTracks(musicRootResolved);
     const directoryName = musicRootResolved === sampleMusicRootResolved
       ? "32 Visualisations Sample Suite"
-      : path.basename(musicRootResolved);
+      : process.env.WAVE_DECK_LIBRARY_NAME || "TVR Playlist";
     send(res, 200, JSON.stringify({
       directoryName,
       tracks,

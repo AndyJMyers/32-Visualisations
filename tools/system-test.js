@@ -123,6 +123,12 @@ async function run() {
     ["Dir", "Visual", "Alchemy", "Speed"].forEach((label) => {
       assert(indexHtml.includes(`>${label}<`), `Car controls are missing the ${label} label.`);
     });
+    ["desktop-transport", "transport-skip", "transport-play", "transport-fullscreen", "space-key", "space-play", "space-pause"].forEach((marker) => {
+      assert(indexHtml.includes(marker), `Desktop transport deck is missing ${marker}.`);
+    });
+    assert(!indexHtml.includes('id="stopButton"'), "Desktop controls should not expose the redundant Stop button.");
+    assert(!indexHtml.includes("Stop [II]"), "Desktop controls should not show the retired Stop label.");
+    assert(!indexHtml.includes("Visual fullscreen (F4)"), "Desktop fullscreen control should not have the retired tooltip.");
     // Retired labels should stay retired; the car UI is intentionally forward-only.
     ["MOOD", "A++", "G++", "Visual &lt;"].forEach((staleLabel) => {
       assert(!indexHtml.includes(staleLabel), `Car controls still contain stale label ${staleLabel}.`);
@@ -135,6 +141,12 @@ async function run() {
     assert(appScript.includes("function isAtNaturalTrackEnd()"), "Playback script is missing the natural-end continuation guard.");
     assert(appScript.includes('document.documentElement.classList.add("android-car")'), "Playback script should keep the early Android car class in sync.");
     assert(appScript.includes("isLandscapeCarMode"), "Playback script should resize the Android canvas for landscape car mode.");
+    assert(appScript.includes('form: "Alchemy"'), "Desktop visual form control should be labelled Alchemy.");
+    assert(appScript.includes('playButton.classList.add("is-playing")'), "Desktop play control should show its active state.");
+    assert(appScript.includes('tagName !== "button"'), "Global space shortcut should not double-toggle focused buttons.");
+    assert(appScript.includes('key === "ArrowRight" || key === ">"'), "Next-track shortcut should accept the displayed greater-than key.");
+    assert(appScript.includes('key === "ArrowLeft" || key === "<"'), "Previous-track shortcut should accept the displayed less-than key.");
+    assert(appScript.includes("function ensureInitialTrackLoaded()"), "Initial library load should select the first track without playing it.");
     assert(appScript.includes("audio.addEventListener(\"pause\""), "Playback script is missing the pause-state handler.");
     assert(appScript.includes("continuousPlaybackRequested && isAtNaturalTrackEnd()"), "Playback script no longer advances when Android pauses at the natural end of a track.");
     assert(
@@ -147,6 +159,8 @@ async function run() {
     const cssText = css.body.toString("utf8");
     assert(cssText.includes("@media (orientation: landscape) and (max-height: 680px)"), "Stylesheet is missing Android landscape car layout.");
     assert(cssText.includes("--car-side-panel-width"), "Landscape car layout should reserve a side control panel.");
+    assert(cssText.includes(".player.visual-fullscreen .controls"), "Fullscreen mode should retain the principal transport controls.");
+    assert(cssText.includes(".player.visual-fullscreen .controls .toggle"), "Fullscreen mode should hide the secondary shuffle toggle.");
 
     const tracksResponse = await request(port, "/api/tracks");
     assert(tracksResponse.statusCode === 200, `Expected /api/tracks to return 200, got ${tracksResponse.statusCode}.`);
