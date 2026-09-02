@@ -43,6 +43,8 @@ const carShuffleLabel = document.querySelector("#carShuffleLabel");
 const carPreviousButton = document.querySelector("#carPreviousButton");
 const carPlayButton = document.querySelector("#carPlayButton");
 const carNextButton = document.querySelector("#carNextButton");
+const desktopNextVisualButton = document.querySelector("#desktopNextVisualButton");
+const desktopAlchemyButton = document.querySelector("#desktopAlchemyButton");
 if (window.AndroidWaveDeck) {
   document.documentElement.classList.add("android-car");
   document.body.classList.add("android-car");
@@ -1082,7 +1084,7 @@ function setControlsEnabled(enabled) {
     control.disabled = !enabled;
   });
 
-  [carFolderButton, carNextVisualButton, carAlchemyButton, carAgitationButton].forEach((control) => {
+  [carFolderButton, carNextVisualButton, carAlchemyButton, carAgitationButton, desktopNextVisualButton, desktopAlchemyButton].forEach((control) => {
     control.disabled = false;
   });
 }
@@ -12758,6 +12760,8 @@ playButton.addEventListener("click", togglePlayPause);
 nextButton.addEventListener("click", () => changeTrackByStep(1));
 previousButton.addEventListener("click", () => changeTrackByStep(-1));
 fullscreenButton.addEventListener("click", toggleVisualFullscreen);
+desktopNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
+desktopAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
 carFolderButton.addEventListener("click", openLibraryPicker);
 carPlayButton.addEventListener("click", togglePlayPause);
 carPreviousButton.addEventListener("click", () => changeTrackByStep(-1));

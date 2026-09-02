@@ -123,7 +123,7 @@ async function run() {
     ["Dir", "Visual", "Alchemy", "Speed"].forEach((label) => {
       assert(indexHtml.includes(`>${label}<`), `Car controls are missing the ${label} label.`);
     });
-    ["desktop-transport", "transport-skip", "transport-play", "transport-fullscreen", "space-key", "space-play", "space-pause"].forEach((marker) => {
+    ["desktop-transport", "desktop-creative-controls", "desktopNextVisualButton", "desktopAlchemyButton", "transport-skip", "transport-play", "transport-fullscreen", "space-key", "space-play", "space-pause"].forEach((marker) => {
       assert(indexHtml.includes(marker), `Desktop transport deck is missing ${marker}.`);
     });
     assert(!indexHtml.includes('id="stopButton"'), "Desktop controls should not expose the redundant Stop button.");
@@ -147,6 +147,8 @@ async function run() {
     assert(appScript.includes('key === "ArrowRight" || key === ">"'), "Next-track shortcut should accept the displayed greater-than key.");
     assert(appScript.includes('key === "ArrowLeft" || key === "<"'), "Previous-track shortcut should accept the displayed less-than key.");
     assert(appScript.includes("function ensureInitialTrackLoaded()"), "Initial library load should select the first track without playing it.");
+    assert(appScript.includes('desktopNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1))'), "Desktop visual button should advance through visualisations.");
+    assert(appScript.includes('desktopAlchemyButton.addEventListener("click", applyAlchemicalAdjustment)'), "Desktop Alchemy button should apply a fresh visual recipe.");
     assert(appScript.includes("audio.addEventListener(\"pause\""), "Playback script is missing the pause-state handler.");
     assert(appScript.includes("continuousPlaybackRequested && isAtNaturalTrackEnd()"), "Playback script no longer advances when Android pauses at the natural end of a track.");
     assert(
@@ -161,6 +163,7 @@ async function run() {
     assert(cssText.includes("--car-side-panel-width"), "Landscape car layout should reserve a side control panel.");
     assert(cssText.includes(".player.visual-fullscreen .controls"), "Fullscreen mode should retain the principal transport controls.");
     assert(cssText.includes(".player.visual-fullscreen .controls .toggle"), "Fullscreen mode should hide the secondary shuffle toggle.");
+    assert(cssText.includes(".player.visual-fullscreen .desktop-creative-controls"), "Fullscreen mode should expose Visual and Alchemy controls.");
 
     const tracksResponse = await request(port, "/api/tracks");
     assert(tracksResponse.statusCode === 200, `Expected /api/tracks to return 200, got ${tracksResponse.statusCode}.`);
