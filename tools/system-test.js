@@ -147,6 +147,9 @@ async function run() {
     assert(appScript.includes('key === "ArrowRight" || key === ">"'), "Next-track shortcut should accept the displayed greater-than key.");
     assert(appScript.includes('key === "ArrowLeft" || key === "<"'), "Previous-track shortcut should accept the displayed less-than key.");
     assert(appScript.includes("function ensureInitialTrackLoaded()"), "Initial library load should select the first track without playing it.");
+    assert(appScript.includes("function canvasRenderSize("), "Visualizer script is missing the canvas render-budget helper.");
+    assert(appScript.includes("maxCanvasPixels"), "Visualizer script is missing a canvas pixel budget.");
+    assert(appScript.includes("const renderSize = canvasRenderSize(cssWidth, cssHeight, ratio)"), "Canvas resize should use the render budget.");
     assert(appScript.includes('desktopNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1))'), "Desktop visual button should advance through visualisations.");
     assert(appScript.includes('desktopAlchemyButton.addEventListener("click", applyAlchemicalAdjustment)'), "Desktop Alchemy button should apply a fresh visual recipe.");
     assert(appScript.includes("audio.addEventListener(\"pause\""), "Playback script is missing the pause-state handler.");

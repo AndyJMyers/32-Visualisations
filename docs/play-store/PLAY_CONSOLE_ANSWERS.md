@@ -84,6 +84,13 @@ Reasoning: the app does not require an account.
 
 ### Content Rating
 
+**IARC Global Rating ID:** `3b9343e0-20ca-8323-8dd0-3f89fd7ab665`
+**Issued:** 3 September 2026
+
+This identifier can be reused when onboarding 32 Visualisations to other
+IARC-licensed digital storefronts. It is a public store-onboarding reference,
+not a signing key or other secret.
+
 Expected category: music/audio player or entertainment utility.
 
 Likely answers:
