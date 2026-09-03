@@ -59,6 +59,12 @@ The number is fixed. Thirty-two is binary, balanced, mellow in its intonation an
 
 **Bob Ross Garden**
 
+### Desktop Fullscreen Gallery
+
+| | |
+|---|---|
+| ![Chimaera of Snake and Conga-line: neon procession](docs/images/desktop-gallery/chimaera-neon-procession.png)<br>**Chimaera: Neon procession** | ![Chimaera of Snake and Conga-line: Mercury Bloom](docs/images/desktop-gallery/chimaera-mercury-bloom.png)<br>**Chimaera: Mercury Bloom** |
+
 ### Snake / Conga Transition
 
 | Snake | Conga-line |
