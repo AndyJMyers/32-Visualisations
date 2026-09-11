@@ -175,11 +175,13 @@ const isAndroidCarMode = Boolean(androidBridge);
 const performanceProfile = isAndroidCarMode
   ? {
       maxPixelRatio: 1.6,
+      maxCanvasPixels: 1_350_000,
       populationScale: 0.72,
       maxPopulation: 8,
     }
   : {
-      maxPixelRatio: 2.4,
+      maxPixelRatio: 1.8,
+      maxCanvasPixels: 2_400_000,
       populationScale: 1,
       maxPopulation: 12,
     };
@@ -1212,6 +1214,20 @@ function handCountValueNumber() {
 function canvasPixelRatio() {
   const ratio = window.devicePixelRatio || 1;
   return Math.min(ratio, performanceProfile.maxPixelRatio);
+}
+
+function canvasRenderSize(cssWidth, cssHeight, ratio = canvasPixelRatio()) {
+  let width = Math.max(1, Math.floor(cssWidth * ratio));
+  let height = Math.max(1, Math.floor(cssHeight * ratio));
+  const pixelCount = width * height;
+
+  if (pixelCount > performanceProfile.maxCanvasPixels) {
+    const scale = Math.sqrt(performanceProfile.maxCanvasPixels / pixelCount);
+    width = Math.max(1, Math.floor(width * scale));
+    height = Math.max(1, Math.floor(height * scale));
+  }
+
+  return { width, height };
 }
 
 function handGraspAmount() {
@@ -12451,8 +12467,9 @@ function resizeCanvas() {
     }
   }
 
-  visualizer.width = Math.floor(cssWidth * ratio);
-  visualizer.height = Math.floor(cssHeight * ratio);
+  const renderSize = canvasRenderSize(cssWidth, cssHeight, ratio);
+  visualizer.width = renderSize.width;
+  visualizer.height = renderSize.height;
   pacDancers = [];
   handForms = [];
   swampBubbles = [];
