@@ -248,7 +248,7 @@ Android car mode:
 
 This project is still under active development, so any hallucinations you experience may not be entirely your own fault this time.
 
-The Android app is live on Google Play. The currently published Play build is version `1.0.3` / build `6`, targeting Android API 36. The dual-flywheel navigator is part of the next update path.
+The Android app is live on Google Play. The currently published Play build is version `1.0.5` / build `8`, targeting Android API 36. Version `1.0.9` / build `9`, including the dual-flywheel navigator, is currently in Google Play review.
 
 If you enjoyed this, why not gain merit in this life by [buying this holy man a pint of mead or ale](https://buy.stripe.com/5kQ5kDcX8cwc52J70rds400), according to your purse?
 

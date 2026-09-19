@@ -146,17 +146,17 @@ Current production state:
 
 - **Production access:** Granted.
 - **Store listing:** Live on Google Play.
-- **Current Play build:** version `1.0.3`, version code `6`.
+- **Current Play build:** version `1.0.5`, version code `8`.
 - **Package:** `com.thirtytwovisualisations.app`.
 - **Target SDK:** Android API 36.
-- **Next release:** Build a new signed AAB with an incremented version code, including the dual-flywheel navigator and its current documentation.
+- **Release in review:** version `1.0.9`, version code `9`, including the dual-flywheel navigator and its current documentation.
 
 Recommended next-release path:
 
 1. Build and locally install the release candidate.
 2. Verify folder selection, playback, dual flywheel navigation, forward-only visualisation cycling, shuffle, `Alchemy`, `Speed`, and button feedback.
 3. Upload the signed AAB to the production track with an incremented version code.
-4. Add the prepared release notes and send the change for review.
+4. Add the prepared release notes and send the change for review. The current `1.0.9` / code `9` update has completed these steps and is awaiting Google's review.
 
 ## Production Access Answers
 
