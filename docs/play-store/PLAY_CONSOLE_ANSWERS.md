@@ -24,7 +24,7 @@ Your music. Local. Offline. Alive in motion.
 
 Play local audio from your Android device, choose your own music folder, and watch your files come alive through 32 vivid, responsive music visualisations. Once installed and pointed at music, it is built to work offline: no streaming account, no subscription, no rented library.
 
-Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, cycle visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger.
+Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, cycle visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger. When you want a particular track from a large library, touch the visualisation to reveal two tactile flywheels: an outer alphabetical dial for getting to the right part of the collection quickly, and an inner song dial for browsing within it.
 
 The app is designed for atmosphere: glowing waveforms, kinetic motion, rich colour, and a cockpit-like interface that feels more like a custom instrument than a standard Android music player.
 
@@ -41,8 +41,9 @@ You do not have to be entirely normal to enjoy this player, and that is rather t
 - Play local audio from folders on your Android device.
 - Works without internet access once installed.
 - Explore a fixed set of 32 vivid music visualisations.
-- Simple portrait interface designed for quick, familiar control.
+- Simple car-friendly interface designed for quick, familiar control in portrait or landscape.
 - Shuffle, track skip, forward-only Visual, Speed, and Alchemy controls.
+- Dual tactile song flywheels: alphabet outside, songs inside.
 - Audio-reactive visuals built for colour, movement, and atmosphere.
 - No in-app rating nags, social prompts, ads, accounts, or subscription hooks.
 - Paid once through Google Play, with no subscription.
@@ -259,7 +260,7 @@ Paste-ready release notes for the next closed testing build:
 
 ```text
 <en-GB>
-Added Android landscape support for in-car use: the app now rotates into a dedicated landscape cockpit layout with the visualisation on the left and the core playback controls on the right. Also keeps the existing playback fixes for first-track start, continuous folder playback, and clean Android startup.
+Added tactile dual flywheel song navigation for larger local music libraries. Touch the visualisation to reveal an outer alphabetical dial for fast browsing and an inner song dial for precise selection. The flywheels support momentum, a touch brake, and a calm automatic fade when no longer needed.
 </en-GB>
 ```
 

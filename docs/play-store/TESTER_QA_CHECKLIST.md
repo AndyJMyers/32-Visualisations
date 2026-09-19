@@ -97,7 +97,22 @@ Check:
 - Did the gold/flame button feedback feel satisfying and clear?
 - Could you imagine using these controls without staring at them for too long?
 
-## 6. Real-World Behaviour - 3 Minutes
+## 6. Flywheel Song Browse - 3 Minutes
+
+Touch the visualisation to reveal the temporary dual flywheel selector.
+
+1. Turn the outer ring to move quickly between the available alphabetic sections of your library.
+2. Turn the inner ring to browse songs within the selected letter.
+3. Try a few quick flicks, then hold a finger still on a ring to slow it down.
+4. Tap outside the selector to dismiss it.
+
+Check:
+
+- Did the two rings make sense without explanation?
+- Could you reach a remembered track faster than repeated Next presses?
+- Did momentum, braking, and dismissal feel predictable?
+
+## 7. Real-World Behaviour - 3 Minutes
 
 Try one or two of these if convenient:
 

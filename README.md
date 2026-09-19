@@ -40,6 +40,7 @@ More attributed engineering log entries live in [docs/engineering-log/](docs/eng
 - Offers car-style Android controls for play/pause, previous/next track, next visualisation, shuffle, `Alchemy`, and `Speed`.
 - Uses `Alchemy` to apply artistically chosen visual settings.
 - Uses `Speed` to cycle visual agitation through five colour-coded steps.
+- Lets Android listeners browse large libraries with a temporary dual flywheel: alphabet outside, songs inside.
 - Keeps your music local.
 
 The number is fixed. Thirty-two is binary, balanced, mellow in its intonation and just faintly occult. New visualisations may therefore require ceremonial retirement of old ones.
@@ -94,7 +95,7 @@ Some are contemplative. Some are playable. Some should possibly be discussed wit
 
 ## Android Road-Trip Player
 
-The Android app is the mobile-first version of the same visualisation world. It is designed for in-car use: portrait layout, large controls at the bottom, familiar transport actions, and a little visual theatre when buttons are pressed.
+The Android app is the mobile-first version of the same visualisation world. It is designed for in-car use: portrait layout, large controls at the bottom, familiar transport actions, and a little visual theatre when buttons are pressed. Touch the visualisation to call up a temporary dual flywheel for finding music in a large folder: the outer ring moves through available initials, while the inner ring selects individual songs.
 
 The app opens ready for your own local music. Use Android's folder picker to choose a music folder, then play offline from files already on the device. Bluetooth routing is handled by Android itself.
 
