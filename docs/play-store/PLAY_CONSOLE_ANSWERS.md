@@ -142,22 +142,21 @@ Explanation if asked:
 
 ## Release Track
 
-Current closed testing state:
+Current production state:
 
-- **Active track:** Closed testing - Alpha
-- **Current Play build:** version `1.0.3`, version code `6`
-- **Package:** `com.thirtytwovisualisations.app`
-- **Target SDK:** Android API 36
-- **Tester gate:** Play Console shows the closed testing release published and at least 12 testers opted in.
-- **Remaining gate:** Run the closed test with at least 12 opted-in testers for 14 continuous days, then apply for production access.
+- **Production access:** Granted.
+- **Store listing:** Live on Google Play.
+- **Current Play build:** version `1.0.3`, version code `6`.
+- **Package:** `com.thirtytwovisualisations.app`.
+- **Target SDK:** Android API 36.
+- **Next release:** Build a new signed AAB with an incremented version code, including the dual-flywheel navigator and its current documentation.
 
-Recommended first release path:
+Recommended next-release path:
 
-1. Upload the signed release `.aab` to internal testing.
-2. Install through Play testing.
-3. Verify folder selection, playback, forward-only visualisation cycling, shuffle, `Alchemy`, `Speed`, and button feedback.
-4. Move to closed testing if Google requires it.
-5. Prepare production release after the required testing gate is satisfied.
+1. Build and locally install the release candidate.
+2. Verify folder selection, playback, dual flywheel navigation, forward-only visualisation cycling, shuffle, `Alchemy`, `Speed`, and button feedback.
+3. Upload the signed AAB to the production track with an incremented version code.
+4. Add the prepared release notes and send the change for review.
 
 ## Production Access Answers
 
@@ -256,7 +255,7 @@ problems, device compatibility issues, or genuine usability blockers.
 
 ## Play Console Release Notes
 
-Paste-ready release notes for the next closed testing build:
+Paste-ready release notes for the next Google Play update:
 
 ```text
 <en-GB>
@@ -302,8 +301,6 @@ Expected outputs:
 - `android/app/build/outputs/bundle/release/app-release.aab`
 - `android/app/build/outputs/apk/release/app-release.apk`
 
-Current alpha label:
-
-- `google-play-alpha-release`
+Historical alpha tag: `google-play-alpha-release`
 
 If the Gradle bundle signing task fails, do not treat the release process as complete until the generated `.aab` has been signed and verified, and Play Console accepts the upload. Keep the signing path boring and repeatable before wider release.

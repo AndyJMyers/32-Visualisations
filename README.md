@@ -95,7 +95,7 @@ Some are contemplative. Some are playable. Some should possibly be discussed wit
 
 ## Android Road-Trip Player
 
-The Android app is the mobile-first version of the same visualisation world. It is designed for in-car use: portrait layout, large controls at the bottom, familiar transport actions, and a little visual theatre when buttons are pressed. Touch the visualisation to call up a temporary dual flywheel for finding music in a large folder: the outer ring moves through available initials, while the inner ring selects individual songs.
+The Android app is the mobile-first version of the same visualisation world. It is designed for in-car use: a portrait-first layout that also works in landscape, large controls at the bottom, familiar transport actions, and a little visual theatre when buttons are pressed. Touch the visualisation to call up a temporary dual flywheel for finding music in a large folder: the outer ring moves through available initials, while the inner ring selects individual songs.
 
 ### Dual Flywheel Navigation
 
@@ -122,13 +122,13 @@ Public privacy policy:
 
 ## Testing
 
-We are preparing for Google Play testing. The tester process is deliberately lightweight: install through a Play test link, choose a music folder, play a few tracks, try the main controls, and report anything strange.
+32 Visualisations has completed Google Play closed testing and has production access. Real-device testing remains part of the project: choose a music folder, play a few tracks, try the main controls, and report anything strange.
 
 The human-friendly test plan is here:
 
 [Tester QA Checklist](docs/play-store/TESTER_QA_CHECKLIST.md)
 
-Google may require 14 continuous days of closed testing for new personal developer accounts. That does not mean heavy testing every day. It means a real group of testers opting in, installing, and giving the app a fair try while the release path matures.
+The original Play release completed the required 14-day closed-test period with a real group of opted-in testers. That work informed the production release and remains useful context for future updates.
 
 Automated system tests can be run from the repository root with:
 
@@ -248,7 +248,7 @@ Android car mode:
 
 This project is still under active development, so any hallucinations you experience may not be entirely your own fault this time.
 
-The Android app is in Google Play closed testing. Version `1.0.3` / build `6` targets Android API 36 and is available to selected testers while the 14-day closed-test gate runs.
+The Android app is live on Google Play. The currently published Play build is version `1.0.3` / build `6`, targeting Android API 36. The dual-flywheel navigator is part of the next update path.
 
 If you enjoyed this, why not gain merit in this life by [buying this holy man a pint of mead or ale](https://buy.stripe.com/5kQ5kDcX8cwc52J70rds400), according to your purse?
 
