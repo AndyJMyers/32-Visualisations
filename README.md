@@ -97,6 +97,12 @@ Some are contemplative. Some are playable. Some should possibly be discussed wit
 
 The Android app is the mobile-first version of the same visualisation world. It is designed for in-car use: portrait layout, large controls at the bottom, familiar transport actions, and a little visual theatre when buttons are pressed. Touch the visualisation to call up a temporary dual flywheel for finding music in a large folder: the outer ring moves through available initials, while the inner ring selects individual songs.
 
+### Dual Flywheel Navigation
+
+![Dual flywheel song navigator on Android](docs/images/android-dual-flywheel.png)
+
+For a big offline collection, the outer dial takes you rapidly through the available letters, while the inner dial traverses the songs under the selected initial. Flick either ring to build momentum; rest a finger on it to bring it gently to heel.
+
 The app opens ready for your own local music. Use Android's folder picker to choose a music folder, then play offline from files already on the device. Bluetooth routing is handled by Android itself.
 
 ## Optional Sample Audio
