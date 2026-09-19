@@ -1125,6 +1125,170 @@ html.android-car body {
   color: #f3fbff;
 }
 
+.song-wheel {
+  display: none;
+}
+
+.android-car #visualizer {
+  touch-action: none;
+}
+
+.android-car .song-wheel {
+  --alphabet-turn: 0deg;
+  --song-turn: 0deg;
+  position: absolute;
+  z-index: 4;
+  top: 43%;
+  left: 50%;
+  width: min(78vw, 344px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.78);
+  filter: saturate(0.92) drop-shadow(0 20px 28px rgba(0, 0, 0, 0.62));
+  transition: opacity 1500ms ease, transform 1500ms cubic-bezier(0.2, 0.85, 0.25, 1), filter 1500ms ease;
+}
+
+.android-car .song-wheel.active {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  filter: saturate(1.25) drop-shadow(0 24px 34px rgba(0, 0, 0, 0.72));
+  pointer-events: auto;
+  transition-duration: 333ms;
+}
+
+.android-car .song-wheel-metal {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(231, 247, 255, 0.82);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(235, 250, 255, 0.6) 0 3%, transparent 3.5% 17%, rgba(0, 0, 0, 0.82) 18% 34%, transparent 35%),
+    radial-gradient(circle at 27% 22%, rgba(111, 244, 255, 0.72), transparent 26%),
+    radial-gradient(circle at 76% 79%, rgba(255, 40, 208, 0.68), transparent 28%),
+    conic-gradient(from 0deg, #101419, #9beaff 7%, #24303b 13%, #edf8ff 18%, #17212b 27%, #bc2cff 42%, #f5d2ff 48%, #202834 57%, #7af4e9 71%, #eff8ff 80%, #182029 91%, #101419);
+  box-shadow:
+    inset 0 0 0 8px rgba(4, 8, 12, 0.72),
+    inset 0 0 26px rgba(0, 0, 0, 0.9),
+    0 0 0 5px rgba(42, 183, 239, 0.18),
+    0 0 42px rgba(157, 48, 255, 0.42);
+  transform: rotate(var(--alphabet-turn));
+  transition: transform 80ms linear;
+  animation: wheel-breathe 2.8s ease-in-out infinite;
+}
+
+.android-car .song-wheel-metal::after {
+  content: "";
+  position: absolute;
+  inset: -9%;
+  border-radius: 50%;
+  background: conic-gradient(from 18deg, transparent 0 4%, rgba(255, 229, 132, 0.95) 4.4% 4.8%, transparent 5.2% 18%, rgba(93, 245, 255, 0.9) 18.4% 18.8%, transparent 19.2% 48%, rgba(255, 73, 204, 0.9) 48.3% 48.8%, transparent 49.2% 100%);
+  filter: blur(1px) drop-shadow(0 0 8px #ffc15a);
+  mask: radial-gradient(circle, transparent 0 77%, #000 78% 80%, transparent 81%);
+  -webkit-mask: radial-gradient(circle, transparent 0 77%, #000 78% 80%, transparent 81%);
+  opacity: 0.26;
+}
+
+.android-car .song-wheel-ticks {
+  position: absolute;
+  inset: 5.5%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(245, 253, 255, 0.96) 0deg 1deg, transparent 1deg 7.5deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 68%, #000 69% 100%);
+  mask: radial-gradient(circle, transparent 0 68%, #000 69% 100%);
+  opacity: 0.8;
+}
+
+.android-car .song-wheel-song-dial {
+  position: absolute;
+  inset: 23%;
+  border: 2px solid rgba(174, 241, 255, 0.76);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.78), transparent 14%),
+    conic-gradient(from 0deg, #0b121b, #b5efff 10%, #252b38 19%, #d776ff 31%, #101a24 45%, #a6ffe6 67%, #263140 79%, #effdff 89%, #0b121b);
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.82), 0 0 22px rgba(88, 211, 255, 0.28);
+  transform: rotate(var(--song-turn));
+  transition: transform 80ms linear;
+  animation: wheel-breathe 3.4s ease-in-out infinite reverse;
+}
+
+.android-car .song-wheel-song-ticks {
+  position: absolute;
+  inset: 7%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(246, 255, 255, 0.86) 0deg 1.2deg, transparent 1.2deg 10deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 64%, #000 65% 100%);
+  mask: radial-gradient(circle, transparent 0 64%, #000 65% 100%);
+}
+
+.android-car .song-wheel-hub {
+  position: absolute;
+  inset: 30%;
+  border: 2px solid rgba(245, 252, 255, 0.9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 25%, #ffffff, #95eaff 16%, #182b3b 42%, #03070b 68%);
+  box-shadow: inset 0 0 18px rgba(135, 230, 255, 0.65), 0 0 24px rgba(213, 72, 255, 0.48);
+}
+
+.android-car .song-wheel[data-active-dial="alphabet"] .song-wheel-metal,
+.android-car .song-wheel[data-active-dial="songs"] .song-wheel-song-dial {
+  border-color: #fff1ae;
+  box-shadow: inset 0 0 0 4px rgba(255, 225, 122, 0.48), inset 0 0 30px rgba(255, 165, 58, 0.66), 0 0 30px rgba(255, 121, 37, 0.8), 0 0 54px rgba(255, 59, 187, 0.44);
+  animation: wheel-live 680ms ease-in-out infinite alternate;
+}
+
+.android-car .song-wheel[data-active-dial="alphabet"] .song-wheel-metal::after {
+  opacity: 0.96;
+  animation: wheel-sparks 360ms linear infinite;
+}
+
+.android-car .song-wheel-copy {
+  position: relative;
+  z-index: 1;
+  width: 48%;
+  text-align: center;
+  color: #f6fcff;
+  text-shadow: 0 2px 8px #000, 0 0 15px rgba(112, 234, 255, 0.75);
+}
+
+@keyframes wheel-breathe {
+  from { filter: brightness(0.8) saturate(0.82); }
+  to { filter: brightness(1.1) saturate(1.1); }
+}
+
+@keyframes wheel-live {
+  from { filter: brightness(1.04) saturate(1.2); }
+  to { filter: brightness(1.44) saturate(1.55); }
+}
+
+@keyframes wheel-sparks {
+  to { transform: rotate(36deg) scale(1.06); }
+}
+
+.android-car .song-wheel-copy span,
+.android-car .song-wheel-copy small {
+  display: block;
+  color: #9ceeff;
+  font-family: "Orbitron", sans-serif;
+  font-size: clamp(0.52rem, 2.15vw, 0.74rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.android-car .song-wheel-copy strong {
+  display: -webkit-box;
+  margin: 0.42rem 0;
+  overflow: hidden;
+  color: #fff;
+  font-size: clamp(0.78rem, 3.25vw, 1.08rem);
+  line-height: 1.18;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 @media (orientation: landscape) and (max-height: 680px) {
   body.android-car,
   html.android-car body {
@@ -1145,6 +1309,12 @@ html.android-car body {
     height: 100vh;
     height: 100dvh;
     border-right: 1px solid #20282d;
+  }
+
+  .android-car .song-wheel {
+    top: 50%;
+    left: calc((100vw - var(--car-side-panel-width)) / 2);
+    width: min(48vw, 322px);
   }
 
   .android-car .now-playing {

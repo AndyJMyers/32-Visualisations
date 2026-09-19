@@ -6,6 +6,9 @@ const currentTrack = document.querySelector("#currentTrack");
 const timeReadout = document.querySelector("#timeReadout");
 const alchemyProgressFill = document.querySelector("#alchemyProgressFill");
 const visualizer = document.querySelector("#visualizer");
+const songWheel = document.querySelector("#songWheel");
+const songWheelTitle = document.querySelector("#songWheelTitle");
+const songWheelCount = document.querySelector("#songWheelCount");
 const audio = document.querySelector("#audio");
 const previousButton = document.querySelector("#previousButton");
 const playButton = document.querySelector("#playButton");
@@ -1260,6 +1263,28 @@ let playbackTransitioning = false;
 let playbackGeneration = 0;
 let playlistAdvancePending = false;
 let playlistAdvanceRetryTimer = 0;
+let songWheelIndex = -1;
+let songWheelPointerId = null;
+let songWheelLastY = 0;
+let songWheelLastTime = 0;
+let songWheelVelocity = 0;
+let songWheelRemainder = 0;
+let songWheelRotation = 0;
+let songWheelAnimationId = 0;
+let songWheelHideTimer = 0;
+let songWheelCommitTimer = 0;
+let songWheelSuppressClickUntil = 0;
+let songWheelWasVisibleOnTouch = false;
+let songWheelMovedOnTouch = false;
+let songWheelPointerTarget = null;
+let songWheelLastAngle = 0;
+let songWheelBrakeTimer = 0;
+let songWheelBrakeAnimationId = 0;
+let songWheelActiveDial = "songs";
+let songWheelAlphabetIndex = 0;
+let songWheelAlphabetRemainder = 0;
+let songWheelAlphabetRotation = 0;
+let songWheelSongRotation = 0;
 
 function currentAudioState() {
   if (!audio.src || currentIndex < 0) {
@@ -2292,6 +2317,311 @@ function changeTrackByStep(step) {
   if (!wasPlaying && !animationId) {
     drawIdleVisualizer();
   }
+}
+
+function updateSongWheelDisplay() {
+  const track = tracks[songWheelIndex];
+  if (!track) {
+    return;
+  }
+
+  songWheelTitle.textContent = trackDisplayTitle(track);
+  const letter = songWheelLetters()[songWheelAlphabetIndex] || "#";
+  songWheelCount.textContent = `${letter} | ${songWheelTrackIndexesForLetter(letter).length} songs`;
+  songWheel.style.setProperty("--alphabet-turn", `${songWheelAlphabetRotation}deg`);
+  songWheel.style.setProperty("--song-turn", `${songWheelSongRotation}deg`);
+  songWheel.dataset.activeDial = songWheelActiveDial;
+}
+
+function songWheelLetterForTrack(track) {
+  const initial = trackDisplayTitle(track).trim().charAt(0).toUpperCase();
+  return /^[A-Z]$/.test(initial) ? initial : "#";
+}
+
+function songWheelLetters() {
+  return [...new Set(tracks.map(songWheelLetterForTrack))].sort((left, right) => {
+    if (left === "#") return 1;
+    if (right === "#") return -1;
+    return left.localeCompare(right);
+  });
+}
+
+function songWheelTrackIndexesForLetter(letter) {
+  return tracks.reduce((indexes, track, index) => {
+    if (songWheelLetterForTrack(track) === letter) {
+      indexes.push(index);
+    }
+    return indexes;
+  }, []);
+}
+
+function songWheelDialAt(event) {
+  const bounds = songWheel.getBoundingClientRect();
+  const distance = Math.hypot(
+    event.clientX - (bounds.left + bounds.width / 2),
+    event.clientY - (bounds.top + bounds.height / 2)
+  ) / (bounds.width / 2);
+  return distance > 0.78 ? "alphabet" : "songs";
+}
+
+function clearSongWheelTimers() {
+  window.clearTimeout(songWheelHideTimer);
+  window.clearTimeout(songWheelCommitTimer);
+  songWheelHideTimer = 0;
+  songWheelCommitTimer = 0;
+}
+
+function hideSongWheel() {
+  songWheel.classList.remove("active");
+  songWheel.setAttribute("aria-hidden", "true");
+}
+
+function commitSongWheelSelection() {
+  if (songWheelIndex < 0 || songWheelIndex === currentIndex || !tracks[songWheelIndex]) {
+    return;
+  }
+
+  const wasPlaying = !audio.paused;
+  pulseStageLabel("track", trackDisplayTitle(tracks[songWheelIndex]));
+  loadTrack(songWheelIndex, wasPlaying);
+  if (!wasPlaying && !animationId) {
+    drawIdleVisualizer();
+  }
+}
+
+function scheduleSongWheelRest(delay = 850) {
+  window.clearTimeout(songWheelCommitTimer);
+  window.clearTimeout(songWheelHideTimer);
+  songWheelCommitTimer = window.setTimeout(() => {
+    commitSongWheelSelection();
+    songWheelHideTimer = window.setTimeout(hideSongWheel, 10000);
+  }, delay);
+}
+
+function openSongWheel() {
+  if (!isAndroidCarMode || tracks.length === 0) {
+    return false;
+  }
+
+  clearSongWheelTimers();
+  songWheelIndex = currentIndex >= 0 ? currentIndex : 0;
+  songWheelVelocity = 0;
+  songWheelRemainder = 0;
+  songWheelAlphabetRemainder = 0;
+  songWheelActiveDial = "songs";
+  const currentLetter = songWheelLetterForTrack(tracks[songWheelIndex]);
+  songWheelAlphabetIndex = Math.max(0, songWheelLetters().indexOf(currentLetter));
+  updateSongWheelDisplay();
+  songWheel.classList.add("active");
+  songWheel.setAttribute("aria-hidden", "false");
+  return true;
+}
+
+function moveSongWheel(distance) {
+  if (!Number.isFinite(distance) || !tracks.length) {
+    return;
+  }
+
+  if (songWheelActiveDial === "alphabet") {
+    const letters = songWheelLetters();
+    songWheelAlphabetRemainder += distance;
+    const steps = songWheelAlphabetRemainder < 0 ? Math.ceil(songWheelAlphabetRemainder) : Math.floor(songWheelAlphabetRemainder);
+    songWheelAlphabetRemainder -= steps;
+    songWheelAlphabetRotation += distance * (360 / Math.max(1, letters.length));
+
+    if (steps !== 0 && letters.length) {
+      songWheelAlphabetIndex = (songWheelAlphabetIndex + steps + letters.length * 2) % letters.length;
+      songWheelIndex = songWheelTrackIndexesForLetter(letters[songWheelAlphabetIndex])[0] ?? songWheelIndex;
+      songWheelRemainder = 0;
+    }
+  } else {
+    const letter = songWheelLetters()[songWheelAlphabetIndex];
+    const indexes = songWheelTrackIndexesForLetter(letter);
+    if (!indexes.length) {
+      return;
+    }
+
+    songWheelRemainder += distance;
+    const steps = songWheelRemainder < 0 ? Math.ceil(songWheelRemainder) : Math.floor(songWheelRemainder);
+    songWheelRemainder -= steps;
+    songWheelSongRotation += distance * 18;
+
+    if (steps !== 0) {
+      const currentLetterIndex = Math.max(0, indexes.indexOf(songWheelIndex));
+      const nextLetterIndex = (currentLetterIndex + steps + indexes.length * 2) % indexes.length;
+      songWheelIndex = indexes[nextLetterIndex];
+    }
+  }
+
+  updateSongWheelDisplay();
+}
+
+function songWheelPointerAngle(event) {
+  const bounds = songWheel.getBoundingClientRect();
+  return Math.atan2(
+    event.clientY - (bounds.top + bounds.height / 2),
+    event.clientX - (bounds.left + bounds.width / 2)
+  );
+}
+
+function normaliseWheelAngle(angle) {
+  if (angle > Math.PI) {
+    return angle - Math.PI * 2;
+  }
+  if (angle < -Math.PI) {
+    return angle + Math.PI * 2;
+  }
+  return angle;
+}
+
+function stopSongWheelBrake() {
+  window.clearTimeout(songWheelBrakeTimer);
+  songWheelBrakeTimer = 0;
+  if (songWheelBrakeAnimationId) {
+    cancelAnimationFrame(songWheelBrakeAnimationId);
+    songWheelBrakeAnimationId = 0;
+  }
+}
+
+function startSongWheelBrake() {
+  stopSongWheelBrake();
+  songWheelBrakeTimer = window.setTimeout(() => {
+    let lastFrame = performance.now();
+
+    function brake(now) {
+      if (songWheelPointerId === null || songWheelPointerTarget !== songWheel || songWheelMovedOnTouch) {
+        songWheelBrakeAnimationId = 0;
+        return;
+      }
+
+      const elapsedSeconds = Math.min(0.05, (now - lastFrame) / 1000);
+      lastFrame = now;
+      moveSongWheel(songWheelVelocity * elapsedSeconds);
+      songWheelVelocity *= Math.pow(0.04, elapsedSeconds);
+
+      if (Math.abs(songWheelVelocity) > 0.08) {
+        songWheelBrakeAnimationId = requestAnimationFrame(brake);
+      } else {
+        songWheelVelocity = 0;
+        songWheelBrakeAnimationId = 0;
+      }
+    }
+
+    songWheelBrakeAnimationId = requestAnimationFrame(brake);
+  }, 140);
+}
+
+function runSongWheelFlywheel() {
+  let lastFrame = performance.now();
+
+  function coast(now) {
+    const elapsedSeconds = Math.min(0.05, (now - lastFrame) / 1000);
+    lastFrame = now;
+    moveSongWheel(songWheelVelocity * elapsedSeconds);
+    songWheelVelocity *= Math.pow(0.22, elapsedSeconds);
+
+    if (Math.abs(songWheelVelocity) > 0.35) {
+      songWheelAnimationId = requestAnimationFrame(coast);
+      return;
+    }
+
+    songWheelAnimationId = 0;
+    scheduleSongWheelRest(500);
+  }
+
+  songWheelAnimationId = requestAnimationFrame(coast);
+}
+
+function startSongWheel(event) {
+  songWheelWasVisibleOnTouch = songWheel.classList.contains("active");
+  songWheelMovedOnTouch = false;
+
+  if (!songWheelWasVisibleOnTouch && !openSongWheel()) {
+    return;
+  }
+
+  if (songWheelWasVisibleOnTouch) {
+    clearSongWheelTimers();
+  }
+
+  if (songWheelAnimationId) {
+    cancelAnimationFrame(songWheelAnimationId);
+    songWheelAnimationId = 0;
+  }
+  stopSongWheelBrake();
+
+  songWheelPointerId = event.pointerId;
+  songWheelPointerTarget = event.currentTarget;
+  if (songWheelPointerTarget === songWheel) {
+    songWheelActiveDial = songWheelDialAt(event);
+    updateSongWheelDisplay();
+  }
+  songWheelLastY = event.clientY;
+  songWheelLastAngle = songWheelPointerTarget === songWheel ? songWheelPointerAngle(event) : 0;
+  songWheelLastTime = event.timeStamp || performance.now();
+  songWheelSuppressClickUntil = performance.now() + 1400;
+  songWheelPointerTarget?.setPointerCapture?.(event.pointerId);
+  if (songWheelWasVisibleOnTouch && songWheelPointerTarget === songWheel) {
+    startSongWheelBrake();
+  }
+  event.preventDefault();
+}
+
+function moveSongWheelFromPointer(event) {
+  if (event.pointerId !== songWheelPointerId) {
+    return;
+  }
+
+  const now = event.timeStamp || performance.now();
+  const elapsed = Math.max(8, now - songWheelLastTime);
+  let songDistance;
+  if (songWheelPointerTarget === songWheel) {
+    const angle = songWheelPointerAngle(event);
+    const angleDistance = normaliseWheelAngle(angle - songWheelLastAngle);
+    songWheelLastAngle = angle;
+    const unitsPerTurn = songWheelActiveDial === "alphabet" ? songWheelLetters().length : 32;
+    songDistance = angleDistance * (unitsPerTurn / (Math.PI * 2));
+  } else {
+    // The initial touch arrives on the canvas before the dial exists; keep a brisk vertical flick as a graceful fallback.
+    songDistance = (songWheelLastY - event.clientY) / 12;
+  }
+  if (Math.abs(songDistance) > 0.002) {
+    songWheelMovedOnTouch = true;
+    stopSongWheelBrake();
+    moveSongWheel(songDistance);
+    const flickVelocity = songDistance / (elapsed / 1000);
+    songWheelVelocity = Math.max(-110, Math.min(110, songWheelVelocity * 0.72 + flickVelocity));
+  }
+  songWheelLastY = event.clientY;
+  songWheelLastTime = now;
+  songWheelSuppressClickUntil = performance.now() + 1400;
+  event.preventDefault();
+}
+
+function finishSongWheelPointer(event) {
+  if (event.pointerId !== songWheelPointerId) {
+    return;
+  }
+
+  const touchedWheel = songWheelPointerTarget === songWheel;
+  stopSongWheelBrake();
+  songWheelPointerTarget?.releasePointerCapture?.(event.pointerId);
+  songWheelPointerId = null;
+  songWheelPointerTarget = null;
+  songWheelSuppressClickUntil = performance.now() + 1400;
+  if (songWheelWasVisibleOnTouch && !songWheelMovedOnTouch && !touchedWheel) {
+    clearSongWheelTimers();
+    hideSongWheel();
+    event.preventDefault();
+    return;
+  }
+
+  if (Math.abs(songWheelVelocity) > 1.1) {
+    runSongWheelFlywheel();
+  } else {
+    scheduleSongWheelRest(500);
+  }
+  event.preventDefault();
 }
 
 function loadTrackBoundary(index) {
@@ -12592,6 +12922,10 @@ themeSelect.addEventListener("change", () => {
 });
 
 window.addEventListener("pointermove", (event) => {
+  if (songWheelPointerId !== null) {
+    return;
+  }
+
   const bounds = visualizer.getBoundingClientRect();
   pulseFullscreenInfo();
   if (!bounds.width || !bounds.height) {
@@ -12612,6 +12946,10 @@ window.addEventListener("pointerleave", () => {
 });
 
 visualizer.addEventListener("click", (event) => {
+  if (isAndroidCarMode && performance.now() < songWheelSuppressClickUntil) {
+    return;
+  }
+
   if (visualizerSelect.value !== "lightning" || fireworkFormSelect.value !== "missilecommand") {
     return;
   }
@@ -12625,6 +12963,44 @@ visualizer.addEventListener("click", (event) => {
     drawIdleVisualizer();
   }
 });
+
+function handleVisualizerSongWheelTouch(event) {
+  if (isAndroidCarMode && songWheel.classList.contains("active")) {
+    clearSongWheelTimers();
+    stopSongWheelBrake();
+    if (songWheelAnimationId) {
+      cancelAnimationFrame(songWheelAnimationId);
+      songWheelAnimationId = 0;
+    }
+    songWheelVelocity = 0;
+    songWheelSuppressClickUntil = performance.now() + 1400;
+    hideSongWheel();
+    event.preventDefault();
+    return;
+  }
+
+  startSongWheel(event);
+}
+
+visualizer.addEventListener("pointerdown", handleVisualizerSongWheelTouch, { passive: false });
+songWheel.addEventListener("pointerdown", startSongWheel, { passive: false });
+songWheel.addEventListener("pointermove", moveSongWheelFromPointer, { passive: false });
+songWheel.addEventListener("pointerup", finishSongWheelPointer, { passive: false });
+songWheel.addEventListener("pointercancel", finishSongWheelPointer, { passive: false });
+
+document.addEventListener("pointerdown", (event) => {
+  if (!isAndroidCarMode || !songWheel.classList.contains("active") || event.target === visualizer || songWheel.contains(event.target)) {
+    return;
+  }
+
+  clearSongWheelTimers();
+  stopSongWheelBrake();
+  if (songWheelAnimationId) {
+    cancelAnimationFrame(songWheelAnimationId);
+    songWheelAnimationId = 0;
+  }
+  hideSongWheel();
+}, true);
 
 peakToggle.addEventListener("change", () => {
   peakLevels = [];

@@ -46,6 +46,21 @@
 
         <canvas id="visualizer" width="1200" height="360" aria-label="Graphic equaliser visualisation"></canvas>
 
+        <section id="songWheel" class="song-wheel" aria-live="polite" aria-hidden="true">
+  <div class="song-wheel-metal" aria-hidden="true">
+    <div class="song-wheel-ticks"></div>
+  </div>
+  <div class="song-wheel-song-dial" aria-hidden="true">
+    <div class="song-wheel-song-ticks"></div>
+    <div class="song-wheel-hub"></div>
+  </div>
+  <div class="song-wheel-copy">
+    <span id="songWheelCount">Song 1</span>
+    <strong id="songWheelTitle">Touch to browse</strong>
+    <small>Outer: alphabet. Inner: songs.</small>
+  </div>
+        </section>
+
         <audio id="audio" crossorigin="anonymous"></audio>
 
         <section class="car-deck" aria-label="In-car playback controls">

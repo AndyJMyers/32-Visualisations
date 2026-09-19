@@ -104,6 +104,8 @@ async function run() {
     assert(index.headers["content-type"]?.includes("text/html"), "Expected / to return HTML.");
     const indexHtml = index.body.toString("utf8");
     assert(indexHtml.includes('id="visualizer"'), "Index page is missing the visualizer canvas.");
+    assert(indexHtml.includes('id="songWheel"'), "Index page is missing the Android song-browse wheel.");
+    assert(indexHtml.includes('class="song-wheel-song-dial"'), "Index page is missing the fine song-selection wheel.");
     assert(indexHtml.includes('id="audio"'), "Index page is missing the audio element.");
     assert(indexHtml.includes('id="carPlayButton"'), "Index page is missing the Android car play control.");
     assert(indexHtml.includes('src="app.js"'), "Index page is missing the app script.");
@@ -147,6 +149,14 @@ async function run() {
     assert(appScript.includes('key === "ArrowRight" || key === ">"'), "Next-track shortcut should accept the displayed greater-than key.");
     assert(appScript.includes('key === "ArrowLeft" || key === "<"'), "Previous-track shortcut should accept the displayed less-than key.");
     assert(appScript.includes("function ensureInitialTrackLoaded()"), "Initial library load should select the first track without playing it.");
+    assert(appScript.includes("function openSongWheel()"), "Android playback script is missing the song-browse wheel.");
+    assert(appScript.includes("function runSongWheelFlywheel()"), "Song-browse wheel should retain flywheel momentum.");
+    assert(appScript.includes("function startSongWheelBrake()"), "Song-browse wheel should support a progressive touch brake.");
+    assert(appScript.includes("songWheelVelocity * 0.72 + flickVelocity"), "Repeated song-wheel flicks should build momentum.");
+    assert(appScript.includes("function songWheelLetters()"), "Song-browse wheel should support alphabetical navigation.");
+    assert(appScript.includes("function songWheelTrackIndexesForLetter(letter)"), "Song-browse wheel should narrow fine navigation to a letter.");
+    assert(appScript.includes('visualizer.addEventListener("pointerdown", handleVisualizerSongWheelTouch'), "Visualizer should open or dismiss the song-browse wheel on touch.");
+    assert(appScript.includes('songWheel.addEventListener("pointerdown", startSongWheel'), "The visible song-browse wheel should own swipe input.");
     assert(appScript.includes("function canvasRenderSize("), "Visualizer script is missing the canvas render-budget helper.");
     assert(appScript.includes("maxCanvasPixels"), "Visualizer script is missing a canvas pixel budget.");
     assert(appScript.includes("const renderSize = canvasRenderSize(cssWidth, cssHeight, ratio)"), "Canvas resize should use the render budget.");
@@ -167,6 +177,8 @@ async function run() {
     assert(cssText.includes(".player.visual-fullscreen .controls"), "Fullscreen mode should retain the principal transport controls.");
     assert(cssText.includes(".player.visual-fullscreen .controls .toggle"), "Fullscreen mode should hide the secondary shuffle toggle.");
     assert(cssText.includes(".player.visual-fullscreen .desktop-creative-controls"), "Fullscreen mode should expose Visual and Alchemy controls.");
+    assert(cssText.includes(".android-car .song-wheel-metal"), "Stylesheet is missing the metallic Android song-browse wheel.");
+    assert(cssText.includes(".android-car .song-wheel-song-dial"), "Stylesheet is missing the fine song-selection dial.");
 
     const tracksResponse = await request(port, "/api/tracks");
     assert(tracksResponse.statusCode === 200, `Expected /api/tracks to return 200, got ${tracksResponse.statusCode}.`);
