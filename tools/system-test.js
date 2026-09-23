@@ -108,6 +108,12 @@ async function run() {
     assert(indexHtml.includes('class="song-wheel-song-dial"'), "Index page is missing the fine song-selection wheel.");
     assert(indexHtml.includes('id="audio"'), "Index page is missing the audio element.");
     assert(indexHtml.includes('id="carPlayButton"'), "Index page is missing the Android car play control.");
+    assert(indexHtml.includes('id="settingsCatalogue"'), "Index page is missing The Garage settings catalogue.");
+    assert(indexHtml.includes('id="settingsButton"'), "Index page is missing the desktop Garage button.");
+    assert(indexHtml.includes('id="carSettingsButton"'), "Index page is missing the Android Garage button.");
+    [["01", "Library"], ["02", "Visual"], ["03", "Expression"], ["04", "About"]].forEach(([number, name]) => {
+      assert(indexHtml.includes(`<span>${number}</span><strong>${name}</strong>`), `The Garage is missing its ${number} ${name} section.`);
+    });
     assert(indexHtml.includes('src="app.js"'), "Index page is missing the app script.");
     assert(indexHtml.includes('document.documentElement.classList.add("android-car")'), "Index page should mark Android car mode before CSS loads.");
     assert(indexHtml.includes('document.body.classList.add("android-car")'), "Index page should mark Android car mode before body content paints.");
@@ -149,6 +155,8 @@ async function run() {
     assert(appScript.includes('key === "ArrowRight" || key === ">"'), "Next-track shortcut should accept the displayed greater-than key.");
     assert(appScript.includes('key === "ArrowLeft" || key === "<"'), "Previous-track shortcut should accept the displayed less-than key.");
     assert(appScript.includes("function ensureInitialTrackLoaded()"), "Initial library load should select the first track without playing it.");
+    assert(appScript.includes("function openSettingsCatalogue()"), "Playback script is missing The Garage open handler.");
+    assert(appScript.includes("function closeSettingsCatalogue()"), "Playback script is missing The Garage close handler.");
     assert(appScript.includes("function openSongWheel()"), "Android playback script is missing the song-browse wheel.");
     assert(appScript.includes("function runSongWheelFlywheel()"), "Song-browse wheel should retain flywheel momentum.");
     assert(appScript.includes("function startSongWheelBrake()"), "Song-browse wheel should support a progressive touch brake.");
@@ -179,6 +187,8 @@ async function run() {
     assert(cssText.includes(".player.visual-fullscreen .desktop-creative-controls"), "Fullscreen mode should expose Visual and Alchemy controls.");
     assert(cssText.includes(".android-car .song-wheel-metal"), "Stylesheet is missing the metallic Android song-browse wheel.");
     assert(cssText.includes(".android-car .song-wheel-song-dial"), "Stylesheet is missing the fine song-selection dial.");
+    assert(cssText.includes(".settings-catalogue"), "Stylesheet is missing The Garage catalogue treatment.");
+    assert(cssText.includes(".android-car .song-wheel .car-settings-button"), "Stylesheet is missing the Android Garage button treatment.");
 
     const tracksResponse = await request(port, "/api/tracks");
     assert(tracksResponse.statusCode === 200, `Expected /api/tracks to return 200, got ${tracksResponse.statusCode}.`);

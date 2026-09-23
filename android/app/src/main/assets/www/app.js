@@ -10,6 +10,11 @@ const songWheel = document.querySelector("#songWheel");
 const songWheelTitle = document.querySelector("#songWheelTitle");
 const songWheelCount = document.querySelector("#songWheelCount");
 const audio = document.querySelector("#audio");
+const settingsCatalogue = document.querySelector("#settingsCatalogue");
+const settingsButton = document.querySelector("#settingsButton");
+const carSettingsButton = document.querySelector("#carSettingsButton");
+const closeSettingsButton = document.querySelector("#closeSettingsButton");
+const settingsFolderButton = document.querySelector("#settingsFolderButton");
 const previousButton = document.querySelector("#previousButton");
 const playButton = document.querySelector("#playButton");
 const nextButton = document.querySelector("#nextButton");
@@ -1089,9 +1094,41 @@ function setControlsEnabled(enabled) {
     control.disabled = !enabled;
   });
 
-  [carFolderButton, carNextVisualButton, carAlchemyButton, carAgitationButton, desktopNextVisualButton, desktopAlchemyButton].forEach((control) => {
+  [
+    carFolderButton,
+    carNextVisualButton,
+    carAlchemyButton,
+    carAgitationButton,
+    desktopNextVisualButton,
+    desktopAlchemyButton,
+    settingsButton,
+    carSettingsButton,
+    settingsFolderButton,
+  ].forEach((control) => {
     control.disabled = false;
   });
+}
+
+function openSettingsCatalogue() {
+  hideSongWheel();
+
+  if (typeof settingsCatalogue.showModal === "function") {
+    if (!settingsCatalogue.open) {
+      settingsCatalogue.showModal();
+    }
+    return;
+  }
+
+  settingsCatalogue.setAttribute("open", "");
+}
+
+function closeSettingsCatalogue() {
+  if (typeof settingsCatalogue.close === "function") {
+    settingsCatalogue.close();
+    return;
+  }
+
+  settingsCatalogue.removeAttribute("open");
 }
 
 function visualizerTheme() {
@@ -13156,6 +13193,16 @@ fullscreenButton.addEventListener("click", toggleVisualFullscreen);
 desktopNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
 desktopAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
 carFolderButton.addEventListener("click", openLibraryPicker);
+settingsFolderButton.addEventListener("click", openLibraryPicker);
+settingsButton.addEventListener("click", openSettingsCatalogue);
+carSettingsButton.addEventListener("pointerdown", (event) => event.stopPropagation());
+carSettingsButton.addEventListener("click", openSettingsCatalogue);
+closeSettingsButton.addEventListener("click", closeSettingsCatalogue);
+settingsCatalogue.addEventListener("click", (event) => {
+  if (event.target === settingsCatalogue) {
+    closeSettingsCatalogue();
+  }
+});
 carPlayButton.addEventListener("click", togglePlayPause);
 carPreviousButton.addEventListener("click", () => changeTrackByStep(-1));
 carNextButton.addEventListener("click", () => changeTrackByStep(1));
