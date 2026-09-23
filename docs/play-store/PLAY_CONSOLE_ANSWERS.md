@@ -24,7 +24,7 @@ Your music. Local. Offline. Alive in motion.
 
 Play local audio from your Android device, choose your own music folder, and watch your files come alive through 32 vivid, responsive music visualisations. Once installed and pointed at music, it is built to work offline: no streaming account, no subscription, no rented library.
 
-Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, cycle visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger. When you want a particular track from a large library, touch the visualisation to reveal two tactile flywheels: an outer alphabetical dial for getting to the right part of the collection quickly, and an inner song dial for browsing within it.
+Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, cycle visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger. When you want a particular track from a large library, touch the visualisation to reveal two tactile flywheels: an outer alphabetical dial for getting to the right part of the collection quickly, and an inner song dial for browsing within it. A small `*` on the active flywheel opens The Garage, where library, visual and expression settings live away from the driving controls.
 
 The app is designed for atmosphere: glowing waveforms, kinetic motion, rich colour, and a cockpit-like interface that feels more like a custom instrument than a standard Android music player.
 
@@ -44,6 +44,7 @@ You do not have to be entirely normal to enjoy this player, and that is rather t
 - Simple car-friendly interface designed for quick, familiar control in portrait or landscape.
 - Shuffle, track skip, forward-only Visual, Speed, and Alchemy controls.
 - Dual tactile song flywheels: alphabet outside, songs inside.
+- Optional Garage catalogue for library, visual and expression settings.
 - Audio-reactive visuals built for colour, movement, and atmosphere.
 - No in-app rating nags, social prompts, ads, accounts, or subscription hooks.
 - Paid once through Google Play, with no subscription.
@@ -146,17 +147,17 @@ Current production state:
 
 - **Production access:** Granted.
 - **Store listing:** Live on Google Play.
-- **Current Play build:** version `1.0.5`, version code `8`.
+- **Current Play build:** version `1.0.9`, version code `9`.
 - **Package:** `com.thirtytwovisualisations.app`.
 - **Target SDK:** Android API 36.
-- **Release in review:** version `1.0.9`, version code `9`, including the dual-flywheel navigator and its current documentation.
+- **Next production update:** version `1.0.10`, version code `10`, adding The Garage settings catalogue and its current documentation.
 
 Recommended next-release path:
 
 1. Build and locally install the release candidate.
 2. Verify folder selection, playback, dual flywheel navigation, forward-only visualisation cycling, shuffle, `Alchemy`, `Speed`, and button feedback.
 3. Upload the signed AAB to the production track with an incremented version code.
-4. Add the prepared release notes and send the change for review. The current `1.0.9` / code `9` update has completed these steps and is awaiting Google's review.
+4. Add the prepared release notes and send the `1.0.10` / code `10` update for review.
 
 ## Production Access Answers
 
@@ -259,7 +260,7 @@ Paste-ready release notes for the next Google Play update:
 
 ```text
 <en-GB>
-Added tactile dual flywheel song navigation for larger local music libraries. Touch the visualisation to reveal an outer alphabetical dial for fast browsing and an inner song dial for precise selection. The flywheels support momentum, a touch brake, and a calm automatic fade when no longer needed.
+Added The Garage, an optional settings catalogue for your library order, visual world and detailed expression controls. On Android, open it from the small `*` which appears with the dual flywheel navigator, keeping the normal car controls clear.
 </en-GB>
 ```
 

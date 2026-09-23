@@ -14,7 +14,7 @@ Your music. Local. Offline. Alive in motion.
 
 Play local audio from your Android device, choose your own music folder, and watch your files come alive through 32 vivid, responsive music visualisations. Once installed and pointed at music, it is built to work offline: no streaming account, no subscription, no rented library.
 
-Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, cycle visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger. When you want a particular track from a large library, touch the visualisation to reveal two tactile flywheels: an outer alphabetical dial for getting to the right part of the collection quickly, and an inner song dial for browsing within it.
+Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, cycle visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger. When you want a particular track from a large library, touch the visualisation to reveal two tactile flywheels: an outer alphabetical dial for getting to the right part of the collection quickly, and an inner song dial for browsing within it. A small `*` on the active flywheel opens The Garage, where library, visual and expression settings live away from the driving controls.
 
 The app is designed for atmosphere: glowing waveforms, kinetic motion, rich colour, and a cockpit-like interface that feels more like a custom instrument than a standard Android music player.
 
@@ -34,6 +34,7 @@ You do not have to be entirely normal to enjoy this player, and that is rather t
 - Simple car-friendly interface designed for quick, familiar control in portrait or landscape.
 - Shuffle, track skip, forward-only Visual, Speed, and Alchemy controls.
 - Dual tactile song flywheels: alphabet outside, songs inside.
+- Optional Garage catalogue for library, visual and expression settings.
 - Audio-reactive visuals built for colour, movement, and atmosphere.
 - No in-app rating nags, social prompts, ads, accounts, or subscription hooks.
 - Paid once through Google Play, with no subscription.
