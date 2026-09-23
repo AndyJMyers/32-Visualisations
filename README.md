@@ -41,7 +41,7 @@ More attributed engineering log entries live in [docs/engineering-log/](docs/eng
 - Uses `Alchemy` to apply artistically chosen visual settings.
 - Uses `Speed` to cycle visual agitation through five colour-coded steps.
 - Lets Android listeners browse large libraries with a temporary dual flywheel: alphabet outside, songs inside.
-- Collects library, visual and detailed expression settings in The Garage, outside the driving controls.
+- Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
 The number is fixed. Thirty-two is binary, balanced, mellow in its intonation and just faintly occult. New visualisations may therefore require ceremonial retirement of old ones.
@@ -100,9 +100,9 @@ The Android app is the mobile-first version of the same visualisation world. It 
 
 ### Dual Flywheel Navigation
 
-![Dual flywheel song navigator on Android](docs/images/android-dual-flywheel.png)
+![Dual flywheel song navigator with The Garage control on Android](docs/images/android-garage-flywheel.png)
 
-For a big offline collection, the outer dial takes you rapidly through the available letters, while the inner dial traverses the songs under the selected initial. Flick either ring to build momentum; rest a finger on it to bring it gently to heel. A small `*` appears with the flywheel when you want The Garage: library, visual and expression settings without cluttering the normal car controls.
+For a big offline collection, the outer dial takes you rapidly through the available letters, while the inner dial traverses the songs under the selected initial. Flick either ring to build momentum; rest a finger on it to bring it gently to heel. The same touch reveals a small `*` beside the flywheels for The Garage: library, visual and expression settings without cluttering the normal car controls.
 
 The app opens ready for your own local music. Use Android's folder picker to choose a music folder, then play offline from files already on the device. Bluetooth routing is handled by Android itself.
 
@@ -249,7 +249,7 @@ Android car mode:
 
 This project is still under active development, so any hallucinations you experience may not be entirely your own fault this time.
 
-The Android app is live on Google Play. The currently published Play build is version `1.0.9` / build `9`, targeting Android API 36. Version `1.0.10` / build `10`, adding The Garage settings catalogue, is prepared for the next production update.
+The Android app is live on Google Play. The currently published Play build is version `1.0.9` / build `9`, targeting Android API 36. Version `1.0.10` / build `10`, adding The Garage settings catalogue, is in Google Play review.
 
 If you enjoyed this, why not gain merit in this life by [buying this holy man a pint of mead or ale](https://buy.stripe.com/5kQ5kDcX8cwc52J70rds400), according to your purse?
 
