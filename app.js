@@ -13,17 +13,24 @@ const audio = document.querySelector("#audio");
 const settingsCatalogue = document.querySelector("#settingsCatalogue");
 const settingsButton = document.querySelector("#settingsButton");
 const carSettingsButton = document.querySelector("#carSettingsButton");
+const carNightDriveButton = document.querySelector("#carNightDriveButton");
 const closeSettingsButton = document.querySelector("#closeSettingsButton");
 const settingsFolderButton = document.querySelector("#settingsFolderButton");
+const garageDirectoryName = document.querySelector("#garageDirectoryName");
+const visualFlywheel = document.querySelector("#visualFlywheel");
+const formFlywheel = document.querySelector("#formFlywheel");
 const previousButton = document.querySelector("#previousButton");
 const playButton = document.querySelector("#playButton");
 const nextButton = document.querySelector("#nextButton");
 const fullscreenButton = document.querySelector("#fullscreenButton");
 const shuffleToggle = document.querySelector("#shuffleToggle");
 const sortSelect = document.querySelector("#sortSelect");
+const sortFlywheel = document.querySelector("#sortFlywheel");
 const visualizerSelect = document.querySelector("#visualizerSelect");
 const fireworkFormSelect = document.querySelector("#fireworkFormSelect");
 const themeSelect = document.querySelector("#themeSelect");
+const garageColourSwatches = document.querySelector("#garageColourSwatches");
+const garageColourSwatchButtons = Array.from(document.querySelectorAll(".garage-colour-swatch"));
 const fireworkSpeed = document.querySelector("#fireworkSpeed");
 const fireworkSpeedValue = document.querySelector("#fireworkSpeedValue");
 const handSize = document.querySelector("#handSize");
@@ -63,6 +70,8 @@ if (window.AndroidWaveDeck) {
 
 let tracks = [];
 let currentIndex = -1;
+let nightDriveEnabled = false;
+const garageFlywheelTimers = new WeakMap();
 let audioContext;
 let analyser;
 let sourceNode;
@@ -1331,6 +1340,160 @@ function currentAudioState() {
   return audio.paused ? "paused" : "playing";
 }
 
+function setNightDrive(enabled, { save = false } = {}) {
+  nightDriveEnabled = Boolean(enabled);
+  document.querySelector(".player").classList.toggle("night-drive", nightDriveEnabled);
+  carNightDriveButton.classList.toggle("is-active", nightDriveEnabled);
+  carNightDriveButton.setAttribute("aria-pressed", String(nightDriveEnabled));
+  carNightDriveButton.setAttribute("aria-label", nightDriveEnabled ? "Disable Night Drive dimmer" : "Enable Night Drive dimmer");
+  if (save) {
+    scheduleSessionSave();
+  }
+}
+
+function updateGarageDirectoryName() {
+  garageDirectoryName.textContent = directoryName.textContent;
+}
+
+function garageFlywheelValues(wheel, select) {
+  const options = Array.from(select.options);
+  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === select.value));
+  const previous = options[(selectedIndex - 1 + options.length) % options.length];
+  const next = options[(selectedIndex + 1) % options.length];
+  wheel.querySelector(".garage-cover-card.previous").textContent = previous?.textContent || "";
+  wheel.querySelector(".garage-cover-card.current").textContent = options[selectedIndex]?.textContent || "";
+  wheel.querySelector(".garage-cover-card.next").textContent = next?.textContent || "";
+}
+
+function alchemyRecipeIndex() {
+  const step = alchemicalStepByVisual[visualizerSelect.value] || 0;
+  return (step + alchemicalRecipes.length - 1) % alchemicalRecipes.length;
+}
+
+function garageAlchemyValues() {
+  const selectedIndex = alchemyRecipeIndex();
+  const previous = alchemicalRecipes[(selectedIndex + alchemicalRecipes.length - 1) % alchemicalRecipes.length];
+  const current = alchemicalRecipes[selectedIndex];
+  const next = alchemicalRecipes[(selectedIndex + 1) % alchemicalRecipes.length];
+  formFlywheel.querySelector(".garage-cover-card.previous").textContent = previous.name;
+  formFlywheel.querySelector(".garage-cover-card.current").textContent = current.name;
+  formFlywheel.querySelector(".garage-cover-card.next").textContent = next.name;
+}
+
+function syncGarageColourSwatches() {
+  const selected = themeSelect.value;
+  const standardTheme = garageColourSwatchButtons.some((button) => button.dataset.theme === selected);
+  garageColourSwatches.hidden = !controlConfig(visualizerConfig()).theme || !standardTheme;
+  garageColourSwatchButtons.forEach((button) => {
+    const active = button.dataset.theme === selected;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function settleGarageFlywheel(wheel) {
+  window.clearTimeout(garageFlywheelTimers.get(wheel));
+  const timer = window.setTimeout(() => {
+    wheel.classList.remove("is-spinning");
+    wheel.classList.add("is-settled");
+  }, 420);
+  garageFlywheelTimers.set(wheel, timer);
+}
+
+function wakeGarageFlywheel(wheel) {
+  window.clearTimeout(garageFlywheelTimers.get(wheel));
+  wheel.classList.remove("is-settled");
+  wheel.classList.add("is-spinning");
+  settleGarageFlywheel(wheel);
+}
+
+function stepGarageFlywheel(wheel, select, step) {
+  if (wheel === formFlywheel) {
+    const next = (alchemyRecipeIndex() + step + alchemicalRecipes.length * 10) % alchemicalRecipes.length;
+    applyAlchemicalAdjustment(next);
+    wakeGarageFlywheel(wheel);
+    return;
+  }
+
+  const options = Array.from(select.options);
+  if (options.length < 2) {
+    settleGarageFlywheel(wheel);
+    return;
+  }
+
+  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === select.value));
+  const next = (selectedIndex + step + options.length * 10) % options.length;
+  select.value = options[next].value;
+  wakeGarageFlywheel(wheel);
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function wireGarageFlywheel(wheel, select) {
+  const coverflow = wheel.querySelector(".garage-coverflow");
+  let pointer = null;
+
+  coverflow.addEventListener("pointerdown", (event) => {
+    pointer = { id: event.pointerId, y: event.clientY, distance: 0, moved: false };
+    coverflow.setPointerCapture?.(event.pointerId);
+    wakeGarageFlywheel(wheel);
+  });
+
+  coverflow.addEventListener("pointermove", (event) => {
+    if (!pointer || event.pointerId !== pointer.id) {
+      return;
+    }
+    pointer.distance += event.clientY - pointer.y;
+    pointer.y = event.clientY;
+    const steps = Math.trunc(pointer.distance / 24);
+    if (steps !== 0) {
+      pointer.moved = true;
+      pointer.distance -= steps * 24;
+      stepGarageFlywheel(wheel, select, -steps);
+      event.preventDefault();
+    }
+  }, { passive: false });
+
+  coverflow.addEventListener("pointerup", (event) => {
+    if (!pointer || event.pointerId !== pointer.id) {
+      return;
+    }
+    const moved = pointer.moved;
+    pointer = null;
+    if (!moved) {
+      const card = event.target.closest("[data-cover-step]");
+      stepGarageFlywheel(wheel, select, Number(card?.dataset.coverStep) || 1);
+    }
+    settleGarageFlywheel(wheel);
+  });
+
+  coverflow.addEventListener("pointercancel", () => {
+    pointer = null;
+    settleGarageFlywheel(wheel);
+  });
+
+  coverflow.addEventListener("click", (event) => {
+    if (event.detail === 0) {
+      const card = event.target.closest("[data-cover-step]");
+      stepGarageFlywheel(wheel, select, Number(card?.dataset.coverStep) || 1);
+    }
+  });
+
+  coverflow.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    stepGarageFlywheel(wheel, select, Math.sign(event.deltaY) || 1);
+  }, { passive: false });
+}
+
+function syncGarageFlywheels() {
+  garageFlywheelValues(sortFlywheel, sortSelect);
+  garageFlywheelValues(visualFlywheel, visualizerSelect);
+  garageAlchemyValues();
+}
+
+wireGarageFlywheel(sortFlywheel, sortSelect);
+wireGarageFlywheel(visualFlywheel, visualizerSelect);
+wireGarageFlywheel(formFlywheel, fireworkFormSelect);
+
 function sessionSnapshot() {
   return {
     version: 1,
@@ -1348,6 +1511,7 @@ function sessionSnapshot() {
       visualizer: visualizerSelect.value,
       form: fireworkFormSelect.value,
       theme: themeSelect.value,
+      nightDrive: nightDriveEnabled,
       speed: fireworkSpeed.value,
       carAgitationGear,
       size: handSize.value,
@@ -1440,10 +1604,12 @@ function restoreControlPreferences(session) {
   syncVisualizerControls();
   setSelectValueIfPresent(themeSelect, controls.theme);
   setSelectValueIfPresent(eyeDischargeSelect, controls.discharge);
+  setNightDrive(controls.nightDrive);
   updateFireworkSpeedLabel();
   updateCarAgitationLabel();
   updateHandControlLabels();
   updateSpectrumDials();
+  syncGarageFlywheels();
 }
 
 function restoreTrackFromSession(session) {
@@ -1579,7 +1745,7 @@ function syncVisualizerControls() {
   const isMissileCommand = visualizer === "lightning" && fireworkFormSelect.value === "missilecommand";
   syncSauronMoodControl(isSauron);
   document.querySelector("#visualizer").classList.toggle("missile-targeting", isMissileCommand);
-  themeLabel.hidden = !controls.theme;
+  themeLabel.hidden = true;
   peakLabel.hidden = !controls.peak;
   speedLabel.hidden = !controls.speed;
   reachLabel.hidden = isSauron || !controls.size;
@@ -1593,6 +1759,8 @@ function syncVisualizerControls() {
   setControlLabel(handSize, labels.size);
   setControlLabel(handCount, labels.count);
   setControlLabel(handGrasp, labels.grasp);
+  syncGarageFlywheels();
+  syncGarageColourSwatches();
 }
 
 function setFullscreenLabel() {
@@ -1724,11 +1892,12 @@ function selectOptionByRecipe(select, index) {
   select.value = options[index % options.length].value;
 }
 
-function applyAlchemicalAdjustment() {
+function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
-  const recipe = alchemicalRecipes[step % alchemicalRecipes.length];
-  alchemicalStepByVisual[visualizer] = step + 1;
+  const selectedIndex = recipeIndex === null ? step : recipeIndex;
+  const recipe = alchemicalRecipes[selectedIndex % alchemicalRecipes.length];
+  alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 
   syncVisualizerControls();
   selectOptionByRecipe(fireworkFormSelect, recipe.form + step);
@@ -12948,13 +13117,13 @@ sortSelect.addEventListener("change", () => {
   sortTracks();
   currentIndex = activeTrack ? tracks.findIndex((track) => track === activeTrack) : -1;
   renderTracks();
+  syncGarageFlywheels();
   scheduleSessionSave(120);
 });
 
 themeSelect.addEventListener("change", () => {
-  if (!animationId) {
-    drawIdleVisualizer();
-  }
+  syncGarageColourSwatches();
+  restartVisualizer();
   scheduleSessionSave();
 });
 
@@ -13069,6 +13238,16 @@ fireworkFormSelect.addEventListener("change", () => {
   syncVisualizerControls();
   restartVisualizer();
   scheduleSessionSave();
+});
+
+garageColourSwatchButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    if (themeSelect.value === button.dataset.theme) {
+      return;
+    }
+    themeSelect.value = button.dataset.theme;
+    themeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+  });
 });
 
 eyeDischargeSelect.addEventListener("change", () => {
@@ -13197,6 +13376,8 @@ settingsFolderButton.addEventListener("click", openLibraryPicker);
 settingsButton.addEventListener("click", openSettingsCatalogue);
 carSettingsButton.addEventListener("pointerdown", (event) => event.stopPropagation());
 carSettingsButton.addEventListener("click", openSettingsCatalogue);
+carNightDriveButton.addEventListener("pointerdown", (event) => event.stopPropagation());
+carNightDriveButton.addEventListener("click", () => setNightDrive(!nightDriveEnabled, { save: true }));
 closeSettingsButton.addEventListener("click", closeSettingsCatalogue);
 settingsCatalogue.addEventListener("click", (event) => {
   if (event.target === settingsCatalogue) {
@@ -13416,4 +13597,6 @@ setFullscreenLabel();
 setControlsEnabled(false);
 setStatus("stopped");
 directoryName.textContent = restoredSession?.directoryName || defaultDirectoryName;
+updateGarageDirectoryName();
+new MutationObserver(updateGarageDirectoryName).observe(directoryName, { childList: true, characterData: true, subtree: true });
 loadPreferredLibrary();

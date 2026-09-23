@@ -111,6 +111,10 @@ async function run() {
     assert(indexHtml.includes('id="settingsCatalogue"'), "Index page is missing The Garage settings catalogue.");
     assert(indexHtml.includes('id="settingsButton"'), "Index page is missing the desktop Garage button.");
     assert(indexHtml.includes('id="carSettingsButton"'), "Index page is missing the Android Garage button.");
+    assert(indexHtml.includes('id="garageDirectoryName"'), "The Garage Library drawer should show the current folder.");
+    assert(indexHtml.includes('id="visualFlywheel"'), "The Garage is missing the visualisation flywheel.");
+    assert(indexHtml.includes('id="formFlywheel"'), "The Garage is missing the Alchemy flywheel.");
+    assert(indexHtml.includes('id="carNightDriveButton"'), "The song selector is missing the Night Drive dimmer.");
     [["01", "Library"], ["02", "Visual"], ["03", "Expression"], ["04", "About"]].forEach(([number, name]) => {
       assert(indexHtml.includes(`<span>${number}</span><strong>${name}</strong>`), `The Garage is missing its ${number} ${name} section.`);
     });
@@ -157,6 +161,8 @@ async function run() {
     assert(appScript.includes("function ensureInitialTrackLoaded()"), "Initial library load should select the first track without playing it.");
     assert(appScript.includes("function openSettingsCatalogue()"), "Playback script is missing The Garage open handler.");
     assert(appScript.includes("function closeSettingsCatalogue()"), "Playback script is missing The Garage close handler.");
+    assert(appScript.includes("function syncGarageFlywheels()"), "The Garage should synchronise its visual and Alchemy flywheels.");
+    assert(appScript.includes("function setNightDrive("), "Playback script is missing the Night Drive dimmer state.");
     assert(appScript.includes("function openSongWheel()"), "Android playback script is missing the song-browse wheel.");
     assert(appScript.includes("function runSongWheelFlywheel()"), "Song-browse wheel should retain flywheel momentum.");
     assert(appScript.includes("function startSongWheelBrake()"), "Song-browse wheel should support a progressive touch brake.");
@@ -188,6 +194,8 @@ async function run() {
     assert(cssText.includes(".android-car .song-wheel-metal"), "Stylesheet is missing the metallic Android song-browse wheel.");
     assert(cssText.includes(".android-car .song-wheel-song-dial"), "Stylesheet is missing the fine song-selection dial.");
     assert(cssText.includes(".settings-catalogue"), "Stylesheet is missing The Garage catalogue treatment.");
+    assert(cssText.includes(".garage-coverflow"), "Stylesheet is missing The Garage cover-flow treatment.");
+    assert(cssText.includes(".player.night-drive #visualizer"), "Stylesheet is missing the Night Drive dimmer treatment.");
     assert(cssText.includes(".android-car .song-wheel .car-settings-button"), "Stylesheet is missing the Android Garage button treatment.");
 
     const tracksResponse = await request(port, "/api/tracks");

@@ -66,6 +66,7 @@
     <small>Outer: alphabet. Inner: songs.</small>
   </div>
   <button id="carSettingsButton" class="car-settings-button" type="button" aria-label="Open The Garage settings catalogue">*</button>
+  <button id="carNightDriveButton" class="car-night-drive-button" type="button" aria-label="Enable Night Drive dimmer" aria-pressed="false">◐</button>
         </section>
 
         <audio id="audio" crossorigin="anonymous"></audio>
@@ -159,9 +160,13 @@
             <details class="settings-drawer" open>
               <summary><span>01</span><strong>Library</strong><small>Your music, your order</small></summary>
               <div class="settings-drawer-body library-tools settings-tools">
-                <button id="settingsFolderButton" class="settings-folder" type="button">Choose music folder</button>
-                <label>
-                  Sort
+                <div class="garage-directory" aria-live="polite">
+                  <span>Current folder</span>
+                  <strong id="garageDirectoryName">Choose an audio directory</strong>
+                </div>
+                <button id="settingsFolderButton" class="settings-folder" type="button">Change folder</button>
+                <label class="garage-native-select">
+                  Library order
                   <select id="sortSelect">
                     <option value="name-asc">Name A-Z</option>
                     <option value="name-desc">Name Z-A</option>
@@ -169,6 +174,14 @@
                     <option value="date-asc">Date oldest</option>
                   </select>
                 </label>
+                <section id="sortFlywheel" class="garage-flywheel garage-sort-flywheel is-settled" aria-label="Library order">
+                  <p>Order</p>
+                  <div class="garage-coverflow" aria-live="polite">
+                    <button class="garage-cover-card previous" type="button" data-cover-step="-1"></button>
+                    <button class="garage-cover-card current" type="button" data-cover-step="1"></button>
+                    <button class="garage-cover-card next" type="button" data-cover-step="1"></button>
+                  </div>
+                </section>
                 <span id="trackCount">0 tracks</span>
               </div>
             </details>
@@ -176,7 +189,7 @@
             <details class="settings-drawer">
               <summary><span>02</span><strong>Visual</strong><small>Choose the world and its colours</small></summary>
               <div class="settings-drawer-body library-tools settings-tools">
-                <label>
+                <label class="garage-native-select">
                   Visual
                   <select id="visualizerSelect">
               <option value="equalizer">Equaliser</option>
@@ -213,7 +226,7 @@
               <option value="snakeconga">Chimaera of Snake and Conga-line</option>
                   </select>
                 </label>
-                <label>
+                <label class="garage-native-select">
                   Alchemy
                   <select id="fireworkFormSelect">
                     <option value="hydra">Hydra</option>
@@ -224,7 +237,25 @@
                     <option value="fort">Wooden fort</option>
                   </select>
                 </label>
-                <label>
+                <div class="garage-flywheel-grid" aria-label="Visual and Alchemy selection wheels">
+                  <section id="visualFlywheel" class="garage-flywheel is-settled" aria-label="Visualisation selection">
+                    <p>Visual</p>
+                    <div class="garage-coverflow" aria-live="polite">
+                      <button id="visualFlywheelPrevious" class="garage-cover-card previous" type="button" data-cover-step="-1"></button>
+                      <button id="visualFlywheelCurrent" class="garage-cover-card current" type="button" data-cover-step="1"></button>
+                      <button id="visualFlywheelNext" class="garage-cover-card next" type="button" data-cover-step="1"></button>
+                    </div>
+                  </section>
+                  <section id="formFlywheel" class="garage-flywheel is-settled" aria-label="Alchemy selection">
+                    <p>Alchemy</p>
+                    <div class="garage-coverflow" aria-live="polite">
+                      <button id="formFlywheelPrevious" class="garage-cover-card previous" type="button" data-cover-step="-1"></button>
+                      <button id="formFlywheelCurrent" class="garage-cover-card current" type="button" data-cover-step="1"></button>
+                      <button id="formFlywheelNext" class="garage-cover-card next" type="button" data-cover-step="1"></button>
+                    </div>
+                  </section>
+                </div>
+                <label class="garage-native-select">
                   Colour
                   <select id="themeSelect">
                     <option value="mono">Mono green</option>
@@ -234,6 +265,13 @@
                     <option value="pressure">High Pressure</option>
                   </select>
                 </label>
+                <div id="garageColourSwatches" class="garage-colour-swatches" role="group" aria-label="Colour">
+                  <button class="garage-colour-swatch mono" type="button" data-theme="mono" aria-label="Mono green"></button>
+                  <button class="garage-colour-swatch ice" type="button" data-theme="ice" aria-label="Ice blue"></button>
+                  <button class="garage-colour-swatch ember" type="button" data-theme="ember" aria-label="Ember"></button>
+                  <button class="garage-colour-swatch spectrum" type="button" data-theme="spectrum" aria-label="Spectrum"></button>
+                  <button class="garage-colour-swatch pressure" type="button" data-theme="pressure" aria-label="High pressure"></button>
+                </div>
                 <label class="toggle compact-toggle">
                   <input id="peakToggle" type="checkbox" checked>
                   <span>Peak hold</span>
