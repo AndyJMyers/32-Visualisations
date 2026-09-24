@@ -175,7 +175,9 @@ async function run() {
     assert(appScript.includes("maxCanvasPixels"), "Visualizer script is missing a canvas pixel budget.");
     assert(appScript.includes("const renderSize = canvasRenderSize(cssWidth, cssHeight, ratio)"), "Canvas resize should use the render budget.");
     assert(appScript.includes('desktopNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1))'), "Desktop visual button should advance through visualisations.");
-    assert(appScript.includes('desktopAlchemyButton.addEventListener("click", applyAlchemicalAdjustment)'), "Desktop Alchemy button should apply a fresh visual recipe.");
+    assert(appScript.includes('desktopAlchemyButton.addEventListener("click", () => applyAlchemicalAdjustment())'), "Desktop Alchemy button should apply a fresh visual recipe without passing a click event as the recipe index.");
+    assert(appScript.includes('carAlchemyButton.addEventListener("click", () => applyAlchemicalAdjustment())'), "Android Alchemy button should apply a fresh visual recipe without passing a click event as the recipe index.");
+    assert(appScript.includes("restartVisualizer();\n  pulseStageLabel(\"visual\", `Alchemy: ${recipe.name}`)"), "Alchemy should redraw the visual immediately after applying a recipe.");
     assert(appScript.includes("audio.addEventListener(\"pause\""), "Playback script is missing the pause-state handler.");
     assert(appScript.includes("continuousPlaybackRequested && isAtNaturalTrackEnd()"), "Playback script no longer advances when Android pauses at the natural end of a track.");
     assert(

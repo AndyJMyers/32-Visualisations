@@ -1895,14 +1895,16 @@ function selectOptionByRecipe(select, index) {
 function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
-  const selectedIndex = recipeIndex === null ? step : recipeIndex;
+  const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex : step;
   const recipe = alchemicalRecipes[selectedIndex % alchemicalRecipes.length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 
   syncVisualizerControls();
-  selectOptionByRecipe(fireworkFormSelect, recipe.form + step);
+  // A named recipe must always resolve to the same controls, rather than
+  // inheriting offsets from the previously selected recipe.
+  selectOptionByRecipe(fireworkFormSelect, recipe.form);
   syncVisualizerControls();
-  selectOptionByRecipe(themeSelect, recipe.theme + Math.floor(step / 2));
+  selectOptionByRecipe(themeSelect, recipe.theme);
   setRangeControlValue(fireworkSpeed, recipe.speed);
   setRangeControlValue(handSize, recipe.size);
   setRangeControlValue(handCount, recipe.count);
@@ -1914,10 +1916,8 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   updateHandControlLabels();
   updateSpectrumDials();
   syncVisualizerControls();
+  restartVisualizer();
   pulseStageLabel("visual", `Alchemy: ${recipe.name}`);
-  if (!animationId) {
-    drawIdleVisualizer();
-  }
   scheduleSessionSave(120);
 }
 
@@ -13370,7 +13370,7 @@ nextButton.addEventListener("click", () => changeTrackByStep(1));
 previousButton.addEventListener("click", () => changeTrackByStep(-1));
 fullscreenButton.addEventListener("click", toggleVisualFullscreen);
 desktopNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
-desktopAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
+desktopAlchemyButton.addEventListener("click", () => applyAlchemicalAdjustment());
 carFolderButton.addEventListener("click", openLibraryPicker);
 settingsFolderButton.addEventListener("click", openLibraryPicker);
 settingsButton.addEventListener("click", openSettingsCatalogue);
@@ -13388,7 +13388,7 @@ carPlayButton.addEventListener("click", togglePlayPause);
 carPreviousButton.addEventListener("click", () => changeTrackByStep(-1));
 carNextButton.addEventListener("click", () => changeTrackByStep(1));
 carNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
-carAlchemyButton.addEventListener("click", applyAlchemicalAdjustment);
+carAlchemyButton.addEventListener("click", () => applyAlchemicalAdjustment());
 carAgitationButton.addEventListener("click", cycleCarAgitationGear);
 carShuffleButton.addEventListener("click", () => {
   shuffleToggle.checked = !shuffleToggle.checked;
