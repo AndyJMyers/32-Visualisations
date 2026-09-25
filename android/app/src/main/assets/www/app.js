@@ -2987,8 +2987,7 @@ function drawEqualizerFrame(canvasContext, buffer) {
     const now = performance.now();
 
     for (let i = 0; i < barCount; i += 1) {
-      const start = Math.floor((i / barCount) * buffer.length);
-      const end = Math.floor(((i + 1) / barCount) * buffer.length);
+      const { start, end } = equalizerBandRange(i, barCount, buffer.length);
       let total = 0;
 
       for (let j = start; j < end; j += 1) {
@@ -3019,6 +3018,19 @@ function drawEqualizerFrame(canvasContext, buffer) {
         canvasContext.fillRect(x, peakY, barWidth, 4);
       }
     }
+}
+
+function equalizerBandRange(index, barCount, bufferLength) {
+  // A linear 0–Nyquist split devotes too many bars to near-silent ultrasonics.
+  // Logarithmic bands give the audible bass, midrange, and presence detail room to move.
+  const maxBin = Math.max(1, Math.min(bufferLength - 1, Math.round(bufferLength * 0.75)));
+  const start = Math.floor(Math.expm1(Math.log1p(maxBin) * index / barCount));
+  const end = Math.max(start + 1, Math.floor(Math.expm1(Math.log1p(maxBin) * (index + 1) / barCount)));
+
+  return {
+    start,
+    end: Math.min(maxBin + 1, end),
+  };
 }
 
 function averageBand(buffer, start, end) {

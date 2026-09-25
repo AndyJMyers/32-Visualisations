@@ -174,6 +174,8 @@ async function run() {
     assert(appScript.includes("function canvasRenderSize("), "Visualizer script is missing the canvas render-budget helper.");
     assert(appScript.includes("maxCanvasPixels"), "Visualizer script is missing a canvas pixel budget.");
     assert(appScript.includes("const renderSize = canvasRenderSize(cssWidth, cssHeight, ratio)"), "Canvas resize should use the render budget.");
+    assert(appScript.includes("function equalizerBandRange("), "Equaliser script is missing its perceptual frequency-band mapper.");
+    assert(appScript.includes("Math.expm1(Math.log1p(maxBin)"), "Equaliser frequency bands should be logarithmic rather than a linear split of the analyser range.");
     assert(appScript.includes('desktopNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1))'), "Desktop visual button should advance through visualisations.");
     assert(appScript.includes('desktopAlchemyButton.addEventListener("click", () => applyAlchemicalAdjustment())'), "Desktop Alchemy button should apply a fresh visual recipe without passing a click event as the recipe index.");
     assert(appScript.includes('carAlchemyButton.addEventListener("click", () => applyAlchemicalAdjustment())'), "Android Alchemy button should apply a fresh visual recipe without passing a click event as the recipe index.");
