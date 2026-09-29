@@ -2,6 +2,9 @@ package com.thirtytwovisualisations.app;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.media.MediaMetadata;
+import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Intent;
@@ -53,6 +56,7 @@ public class MainActivity extends Activity {
 
     private WebView webView;
     private SharedPreferences preferences;
+    private MediaSession mediaSession;
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
@@ -63,6 +67,7 @@ public class MainActivity extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         preferences = getSharedPreferences(PREFS, MODE_PRIVATE);
+        setupMediaControls();
         webView = new WebView(this);
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -76,6 +81,75 @@ public class MainActivity extends Activity {
         setContentView(webView);
         enterImmersiveMode();
         webView.loadUrl(APP_ORIGIN + "/index.html");
+    }
+
+    private void setupMediaControls() {
+        mediaSession = new MediaSession(this, "32Visualisations");
+        mediaSession.setFlags(
+            MediaSession.FLAG_HANDLES_MEDIA_BUTTONS
+                | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS
+        );
+        mediaSession.setCallback(new MediaSession.Callback() {
+            @Override
+            public void onPlay() {
+                dispatchMediaCommand("play");
+            }
+
+            @Override
+            public void onPause() {
+                dispatchMediaCommand("pause");
+            }
+
+            @Override
+            public void onSkipToNext() {
+                dispatchMediaCommand("next");
+            }
+
+            @Override
+            public void onSkipToPrevious() {
+                dispatchMediaCommand("previous");
+            }
+        });
+        updateMediaSession("32 Visualisations", false);
+    }
+
+    private void dispatchMediaCommand(String command) {
+        dispatchToWebView("window.waveDeckAndroidMediaCommand && window.waveDeckAndroidMediaCommand(" + JSONObject.quote(command) + ");");
+    }
+
+    private void dispatchToWebView(String script) {
+        if (webView != null) {
+            webView.post(() -> webView.evaluateJavascript(script, null));
+        }
+    }
+
+    private void updateMediaSession(String title, boolean playing) {
+        if (mediaSession == null) {
+            return;
+        }
+
+        mediaSession.setMetadata(new MediaMetadata.Builder()
+            .putString(MediaMetadata.METADATA_KEY_TITLE, title == null || title.isEmpty() ? "32 Visualisations" : title)
+            .putString(MediaMetadata.METADATA_KEY_ARTIST, "32 Visualisations")
+            .build());
+        long actions = PlaybackState.ACTION_PLAY
+            | PlaybackState.ACTION_PAUSE
+            | PlaybackState.ACTION_SKIP_TO_NEXT
+            | PlaybackState.ACTION_SKIP_TO_PREVIOUS;
+        mediaSession.setPlaybackState(new PlaybackState.Builder()
+            .setActions(actions)
+            .setState(playing ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED, PlaybackState.PLAYBACK_POSITION_UNKNOWN, 1f)
+            .build());
+        // Keep Play available on Bluetooth and lock-screen controls after a manual pause.
+        mediaSession.setActive(true);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mediaSession != null) {
+            mediaSession.release();
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -368,6 +442,11 @@ public class MainActivity extends Activity {
     }
 
     public class AndroidBridge {
+        @JavascriptInterface
+        public void updateMediaSession(String title, boolean playing) {
+            MainActivity.this.updateMediaSession(title, playing);
+        }
+
         @JavascriptInterface
         public String getLibrary() {
             try {

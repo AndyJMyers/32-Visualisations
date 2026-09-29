@@ -151,7 +151,13 @@ async function run() {
     assert(appJs.headers["content-type"]?.includes("text/javascript"), "Expected app.js JavaScript content type.");
     const appScript = appJs.body.toString("utf8");
     assert(appScript.includes("function isAtNaturalTrackEnd()"), "Playback script is missing the natural-end continuation guard.");
+    assert(appScript.includes("function equalizerDisplayLevel("), "Equaliser should use its headroom-preserving display curve.");
+    assert(appScript.includes("const lowBandCount = Math.min(12"), "Equaliser should give the lowest bands distinct frequency ranges.");
     assert(appScript.includes("function recoverContinuousPlayback()"), "Playback script is missing its foreground recovery path after a background interruption.");
+    assert(appScript.includes("window.waveDeckAndroidMediaCommand"), "Android media controls should be able to drive playback.");
+    const mainActivity = fs.readFileSync(path.join(repoRoot, "android", "app", "src", "main", "java", "com", "thirtytwovisualisations", "app", "MainActivity.java"), "utf8");
+    assert(mainActivity.includes("new MediaSession"), "Android shell should expose a media session to Bluetooth and lock-screen controls.");
+    assert(mainActivity.includes("onSkipToNext"), "Android media session should handle track skipping.");
     assert(appScript.includes("recoverContinuousPlayback();"), "Playback should recover continuous playback when the Android WebView returns to the foreground.");
     assert(appScript.includes('document.documentElement.classList.add("android-car")'), "Playback script should keep the early Android car class in sync.");
     assert(appScript.includes("isLandscapeCarMode"), "Playback script should resize the Android canvas for landscape car mode.");
@@ -177,7 +183,7 @@ async function run() {
     assert(appScript.includes("maxCanvasPixels"), "Visualizer script is missing a canvas pixel budget.");
     assert(appScript.includes("const renderSize = canvasRenderSize(cssWidth, cssHeight, ratio)"), "Canvas resize should use the render budget.");
     assert(appScript.includes("function equalizerBandRange("), "Equaliser script is missing its perceptual frequency-band mapper.");
-    assert(appScript.includes("Math.expm1(Math.log1p(maxBin)"), "Equaliser frequency bands should be logarithmic rather than a linear split of the analyser range.");
+    assert(appScript.includes("Math.pow(spanRatio"), "Equaliser should use logarithmic spacing above its distinct low-frequency bands.");
     assert(appScript.includes('desktopNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1))'), "Desktop visual button should advance through visualisations.");
     assert(appScript.includes('desktopAlchemyButton.addEventListener("click", () => applyAlchemicalAdjustment())'), "Desktop Alchemy button should apply a fresh visual recipe without passing a click event as the recipe index.");
     assert(appScript.includes('carAlchemyButton.addEventListener("click", () => applyAlchemicalAdjustment())'), "Android Alchemy button should apply a fresh visual recipe without passing a click event as the recipe index.");

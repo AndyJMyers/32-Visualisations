@@ -1039,6 +1039,17 @@ function setAndroidStatus(message) {
   }
 }
 
+function updateAndroidMediaSession(playing) {
+  if (!androidBridge?.updateMediaSession) {
+    return;
+  }
+
+  const title = currentIndex >= 0 && tracks[currentIndex]
+    ? trackDisplayTitle(tracks[currentIndex])
+    : "32 Visualisations";
+  androidBridge.updateMediaSession(title, playing);
+}
+
 function sortTracks() {
   const [field, direction] = sortSelect.value.split("-");
   const multiplier = direction === "asc" ? 1 : -1;
@@ -2032,8 +2043,12 @@ function setupAudioGraph() {
   if (!audioContext) {
     audioContext = new AudioContext();
     analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
+    analyser.fftSize = 1024;
     analyser.smoothingTimeConstant = 0.64;
+    // The browser default max of -30 dB saturates much of a modern mastered track.
+    // Retain enough headroom for the equaliser to show the actual band differences.
+    analyser.minDecibels = -96;
+    analyser.maxDecibels = -8;
     sourceNode = audioContext.createMediaElementSource(audio);
     sourceNode.connect(analyser);
     analyser.connect(audioContext.destination);
@@ -2234,6 +2249,7 @@ function pauseCurrent() {
   continuousPlaybackRequested = false;
   playbackTransitioning = false;
   audio.pause();
+  updateAndroidMediaSession(false);
   setStatus("paused");
   scheduleSessionSave(120);
 }
@@ -2244,6 +2260,7 @@ function stopCurrent() {
   continuousPlaybackRequested = false;
   playbackTransitioning = false;
   audio.pause();
+  updateAndroidMediaSession(false);
   audio.currentTime = 0;
   setStatus("stopped");
   updateAlchemyProgress();
@@ -3016,7 +3033,7 @@ function drawEqualizerFrame(canvasContext, buffer) {
       }
 
       const value = total / Math.max(1, end - start);
-      const normalizedValue = value / 255;
+      const normalizedValue = equalizerDisplayLevel(value / 255, i, barCount);
       const barHeight = Math.max(8, normalizedValue * (height - 28));
       const x = i * (barWidth + barGap);
       const y = height - barHeight;
@@ -3041,12 +3058,31 @@ function drawEqualizerFrame(canvasContext, buffer) {
     }
 }
 
+function equalizerDisplayLevel(rawLevel, bandIndex, bandCount) {
+  // Leave visual headroom without imposing a frequency tilt on the music.
+  const knee = 1.7;
+  const softened = (1 - Math.exp(-rawLevel * knee)) / (1 - Math.exp(-knee));
+  return Math.min(0.92, softened * 0.92);
+}
+
 function equalizerBandRange(index, barCount, bufferLength) {
-  // A linear 0–Nyquist split devotes too many bars to near-silent ultrasonics.
-  // Logarithmic bands give the audible bass, midrange, and presence detail room to move.
+  // Keep the bottom twelve bars disjoint. With a small FFT and pure logarithmic bands,
+  // several adjacent bass bars can otherwise read the same bin and move in lockstep.
   const maxBin = Math.max(1, Math.min(bufferLength - 1, Math.round(bufferLength * 0.75)));
-  const start = Math.floor(Math.expm1(Math.log1p(maxBin) * index / barCount));
-  const end = Math.max(start + 1, Math.floor(Math.expm1(Math.log1p(maxBin) * (index + 1) / barCount)));
+  const lowBandCount = Math.min(12, Math.max(1, barCount - 1));
+  const lowBinEnd = Math.min(maxBin, Math.max(lowBandCount * 2, Math.round(maxBin * 0.07)));
+
+  if (index < lowBandCount) {
+    const start = Math.floor(index * lowBinEnd / lowBandCount);
+    const end = Math.max(start + 1, Math.floor((index + 1) * lowBinEnd / lowBandCount));
+    return { start, end: Math.min(lowBinEnd, end) };
+  }
+
+  const remainingBands = Math.max(1, barCount - lowBandCount);
+  const remainingIndex = index - lowBandCount;
+  const spanRatio = maxBin / Math.max(1, lowBinEnd);
+  const start = Math.floor(lowBinEnd * Math.pow(spanRatio, remainingIndex / remainingBands));
+  const end = Math.max(start + 1, Math.floor(lowBinEnd * Math.pow(spanRatio, (remainingIndex + 1) / remainingBands)));
 
   return {
     start,
@@ -13449,6 +13485,7 @@ audio.addEventListener("playing", () => {
   playlistAdvancePending = false;
   playbackTransitioning = false;
   continuousPlaybackRequested = true;
+  updateAndroidMediaSession(true);
   setStatus("playing");
   scheduleSessionSave(120);
 });
@@ -13459,9 +13496,12 @@ audio.addEventListener("pause", () => {
   }
 
   if (playbackTransitioning || continuousPlaybackRequested) {
+    updateAndroidMediaSession(true);
     scheduleSessionSave(120);
     return;
   }
+
+  updateAndroidMediaSession(false);
 
   if (audio.currentTime > 0 && audio.currentTime < audio.duration) {
     setStatus("paused");
@@ -13489,6 +13529,18 @@ audio.addEventListener("error", () => {
   }
   setAndroidStatus(`Android: audio error${code}`);
 });
+
+window.waveDeckAndroidMediaCommand = (command) => {
+  if (command === "play" && audio.paused) {
+    togglePlayPause();
+  } else if (command === "pause" && !audio.paused) {
+    pauseCurrent();
+  } else if (command === "next") {
+    changeTrackByStep(1);
+  } else if (command === "previous") {
+    changeTrackByStep(-1);
+  }
+};
 
 window.addEventListener("resize", resizeCanvas);
 document.addEventListener("fullscreenchange", () => {
