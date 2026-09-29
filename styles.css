@@ -1063,8 +1063,12 @@ h1 {
   text-align: center;
 }
 
-.dial-scale span:nth-child(2) {
+.dial-control[data-level="0"] .dial-scale span:nth-child(1),
+.dial-control[data-level="1"] .dial-scale span:nth-child(2),
+.dial-control[data-level="2"] .dial-scale span:nth-child(3) {
   border-color: #b89a62;
+  color: #e6c88f;
+  text-shadow: 0 0 8px rgba(230, 200, 143, 0.3);
 }
 
 .bakelite-dial:focus-visible .dial-face {

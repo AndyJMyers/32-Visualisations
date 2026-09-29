@@ -1835,17 +1835,21 @@ function spectrumLevelIndex(value) {
 }
 
 function updateSpectrumDials() {
-  const smileLevel = smileDialLevels[spectrumLevelIndex(spectrumPad.smilesDecadence)];
-  const insanityLevel = insanityDialLevels[spectrumLevelIndex(spectrumPad.psychedeliaInsanity)];
+  const smileLevelIndex = spectrumLevelIndex(spectrumPad.smilesDecadence);
+  const insanityLevelIndex = spectrumLevelIndex(spectrumPad.psychedeliaInsanity);
+  const smileLevel = smileDialLevels[smileLevelIndex];
+  const insanityLevel = insanityDialLevels[insanityLevelIndex];
   spectrumPad.smilesDecadence = smileLevel.value;
   spectrumPad.psychedeliaInsanity = insanityLevel.value;
 
-  smilesDial.dataset.level = String(spectrumLevelIndex(smileLevel.value));
+  smilesDial.dataset.level = String(smileLevelIndex);
+  smilesDial.closest(".dial-control")?.setAttribute("data-level", String(smileLevelIndex));
   smilesDial.style.setProperty("--dial-angle", `${smileLevel.angle}deg`);
   smilesDial.setAttribute("aria-label", `Smiles: ${smileLevel.label}`);
   smilesDialValue.textContent = smileLevel.label;
 
-  insanityDial.dataset.level = String(spectrumLevelIndex(insanityLevel.value));
+  insanityDial.dataset.level = String(insanityLevelIndex);
+  insanityDial.closest(".dial-control")?.setAttribute("data-level", String(insanityLevelIndex));
   insanityDial.style.setProperty("--dial-angle", `${insanityLevel.angle}deg`);
   insanityDial.setAttribute("aria-label", `Insanity: ${insanityLevel.label}`);
   insanityDialValue.textContent = insanityLevel.label;
@@ -2205,6 +2209,23 @@ function handleTrackEnded() {
   }
 
   continueToNextTrack();
+}
+
+function recoverContinuousPlayback() {
+  if (!continuousPlaybackRequested || playbackTransitioning || tracks.length === 0) {
+    return;
+  }
+
+  if (isAtNaturalTrackEnd()) {
+    handleTrackEnded();
+    return;
+  }
+
+  if (audio.paused && currentIndex >= 0) {
+    playlistAdvancePending = true;
+    playbackTransitioning = true;
+    playLoadedTrackWithRetry(playbackGeneration, { preservePlaybackIntent: true });
+  }
 }
 
 function pauseCurrent() {
@@ -13592,6 +13613,8 @@ window.addEventListener("pagehide", saveSessionNow);
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") {
     saveSessionNow();
+  } else {
+    recoverContinuousPlayback();
   }
 });
 

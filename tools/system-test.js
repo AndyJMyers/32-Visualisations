@@ -151,6 +151,8 @@ async function run() {
     assert(appJs.headers["content-type"]?.includes("text/javascript"), "Expected app.js JavaScript content type.");
     const appScript = appJs.body.toString("utf8");
     assert(appScript.includes("function isAtNaturalTrackEnd()"), "Playback script is missing the natural-end continuation guard.");
+    assert(appScript.includes("function recoverContinuousPlayback()"), "Playback script is missing its foreground recovery path after a background interruption.");
+    assert(appScript.includes("recoverContinuousPlayback();"), "Playback should recover continuous playback when the Android WebView returns to the foreground.");
     assert(appScript.includes('document.documentElement.classList.add("android-car")'), "Playback script should keep the early Android car class in sync.");
     assert(appScript.includes("isLandscapeCarMode"), "Playback script should resize the Android canvas for landscape car mode.");
     assert(appScript.includes('form: "Alchemy"'), "Desktop visual form control should be labelled Alchemy.");
@@ -199,6 +201,7 @@ async function run() {
     assert(cssText.includes(".android-car .song-wheel-song-dial"), "Stylesheet is missing the fine song-selection dial.");
     assert(cssText.includes(".settings-catalogue"), "Stylesheet is missing The Garage catalogue treatment.");
     assert(cssText.includes(".garage-coverflow"), "Stylesheet is missing The Garage cover-flow treatment.");
+    assert(cssText.includes('.dial-control[data-level="0"] .dial-scale span:nth-child(1)'), "The Garage expression dials should highlight their active scale position.");
     assert(cssText.includes(".player.night-drive #visualizer"), "Stylesheet is missing the Night Drive dimmer treatment.");
     assert(cssText.includes(".android-car .song-wheel .car-settings-button"), "Stylesheet is missing the Android Garage button treatment.");
 
