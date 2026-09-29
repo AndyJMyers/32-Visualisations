@@ -32,6 +32,7 @@ You do not have to be entirely normal to enjoy this player, and that is rather t
 - Works without internet access once installed.
 - Explore a fixed set of 32 vivid music visualisations.
 - Simple car-friendly interface designed for quick, familiar control in portrait or landscape.
+- Bluetooth, headset and lock-screen Play/Pause and track-skip controls.
 - Shuffle, track skip, forward-only Visual, Speed, and Alchemy controls.
 - Dual tactile song flywheels: alphabet outside, songs inside.
 - Optional Garage catalogue for library, visual and expression settings.

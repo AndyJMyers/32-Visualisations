@@ -104,7 +104,7 @@ The Android app is the mobile-first version of the same visualisation world. It 
 
 For a big offline collection, the outer dial takes you rapidly through the available letters, while the inner dial traverses the songs under the selected initial. Flick either ring to build momentum; rest a finger on it to bring it gently to heel. The same touch reveals a small `*` beside the flywheels for The Garage: library, visual and expression settings without cluttering the normal car controls. Alongside it, `◐` toggles Night Drive, dimming the music controls and visual intensity for calmer after-dark use.
 
-The app opens ready for your own local music. Use Android's folder picker to choose a music folder, then play offline from files already on the device. Bluetooth routing is handled by Android itself.
+The app opens ready for your own local music. Use Android's folder picker to choose a music folder, then play offline from files already on the device. Bluetooth routing is handled by Android itself, with Play/Pause and track-skip controls exposed to compatible Bluetooth, headset and lock-screen media controls.
 
 ## Optional Sample Audio
 

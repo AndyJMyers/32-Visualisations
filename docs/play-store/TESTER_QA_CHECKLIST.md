@@ -52,6 +52,7 @@ Try:
 - Next track.
 - Previous track.
 - Let one track play for a minute or two.
+- If you use Bluetooth or headphones with media buttons, try Play/Pause and track skip there too.
 
 Check:
 
