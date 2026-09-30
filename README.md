@@ -10,6 +10,16 @@ It plays local audio from your device, works without an internet connection once
 
 No streaming account. No subscription. No bundled catalogue pretending to know your taste. Just your files, your device, your speakers, and thirty-two vivid ways to make sound visible.
 
+## No Cloud. No Account. No Alibi.
+
+**32 Visualisations is a local tool, not a service asking to become a permanent feature of your life.**
+
+It plays the music you already chose to keep on your own device. There is no account to create, no cloud library, no advertising profile, no analytics, and no remote record of the glorious or regrettable things you listen to. Your settings stay on your device; your music stays on your device; and nobody running this project knows, or needs to know, what is in your collection.
+
+That is not an elaborate privacy framework. It is the much simpler arrangement in which the information never needs to come to us in the first place.
+
+Read the fuller manifesto: [**No Cloud. No Account. No Alibi.**](https://andyjmyers.substack.com/p/no-cloud-no-account-no-alibi)
+
 ## The Story
 
 Streaming made music convenient, but it also made listening feel rented, flattened, and strangely disposable. 32 Visualisations goes the other way.
