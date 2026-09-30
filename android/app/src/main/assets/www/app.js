@@ -9,6 +9,7 @@ const visualizer = document.querySelector("#visualizer");
 const songWheel = document.querySelector("#songWheel");
 const songWheelTitle = document.querySelector("#songWheelTitle");
 const songWheelCount = document.querySelector("#songWheelCount");
+const player = document.querySelector(".player");
 const audio = document.querySelector("#audio");
 const settingsCatalogue = document.querySelector("#settingsCatalogue");
 const settingsButton = document.querySelector("#settingsButton");
@@ -2615,6 +2616,14 @@ function clearSongWheelTimers() {
   songWheelCommitTimer = 0;
 }
 
+function isDesktopSongWheelMode() {
+  return !isAndroidCarMode && window.matchMedia("(min-width: 720px)").matches;
+}
+
+function songWheelIsAvailable() {
+  return isAndroidCarMode || isDesktopSongWheelMode();
+}
+
 function hideSongWheel() {
   songWheel.classList.remove("active");
   songWheel.setAttribute("aria-hidden", "true");
@@ -2643,8 +2652,13 @@ function scheduleSongWheelRest(delay = 850) {
 }
 
 function openSongWheel() {
-  if (!isAndroidCarMode || tracks.length === 0) {
+  if (!songWheelIsAvailable() || tracks.length === 0) {
     return false;
+  }
+
+  if (isDesktopSongWheelMode()) {
+    player.classList.add("desktop-song-wheel-host");
+    songWheel.classList.add("desktop-orbital");
   }
 
   clearSongWheelTimers();
@@ -13221,7 +13235,7 @@ window.addEventListener("pointerleave", () => {
 });
 
 visualizer.addEventListener("click", (event) => {
-  if (isAndroidCarMode && performance.now() < songWheelSuppressClickUntil) {
+  if (performance.now() < songWheelSuppressClickUntil) {
     return;
   }
 
@@ -13240,7 +13254,7 @@ visualizer.addEventListener("click", (event) => {
 });
 
 function handleVisualizerSongWheelTouch(event) {
-  if (isAndroidCarMode && songWheel.classList.contains("active")) {
+  if (songWheelIsAvailable() && songWheel.classList.contains("active")) {
     clearSongWheelTimers();
     stopSongWheelBrake();
     if (songWheelAnimationId) {
@@ -13254,7 +13268,9 @@ function handleVisualizerSongWheelTouch(event) {
     return;
   }
 
-  startSongWheel(event);
+  if (songWheelIsAvailable()) {
+    startSongWheel(event);
+  }
 }
 
 visualizer.addEventListener("pointerdown", handleVisualizerSongWheelTouch, { passive: false });
@@ -13264,7 +13280,7 @@ songWheel.addEventListener("pointerup", finishSongWheelPointer, { passive: false
 songWheel.addEventListener("pointercancel", finishSongWheelPointer, { passive: false });
 
 document.addEventListener("pointerdown", (event) => {
-  if (!isAndroidCarMode || !songWheel.classList.contains("active") || event.target === visualizer || songWheel.contains(event.target)) {
+  if (!songWheelIsAvailable() || !songWheel.classList.contains("active") || event.target === visualizer || songWheel.contains(event.target)) {
     return;
   }
 

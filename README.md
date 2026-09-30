@@ -40,7 +40,7 @@ More attributed engineering log entries live in [docs/engineering-log/](docs/eng
 - Offers car-style Android controls for play/pause, previous/next track, next visualisation, shuffle, `Alchemy`, and `Speed`.
 - Uses `Alchemy` to apply artistically chosen visual settings.
 - Uses `Speed` to cycle visual agitation through five colour-coded steps.
-- Lets Android listeners browse large libraries with a temporary dual flywheel: alphabet outside, songs inside.
+- Lets Android and desktop listeners browse large libraries with a temporary dual flywheel: alphabet outside, songs inside.
 - Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
@@ -60,6 +60,12 @@ The number is fixed. Thirty-two is binary, balanced, mellow in its intonation an
 ![Bob Ross Garden roulette](docs/images/bob-ross-garden.png)
 
 **Bob Ross Garden**
+
+### Desktop Interface
+
+![Desktop orbital song navigator over the visualiser](docs/images/desktop-orbital-flywheel.jpg)
+
+Click the visualisation to bring up the desktop orbital: a deliberately oversized, two-ring navigator for a large library. Rotate the outer ring to move between available initials and the inner ring to move through songs under the selected letter. It settles and fades away when you are done, or yields immediately to a click elsewhere.
 
 ### Desktop Fullscreen Gallery
 
