@@ -63,7 +63,11 @@
   <div class="song-wheel-copy">
     <span id="songWheelCount">Song 1</span>
     <strong id="songWheelTitle">Choose a track</strong>
-    <small>Outer: alphabet. Inner: songs.</small>
+    <div class="song-wheel-precision" role="group" aria-label="Precise track selection">
+      <button id="songWheelPrevious" type="button" aria-label="Previous song">&#8249;</button>
+      <button id="songWheelNext" type="button" aria-label="Next song">&#8250;</button>
+    </div>
+    <small>Outer: alphabet. Inner: songs. Arrows nudge.</small>
   </div>
   <button id="carSettingsButton" class="car-settings-button" type="button" aria-label="Open The Garage settings catalogue">*</button>
   <button id="carNightDriveButton" class="car-night-drive-button" type="button" aria-label="Enable Night Drive dimmer" aria-pressed="false">◐</button>

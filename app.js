@@ -9,6 +9,8 @@ const visualizer = document.querySelector("#visualizer");
 const songWheel = document.querySelector("#songWheel");
 const songWheelTitle = document.querySelector("#songWheelTitle");
 const songWheelCount = document.querySelector("#songWheelCount");
+const songWheelPrevious = document.querySelector("#songWheelPrevious");
+const songWheelNext = document.querySelector("#songWheelNext");
 const player = document.querySelector(".player");
 const audio = document.querySelector("#audio");
 const settingsCatalogue = document.querySelector("#settingsCatalogue");
@@ -2714,6 +2716,25 @@ function moveSongWheel(distance) {
   updateSongWheelDisplay();
 }
 
+function nudgeSongWheel(step) {
+  if (!tracks.length || !Number.isFinite(step) || step === 0) {
+    return;
+  }
+
+  clearSongWheelTimers();
+  stopSongWheelBrake();
+  if (songWheelAnimationId) {
+    cancelAnimationFrame(songWheelAnimationId);
+    songWheelAnimationId = 0;
+  }
+
+  songWheelVelocity = 0;
+  songWheelRemainder = 0;
+  songWheelActiveDial = "songs";
+  moveSongWheel(step);
+  scheduleSongWheelRest(900);
+}
+
 function songWheelPointerAngle(event) {
   const bounds = songWheel.getBoundingClientRect();
   return Math.atan2(
@@ -2776,7 +2797,7 @@ function runSongWheelFlywheel() {
     const elapsedSeconds = Math.min(0.05, (now - lastFrame) / 1000);
     lastFrame = now;
     moveSongWheel(songWheelVelocity * elapsedSeconds);
-    songWheelVelocity *= Math.pow(0.22, elapsedSeconds);
+    songWheelVelocity *= Math.pow(0.035, elapsedSeconds);
 
     if (Math.abs(songWheelVelocity) > 0.35) {
       songWheelAnimationId = requestAnimationFrame(coast);
@@ -2874,9 +2895,11 @@ function finishSongWheelPointer(event) {
     return;
   }
 
-  if (Math.abs(songWheelVelocity) > 1.1) {
+  // Slow turns are for landing on a particular title, not an invitation to coast past it.
+  if (Math.abs(songWheelVelocity) > 12) {
     runSongWheelFlywheel();
   } else {
+    songWheelVelocity = 0;
     scheduleSongWheelRest(500);
   }
   event.preventDefault();
@@ -13278,6 +13301,15 @@ songWheel.addEventListener("pointerdown", startSongWheel, { passive: false });
 songWheel.addEventListener("pointermove", moveSongWheelFromPointer, { passive: false });
 songWheel.addEventListener("pointerup", finishSongWheelPointer, { passive: false });
 songWheel.addEventListener("pointercancel", finishSongWheelPointer, { passive: false });
+
+[songWheelPrevious, songWheelNext].forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+  });
+});
+
+songWheelPrevious.addEventListener("click", () => nudgeSongWheel(-1));
+songWheelNext.addEventListener("click", () => nudgeSongWheel(1));
 
 document.addEventListener("pointerdown", (event) => {
   if (!songWheelIsAvailable() || !songWheel.classList.contains("active") || event.target === visualizer || songWheel.contains(event.target)) {
