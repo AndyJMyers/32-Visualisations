@@ -2603,12 +2603,23 @@ function songWheelTrackIndexesForLetter(letter) {
 }
 
 function songWheelDialAt(event) {
+  const target = event.target instanceof Element ? event.target : null;
+
+  // Prefer the actual painted dial over a radius guess. The inner dial's edge is
+  // deliberately close to the outer dial, so geometry alone made that boundary flaky.
+  if (target?.closest(".song-wheel-song-dial, .song-wheel-copy")) {
+    return "songs";
+  }
+  if (target?.closest(".song-wheel-metal")) {
+    return "alphabet";
+  }
+
   const bounds = songWheel.getBoundingClientRect();
   const distance = Math.hypot(
     event.clientX - (bounds.left + bounds.width / 2),
     event.clientY - (bounds.top + bounds.height / 2)
   ) / (bounds.width / 2);
-  return distance > 0.78 ? "alphabet" : "songs";
+  return distance > 0.82 ? "alphabet" : "songs";
 }
 
 function clearSongWheelTimers() {
