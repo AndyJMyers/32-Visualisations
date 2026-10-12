@@ -1090,7 +1090,9 @@ function renderTracks() {
 
     const name = document.createElement("span");
     name.className = "track-name";
-    name.textContent = trackDisplayTitle(track);
+    const displayTitle = trackDisplayTitle(track);
+    name.textContent = displayTitle;
+    name.title = displayTitle;
 
     const date = document.createElement("span");
     date.className = "track-date";
@@ -1345,6 +1347,11 @@ let songWheelBrakeAnimationId = 0;
 let songWheelActiveDial = "songs";
 let songWheelAlphabetIndex = 0;
 let songWheelAlphabetRemainder = 0;
+const songWheelSongUnitsPerTurn = 28;
+const songWheelMaximumVelocity = 96;
+const songWheelCoastThreshold = 4.5;
+const songWheelCoastDamping = 0.05;
+const songWheelBrakeDamping = 0.008;
 let songWheelAlphabetRotation = 0;
 let songWheelSongRotation = 0;
 
@@ -2101,7 +2108,9 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
     };
     audio.addEventListener("loadedmetadata", applyResumeTime, { once: true });
   }
-  currentTrack.textContent = trackDisplayTitle(track);
+  const displayTitle = trackDisplayTitle(track);
+  currentTrack.textContent = displayTitle;
+  currentTrack.title = displayTitle;
   renderTracks();
   scheduleSessionSave();
 
@@ -2285,6 +2294,7 @@ function resetLibraryState() {
   audio.removeAttribute("src");
   audio.load();
   currentTrack.textContent = "No track loaded";
+  currentTrack.removeAttribute("title");
   timeReadout.textContent = "0:00 / 0:00";
   updateAlchemyProgress();
   setStatus("stopped");
@@ -2806,7 +2816,7 @@ function moveSongWheel(distance) {
     songWheelRemainder += distance;
     const steps = songWheelRemainder < 0 ? Math.ceil(songWheelRemainder) : Math.floor(songWheelRemainder);
     songWheelRemainder -= steps;
-    songWheelSongRotation += distance * 18;
+  songWheelSongRotation += distance * 24;
 
     if (steps !== 0) {
       const currentLetterIndex = Math.max(0, indexes.indexOf(songWheelIndex));
@@ -2864,6 +2874,52 @@ function stopSongWheelBrake() {
   }
 }
 
+function stopSongWheelMotion() {
+  stopSongWheelBrake();
+  if (songWheelAnimationId) {
+    cancelAnimationFrame(songWheelAnimationId);
+    songWheelAnimationId = 0;
+  }
+  songWheelVelocity = 0;
+}
+
+function releaseSongWheelFlock() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  songWheel.querySelector(".song-wheel-flock")?.remove();
+  const flock = document.createElement("div");
+  flock.className = "song-wheel-flock";
+  flock.setAttribute("aria-hidden", "true");
+
+  const flightPlan = [
+    [-31, 42, -18, -68, -24, 0, 0.68],
+    [-18, 59, -8, -79, -12, 70, 0.86],
+    [-2, 63, 11, -91, 12, 140, 0.78],
+    [14, 60, 27, -79, 23, 35, 0.98],
+    [29, 46, 45, -66, 37, 110, 0.72],
+    [-43, 31, -54, -45, -34, 170, 0.61],
+    [40, 28, 60, -49, 32, 95, 0.57]
+  ];
+
+  flightPlan.forEach(([startX, startY, endX, endY, turn, delay, scale]) => {
+    const bird = document.createElement("i");
+    bird.className = "song-wheel-bird";
+    bird.style.setProperty("--flock-start-x", `${startX}%`);
+    bird.style.setProperty("--flock-start-y", `${startY}%`);
+    bird.style.setProperty("--flock-end-x", `${endX}%`);
+    bird.style.setProperty("--flock-end-y", `${endY}%`);
+    bird.style.setProperty("--flock-turn", `${turn}deg`);
+    bird.style.setProperty("--flock-delay", `${delay}ms`);
+    bird.style.setProperty("--flock-scale", String(scale));
+    flock.append(bird);
+  });
+
+  songWheel.append(flock);
+  window.setTimeout(() => flock.remove(), 1900);
+}
+
 function startSongWheelBrake() {
   stopSongWheelBrake();
   songWheelBrakeTimer = window.setTimeout(() => {
@@ -2878,7 +2934,7 @@ function startSongWheelBrake() {
       const elapsedSeconds = Math.min(0.05, (now - lastFrame) / 1000);
       lastFrame = now;
       moveSongWheel(songWheelVelocity * elapsedSeconds);
-      songWheelVelocity *= Math.pow(0.04, elapsedSeconds);
+      songWheelVelocity *= Math.pow(songWheelBrakeDamping, elapsedSeconds);
 
       if (Math.abs(songWheelVelocity) > 0.08) {
         songWheelBrakeAnimationId = requestAnimationFrame(brake);
@@ -2899,14 +2955,15 @@ function runSongWheelFlywheel() {
     const elapsedSeconds = Math.min(0.05, (now - lastFrame) / 1000);
     lastFrame = now;
     moveSongWheel(songWheelVelocity * elapsedSeconds);
-    songWheelVelocity *= Math.pow(0.035, elapsedSeconds);
+    songWheelVelocity *= Math.pow(songWheelCoastDamping, elapsedSeconds);
 
-    if (Math.abs(songWheelVelocity) > 0.35) {
+    if (Math.abs(songWheelVelocity) > 0.12) {
       songWheelAnimationId = requestAnimationFrame(coast);
       return;
     }
 
     songWheelAnimationId = 0;
+    releaseSongWheelFlock();
     scheduleSongWheelRest(500);
   }
 
@@ -2933,7 +2990,7 @@ function startSongWheel(event) {
     cancelAnimationFrame(songWheelAnimationId);
     songWheelAnimationId = 0;
   }
-  stopSongWheelBrake();
+  stopSongWheelMotion();
 
   songWheelPointerId = event.pointerId;
   songWheelPointerTarget = event.currentTarget;
@@ -2964,7 +3021,9 @@ function moveSongWheelFromPointer(event) {
     const angle = songWheelPointerAngle(event);
     const angleDistance = normaliseWheelAngle(angle - songWheelLastAngle);
     songWheelLastAngle = angle;
-    const unitsPerTurn = songWheelActiveDial === "alphabet" ? songWheelLetters().length : 32;
+    const unitsPerTurn = songWheelActiveDial === "alphabet"
+      ? songWheelLetters().length
+      : songWheelSongUnitsPerTurn;
     songDistance = angleDistance * (unitsPerTurn / (Math.PI * 2));
   } else {
     // The initial touch arrives on the canvas before the dial exists; keep a brisk vertical flick as a graceful fallback.
@@ -2975,7 +3034,10 @@ function moveSongWheelFromPointer(event) {
     stopSongWheelBrake();
     moveSongWheel(songDistance);
     const flickVelocity = songDistance / (elapsed / 1000);
-    songWheelVelocity = Math.max(-110, Math.min(110, songWheelVelocity * 0.72 + flickVelocity));
+    songWheelVelocity = Math.max(
+      -songWheelMaximumVelocity,
+      Math.min(songWheelMaximumVelocity, songWheelVelocity * 0.62 + flickVelocity * 0.55)
+    );
   }
   songWheelLastY = event.clientY;
   songWheelLastTime = now;
@@ -3001,8 +3063,8 @@ function finishSongWheelPointer(event) {
     return;
   }
 
-  // Slow turns are for landing on a particular title, not an invitation to coast past it.
-  if (Math.abs(songWheelVelocity) > 12) {
+  // A tiny movement stays precise; a proper stroke releases the wheel's stored momentum.
+  if (Math.abs(songWheelVelocity) > songWheelCoastThreshold) {
     runSongWheelFlywheel();
   } else {
     songWheelVelocity = 0;
@@ -13423,8 +13485,13 @@ songWheelSearch.addEventListener("pointerdown", (event) => {
 
 songWheelSearch.addEventListener("input", () => {
   clearSongWheelTimers();
-  songWheelVelocity = 0;
+  stopSongWheelMotion();
   updateSongWheelSearchResults();
+});
+
+songWheelSearch.addEventListener("focus", () => {
+  clearSongWheelTimers();
+  stopSongWheelMotion();
 });
 
 songWheelSearch.addEventListener("keydown", (event) => {
