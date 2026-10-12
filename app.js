@@ -11,6 +11,8 @@ const songWheelTitle = document.querySelector("#songWheelTitle");
 const songWheelCount = document.querySelector("#songWheelCount");
 const songWheelPrevious = document.querySelector("#songWheelPrevious");
 const songWheelNext = document.querySelector("#songWheelNext");
+const songWheelSearch = document.querySelector("#songWheelSearch");
+const songWheelSearchResults = document.querySelector("#songWheelSearchResults");
 const player = document.querySelector(".player");
 const audio = document.querySelector("#audio");
 const settingsCatalogue = document.querySelector("#settingsCatalogue");
@@ -2580,6 +2582,92 @@ function updateSongWheelDisplay() {
   songWheel.dataset.activeDial = songWheelActiveDial;
 }
 
+function normaliseSongWheelSearch(value) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase();
+}
+
+function songWheelSearchMatches() {
+  const query = normaliseSongWheelSearch(songWheelSearch.value.trim());
+  if (!query) {
+    return [];
+  }
+
+  return tracks
+    .map((track, index) => ({
+      index,
+      title: trackDisplayTitle(track),
+      searchTitle: normaliseSongWheelSearch(trackDisplayTitle(track))
+    }))
+    .filter((track) => track.searchTitle.includes(query))
+    .sort((left, right) => {
+      const leftStartsWithQuery = left.searchTitle.startsWith(query);
+      const rightStartsWithQuery = right.searchTitle.startsWith(query);
+      if (leftStartsWithQuery !== rightStartsWithQuery) {
+        return leftStartsWithQuery ? -1 : 1;
+      }
+      return left.title.localeCompare(right.title);
+    })
+    .slice(0, 6);
+}
+
+function updateSongWheelSearchResults() {
+  const matches = songWheelSearchMatches();
+  songWheelSearchResults.replaceChildren();
+
+  if (!songWheelSearch.value.trim()) {
+    songWheelSearchResults.hidden = true;
+    return matches;
+  }
+
+  if (!matches.length) {
+    const empty = document.createElement("p");
+    empty.className = "song-wheel-search-empty";
+    empty.textContent = "No matching track";
+    songWheelSearchResults.append(empty);
+  } else {
+    matches.forEach(({ index, title }) => {
+      const result = document.createElement("button");
+      result.type = "button";
+      result.className = "song-wheel-search-result";
+      result.dataset.trackIndex = String(index);
+      result.setAttribute("role", "option");
+      result.textContent = title;
+      songWheelSearchResults.append(result);
+    });
+  }
+
+  songWheelSearchResults.hidden = false;
+  return matches;
+}
+
+function selectSongWheelSearchResult(index) {
+  if (!Number.isInteger(index) || !tracks[index]) {
+    return;
+  }
+
+  clearSongWheelTimers();
+  stopSongWheelBrake();
+  if (songWheelAnimationId) {
+    cancelAnimationFrame(songWheelAnimationId);
+    songWheelAnimationId = 0;
+  }
+
+  songWheelVelocity = 0;
+  songWheelRemainder = 0;
+  songWheelIndex = index;
+  const letter = songWheelLetterForTrack(tracks[index]);
+  songWheelAlphabetIndex = Math.max(0, songWheelLetters().indexOf(letter));
+  songWheelActiveDial = "songs";
+  songWheelSearch.value = "";
+  updateSongWheelSearchResults();
+  updateSongWheelDisplay();
+  commitSongWheelSelection();
+  hideSongWheel();
+}
+
 function songWheelLetterForTrack(track) {
   const initial = trackDisplayTitle(track).trim().charAt(0).toUpperCase();
   return /^[A-Z]$/.test(initial) ? initial : "#";
@@ -2640,6 +2728,7 @@ function songWheelIsAvailable() {
 function hideSongWheel() {
   songWheel.classList.remove("active");
   songWheel.setAttribute("aria-hidden", "true");
+  songWheelSearch.blur();
 }
 
 function commitSongWheelSelection() {
@@ -2680,6 +2769,8 @@ function openSongWheel() {
   songWheelRemainder = 0;
   songWheelAlphabetRemainder = 0;
   songWheelActiveDial = "songs";
+  songWheelSearch.value = "";
+  updateSongWheelSearchResults();
   const currentLetter = songWheelLetterForTrack(tracks[songWheelIndex]);
   songWheelAlphabetIndex = Math.max(0, songWheelLetters().indexOf(currentLetter));
   updateSongWheelDisplay();
@@ -2823,6 +2914,10 @@ function runSongWheelFlywheel() {
 }
 
 function startSongWheel(event) {
+  if (event.target instanceof Element && event.target.closest(".song-wheel-search")) {
+    return;
+  }
+
   songWheelWasVisibleOnTouch = songWheel.classList.contains("active");
   songWheelMovedOnTouch = false;
 
@@ -13321,6 +13416,47 @@ songWheel.addEventListener("pointercancel", finishSongWheelPointer, { passive: f
 
 songWheelPrevious.addEventListener("click", () => nudgeSongWheel(-1));
 songWheelNext.addEventListener("click", () => nudgeSongWheel(1));
+
+songWheelSearch.addEventListener("pointerdown", (event) => {
+  event.stopPropagation();
+});
+
+songWheelSearch.addEventListener("input", () => {
+  clearSongWheelTimers();
+  songWheelVelocity = 0;
+  updateSongWheelSearchResults();
+});
+
+songWheelSearch.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    const [firstMatch] = songWheelSearchMatches();
+    if (firstMatch) {
+      selectSongWheelSearchResult(firstMatch.index);
+      event.preventDefault();
+    }
+  } else if (event.key === "Escape") {
+    if (songWheelSearch.value) {
+      songWheelSearch.value = "";
+      updateSongWheelSearchResults();
+    } else {
+      hideSongWheel();
+    }
+    event.preventDefault();
+  }
+});
+
+songWheelSearchResults.addEventListener("pointerdown", (event) => {
+  event.stopPropagation();
+});
+
+songWheelSearchResults.addEventListener("click", (event) => {
+  const result = event.target instanceof Element ? event.target.closest(".song-wheel-search-result") : null;
+  if (!result) {
+    return;
+  }
+
+  selectSongWheelSearchResult(Number.parseInt(result.dataset.trackIndex || "", 10));
+});
 
 document.addEventListener("pointerdown", (event) => {
   if (!songWheelIsAvailable() || !songWheel.classList.contains("active") || event.target === visualizer || songWheel.contains(event.target)) {

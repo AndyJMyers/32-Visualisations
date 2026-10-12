@@ -63,6 +63,11 @@
   <div class="song-wheel-copy">
     <span id="songWheelCount">Song 1</span>
     <strong id="songWheelTitle">Choose a track</strong>
+    <div class="song-wheel-search">
+      <label class="visually-hidden" for="songWheelSearch">Find a track</label>
+      <input id="songWheelSearch" type="search" autocomplete="off" placeholder="Find a track..." enterkeyhint="go">
+      <div id="songWheelSearchResults" class="song-wheel-search-results" role="listbox" aria-label="Matching tracks"></div>
+    </div>
     <div class="song-wheel-precision" role="group" aria-label="Precise track selection">
       <button id="songWheelPrevious" type="button" aria-label="Previous song">&#8249;</button>
       <button id="songWheelNext" type="button" aria-label="Next song">&#8250;</button>
@@ -341,7 +346,7 @@
               <summary><span>04</span><strong>About</strong><small>Local, offline, yours</small></summary>
               <div class="settings-drawer-body settings-about">
                 <p>32 Visualisations plays the files you choose on this device. It does not bundle a catalogue, use a streaming account, or upload your library.</p>
-                <p>For a particular track in a large folder, touch the visualisation to reveal the dual flywheel: alphabet outside, songs inside.</p>
+                <p>For a particular track in a large folder, touch the visualisation to reveal the dual flywheel: alphabet outside, songs inside, or type part of a title to find it directly.</p>
               </div>
             </details>
           </article>
