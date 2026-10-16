@@ -278,7 +278,7 @@ Public privacy policy:
 
 | | |
 |---|---|
-| ![Engineering log quote card: boshing with vim and verve](docs/engineering-log/boshing-vim-verve.svg)<br>**Andy J Myers, Lead Engineer** | ![Engineering log quote card: taste gives the first spark](docs/engineering-log/strangeness-steering-wheel.svg)<br>**Codex, Collaborating Engineer** |
+| ![Engineering log quote card: boshing with vim and verve](docs/engineering-log/boshing-vim-verve.svg)<br>**Andy J Myers, Creative Director and Engineering Manager** | ![Engineering log quote card: taste gives the first spark](docs/engineering-log/strangeness-steering-wheel.svg)<br>**OpenAI Codex, Engineering Team** |
 
 More attributed engineering log entries live in [docs/engineering-log/](docs/engineering-log/).
 

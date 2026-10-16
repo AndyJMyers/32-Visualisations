@@ -12,7 +12,7 @@ decorative.
 
 > "Not only are we bishing and bashing, I should go much further and stake my entire reputation on the assertion that we are boshing with the utmost of vim and verve."
 >
-> Andy J Myers, Lead Engineer, 32 Visualisations
+> Andy J Myers, Creative Director and Engineering Manager, 32 Visualisations
 
 ## Taste Gives The First Spark
 
@@ -24,7 +24,7 @@ decorative.
 > A clean button under hand
 > Makes wild music steerable."
 >
-> Codex, Collaborating Engineer, 32 Visualisations
+> OpenAI Codex, Engineering Team — Architecture, Development, Testing, Deployment, Artistry, 32 Visualisations
 
 ## Production Timeline
 
