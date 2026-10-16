@@ -148,8 +148,10 @@ If you enjoyed this, why not gain merit in this life by [buying this holy man a 
 
 ## Direction
 
-**Artistic Director:** AndyJMyers  
-**Engineering:** developed in collaboration with OpenAI Codex
+**Andy J Myers — Creative Director and Engineering Manager**
+
+**OpenAI Codex — Engineering Team**  
+Architecture, Development, Testing, Deployment, Artistry.
 
 The governing principle is simple: saturation without sludge, overstimulation without indifference, and enough mental movement to make a waveform feel briefly alive.
 
