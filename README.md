@@ -36,14 +36,6 @@ The guiding idea is simple:
 
 That means few controls, large targets, no account ceremony, no fiddly in-car settings, and enough visual excess to make a track feel like an event.
 
-## Engineering Log
-
-| | |
-|---|---|
-| ![Engineering log quote card: boshing with vim and verve](docs/engineering-log/boshing-vim-verve.svg)<br>**Andy J Myers, Lead Engineer** | ![Engineering log quote card: taste gives the first spark](docs/engineering-log/strangeness-steering-wheel.svg)<br>**Codex, Collaborating Engineer** |
-
-More attributed engineering log entries live in [docs/engineering-log/](docs/engineering-log/).
-
 ## What It Does
 
 - Plays local audio files from a folder on your Android device.
@@ -126,22 +118,89 @@ For a big offline collection, the outer dial takes you rapidly through the avail
 
 The app opens ready for your own local music. Use Android's folder picker to choose a music folder, then play offline from files already on the device. Bluetooth routing is handled by Android itself, with Play/Pause and track-skip controls exposed to compatible Bluetooth, headset and lock-screen media controls.
 
-## Optional Sample Audio
+## Controls
 
-The repository includes three original WAV files in [sample-music/](sample-music/) for desktop/server demonstration and automated tests. They are not packaged inside the Android app. The Play build stays lean and expects the listener to bring their own music library.
+Desktop:
 
-Current Play preparation lives in:
+- `Play/Pause`, `Prev`, and `Next` handle the library.
+- `Season` switches Summer and Autumn without changing the music.
+- `Up` and `Down` move through visualisations.
+- `Left` and `Right` move through tracks.
+- `F` or `F4` toggles the visual stage.
+- `W`, `A`, `S`, and `D` adjust expression dials and operate certain interactive scenes.
 
-- [Play Console answers](docs/play-store/PLAY_CONSOLE_ANSWERS.md)
-- [Tester QA checklist](docs/play-store/TESTER_QA_CHECKLIST.md)
-- [Privacy policy](docs/play-store/PRIVACY_POLICY.md)
-- [Play pitch pack](docs/play-store/pitch/PLAY_PITCH.md)
+Android car mode:
 
-Public privacy policy:
+- `Dir` chooses a folder.
+- `Visual` advances to the next visualisation.
+- `Alchemy` applies alchemical adjustment.
+- `Speed` changes the visual agitation step.
+- Season switches between Summer and the Autumn preview on the development branch.
+- The transport row handles previous, play/pause, and next.
 
-[32 Visualisations Privacy Policy](https://andyjmyers.substack.com/p/32-visualisations-privacy-policy)
+## Status
 
-## Testing
+This project is still under active development, so any hallucinations you experience may not be entirely your own fault this time.
+
+The Android app is live on Google Play. The preserved source baseline is version `1.0.17` / build `17`, targeting Android API 36. This records the repository version; the currently published Play version must be checked in Play Console before a hotfix release. Autumn is in creative production and is not yet a released collection.
+
+If you enjoyed this, why not gain merit in this life by [buying this holy man a pint of mead or ale](https://buy.stripe.com/5kQ5kDcX8cwc52J70rds400), according to your purse?
+
+## Direction
+
+**Artistic Director:** AndyJMyers  
+**Engineering:** developed in collaboration with OpenAI Codex
+
+The governing principle is simple: saturation without sludge, overstimulation without indifference, and enough mental movement to make a waveform feel briefly alive.
+
+## For Developers
+
+Local setup, testing, Android builds and maintenance notes follow. All commands run from the repository root unless stated otherwise.
+
+### Running Locally
+
+#### Requirements
+
+- A current version of Node.js
+- A directory containing supported audio files
+- A modern browser
+
+#### Start
+
+Set the library directory and run the server from the repository root.
+
+PowerShell:
+
+```powershell
+$env:WAVE_DECK_LIBRARY = "D:\Music\Road Trip"
+node server.js
+```
+
+macOS or Linux:
+
+```bash
+WAVE_DECK_LIBRARY="/path/to/music-library" node server.js
+```
+
+Then open [http://127.0.0.1:4173/](http://127.0.0.1:4173/).
+
+If `WAVE_DECK_LIBRARY` is not set, the local server looks for `C:\TVR Playlist`.
+
+The **Open folder** control can also select a different local directory in browsers that support the File System Access API.
+
+#### Run With Codex
+
+Clone the repository, open its folder in the [Codex app](https://developers.openai.com/codex/app), and select **Local**. Then give Codex the location of your music library:
+
+```text
+Start 32 Visualisations using my music library at "D:\Music\Road Trip". Keep the
+server running at http://127.0.0.1:4173/, verify that the page and track
+library load, and give me the link.
+```
+
+Use the equivalent `/path/to/music-library` on macOS or Linux. Codex will set the library environment variable, start the local Node.js server, and check that it is reachable. It may ask for approval before launching a persistent local process.
+
+### Testing
 
 32 Visualisations has completed Google Play closed testing and has production access. Real-device testing remains part of the project: choose a music folder, play a few tracks, try the main controls, and report anything strange.
 
@@ -167,50 +226,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\verify-android-release.ps1
 
 The release build script also runs this verification after Gradle finishes.
 
-## Running Locally
-
-### Requirements
-
-- A current version of Node.js
-- A directory containing supported audio files
-- A modern browser
-
-### Start
-
-Set the library directory and run the server from the repository root.
-
-PowerShell:
-
-```powershell
-$env:WAVE_DECK_LIBRARY = "D:\Music\Road Trip"
-node server.js
-```
-
-macOS or Linux:
-
-```bash
-WAVE_DECK_LIBRARY="/path/to/music-library" node server.js
-```
-
-Then open [http://127.0.0.1:4173/](http://127.0.0.1:4173/).
-
-If `WAVE_DECK_LIBRARY` is not set, the local server looks for `C:\TVR Playlist`.
-
-The **Open folder** control can also select a different local directory in browsers that support the File System Access API.
-
-### Run With Codex
-
-Clone the repository, open its folder in the [Codex app](https://developers.openai.com/codex/app), and select **Local**. Then give Codex the location of your music library:
-
-```text
-Start 32 Visualisations using my music library at "D:\Music\Road Trip". Keep the
-server running at http://127.0.0.1:4173/, verify that the page and track
-library load, and give me the link.
-```
-
-Use the equivalent `/path/to/music-library` on macOS or Linux. Codex will set the library environment variable, start the local Node.js server, and check that it is reachable. It may ask for approval before launching a persistent local process.
-
-## Building Android
+### Building Android
 
 The `android/` project bundles the shared web app into an Android WebView wrapper.
 
@@ -241,42 +257,30 @@ android/app/build/outputs/apk/release/app-release.apk
 
 Signing secrets are intentionally not committed.
 
-## Controls
+### Optional Sample Audio
 
-Desktop:
+The repository includes three original WAV files in [sample-music/](sample-music/) for desktop/server demonstration and automated tests. They are not packaged inside the Android app. The Play build stays lean and expects the listener to bring their own music library.
 
-- `Play/Pause`, `Prev`, and `Next` handle the library.
-- `Season` switches Summer and Autumn without changing the music.
-- `Up` and `Down` move through visualisations.
-- `Left` and `Right` move through tracks.
-- `F` or `F4` toggles the visual stage.
-- `W`, `A`, `S`, and `D` adjust expression dials and operate certain interactive scenes.
+Current Play preparation lives in:
 
-Android car mode:
+- [Play Console answers](docs/play-store/PLAY_CONSOLE_ANSWERS.md)
+- [Tester QA checklist](docs/play-store/TESTER_QA_CHECKLIST.md)
+- [Privacy policy](docs/play-store/PRIVACY_POLICY.md)
+- [Play pitch pack](docs/play-store/pitch/PLAY_PITCH.md)
 
-- `Dir` chooses a folder.
-- `Visual` advances to the next visualisation.
-- `Alchemy` applies alchemical adjustment.
-- `Speed` changes the visual agitation step.
-- Season switches between Summer and the Autumn preview on the development branch.
-- The transport row handles previous, play/pause, and next.
+Public privacy policy:
 
-## Project Notes
+[32 Visualisations Privacy Policy](https://andyjmyers.substack.com/p/32-visualisations-privacy-policy)
+
+### Engineering Log
+
+| | |
+|---|---|
+| ![Engineering log quote card: boshing with vim and verve](docs/engineering-log/boshing-vim-verve.svg)<br>**Andy J Myers, Lead Engineer** | ![Engineering log quote card: taste gives the first spark](docs/engineering-log/strangeness-steering-wheel.svg)<br>**Codex, Collaborating Engineer** |
+
+More attributed engineering log entries live in [docs/engineering-log/](docs/engineering-log/).
+
+### Project Notes
 
 - Android maintenance rules: [docs/MAINTENANCE.md](docs/MAINTENANCE.md)
 - Play Store materials: [docs/play-store/](docs/play-store/)
-
-## Status
-
-This project is still under active development, so any hallucinations you experience may not be entirely your own fault this time.
-
-The Android app is live on Google Play. The preserved source baseline is version `1.0.17` / build `17`, targeting Android API 36. This records the repository version; the currently published Play version must be checked in Play Console before a hotfix release. Autumn is in creative production and is not yet a released collection.
-
-If you enjoyed this, why not gain merit in this life by [buying this holy man a pint of mead or ale](https://buy.stripe.com/5kQ5kDcX8cwc52J70rds400), according to your purse?
-
-## Direction
-
-**Artistic Director:** AndyJMyers  
-**Engineering:** developed in collaboration with OpenAI Codex
-
-The governing principle is simple: saturation without sludge, overstimulation without indifference, and enough mental movement to make a waveform feel briefly alive.
