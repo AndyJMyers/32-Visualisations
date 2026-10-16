@@ -1,5 +1,9 @@
 # 32 Visualisations
 
+> **Autumn is in production — creative development is underway, not yet released.**
+> The original 32 are now the **Summer** collection. One player, one music library, seasonal visuals and alchemies.
+> The creative cycle runs from **May 2026 to May 2027**. See [season status and development workflow](docs/SEASONS.md).
+
 **Your music. Local. Offline. One fair price. Turned all the way up.**
 
 ![32 Visualisations hero artwork](docs/play-store/pitch/github-hero-1600x600.png)
@@ -54,7 +58,7 @@ More attributed engineering log entries live in [docs/engineering-log/](docs/eng
 - Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
-The number is fixed. Thirty-two is binary, balanced, mellow in its intonation and just faintly occult. New visualisations may therefore require ceremonial retirement of old ones.
+Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The planned Season control selects the collection within the same player.
 
 ## A Glimpse
 
@@ -95,7 +99,7 @@ Click the visualisation to bring up the desktop orbital: a deliberately oversize
 |---|---|
 | ![Turtle River with Grievance, Hunger and Munchiness controls](docs/images/controls-turtle-river.png)<br>**Grievance. Hunger. Munchiness.** | ![Oyster Pearls with Tide, Shell size and Pearl making controls](docs/images/controls-oyster-pearls.png)<br>**Tide. Shell size. Pearl making.** |
 
-## The 32
+## Summer — the original 32
 
 | | | | |
 |---|---|---|---|
@@ -265,7 +269,7 @@ Android car mode:
 
 This project is still under active development, so any hallucinations you experience may not be entirely your own fault this time.
 
-The Android app is live on Google Play. The currently published Play build is version `1.0.9` / build `9`, targeting Android API 36. Version `1.0.10` / build `10`, adding The Garage settings catalogue, is in Google Play review.
+The Android app is live on Google Play. The preserved source baseline is version `1.0.17` / build `17`, targeting Android API 36. This records the repository version; the currently published Play version must be checked in Play Console before a hotfix release. Autumn is in creative production and is not yet a released collection.
 
 If you enjoyed this, why not gain merit in this life by [buying this holy man a pint of mead or ale](https://buy.stripe.com/5kQ5kDcX8cwc52J70rds400), according to your purse?
 

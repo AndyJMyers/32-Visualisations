@@ -1,0 +1,31 @@
+{
+  "creativeCycle": {
+    "from": "2026-05",
+    "to": "2027-05"
+  },
+  "currentDevelopment": "autumn",
+  "status": "in-creative-production-not-released",
+  "collections": [
+    {
+      "id": "summer",
+      "label": "Summer",
+      "visualCount": 32,
+      "status": "existing-original-collection"
+    },
+    {
+      "id": "autumn",
+      "label": "Autumn",
+      "plannedVisualCount": 32,
+      "status": "in-development",
+      "firstVisual": "Ralph's Last Watch"
+    }
+  ],
+  "baseline": {
+    "branch": "baseline/summer-1.0.17-2026-10-16",
+    "commit": "33157f6a87a7849cb712c3e5e4ba3bda457077cb",
+    "sourceVersion": "1.0.17",
+    "playReleaseVerified": false
+  },
+  "developmentBranch": "development/autumn",
+  "runtimeSeasonSwitchImplemented": false
+}

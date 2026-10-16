@@ -6,6 +6,16 @@
 
 The public voice should lead with utility, then beauty, then strangeness: local music, offline use, simple controls, 32 vivid visualisations. The app is paid at £4.99, but the price should remain a quiet Play Store fact rather than a sales headline: one fair payment, no subscription, and a lifetime of playing your own music.
 
+## Seasonal Direction — May 2026 to May 2027
+
+**Your music. A year of visual inspirations.**
+
+A cycle of visual inspirations from May 2026 to May 2027: changing weather, changing light, inside and outside, all responding to the music you already own.
+
+The original 32 form Summer, full of colour and energy. Autumn is now in creative production: another 32 visuals with their own alchemies. The planned Season button replaces Shuffle in the same Android and local player, with a background reflecting the selected collection. The music library and playback continue across season changes.
+
+Public copy must distinguish availability from direction: Summer's 32 exist today; Autumn is being developed. The May-to-May cycle describes the creative project, not a subscription, expiry date, or promise that future seasons are already available. Existing screenshots and panels depict the original Summer collection and need refreshing when seasonal controls ship.
+
 ## Core Lines
 
 - Your music. Local. Offline. Alive in motion.
