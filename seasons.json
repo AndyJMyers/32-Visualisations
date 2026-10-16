@@ -17,7 +17,9 @@
       "label": "Autumn",
       "plannedVisualCount": 32,
       "status": "in-development",
-      "firstVisual": "Ralph's Last Watch"
+      "firstVisual": "Ralph's Last Watch",
+      "implementedVisualCount": 1,
+      "firstVisualStatus": "first-procedural-draft"
     }
   ],
   "baseline": {
@@ -27,5 +29,5 @@
     "playReleaseVerified": false
   },
   "developmentBranch": "development/autumn",
-  "runtimeSeasonSwitchImplemented": false
+  "runtimeSeasonSwitchImplemented": true
 }

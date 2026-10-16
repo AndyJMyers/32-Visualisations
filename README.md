@@ -49,16 +49,16 @@ More attributed engineering log entries live in [docs/engineering-log/](docs/eng
 - Plays local audio files from a folder on your Android device.
 - Works without internet connectivity once installed.
 - Supports `.wav`, `.mp3`, `.m4a`, `.aac`, `.flac`, `.ogg`, and `.opus`.
-- Provides a fixed set of **32** audio-reactive visualisations.
+- Preserves Summer’s **32** audio-reactive visualisations and adds an Autumn collection in development.
 - Runs as a desktop browser app or an offline-first Android WebView app.
-- Offers car-style Android controls for play/pause, previous/next track, next visualisation, shuffle, `Alchemy`, and `Speed`.
+- Offers car-style Android controls for play/pause, previous/next track, next visualisation, `Season`, `Alchemy`, and `Speed`.
 - Uses `Alchemy` to apply artistically chosen visual settings.
 - Uses `Speed` to cycle visual agitation through five colour-coded steps.
 - Lets Android and desktop listeners browse large libraries with a temporary dual flywheel: alphabet outside, songs inside.
 - Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
-Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The planned Season control selects the collection within the same player.
+Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player. On the Autumn development branch, Autumn 01 is available as a first draft alongside Summer’s original 32.
 
 ## A Glimpse
 
@@ -245,7 +245,8 @@ Signing secrets are intentionally not committed.
 
 Desktop:
 
-- `Play`, `Stop`, `Prev`, `Next`, and `Shuffle` handle the library.
+- `Play/Pause`, `Prev`, and `Next` handle the library.
+- `Season` switches Summer and Autumn without changing the music.
 - `Up` and `Down` move through visualisations.
 - `Left` and `Right` move through tracks.
 - `F` or `F4` toggles the visual stage.
@@ -257,7 +258,7 @@ Android car mode:
 - `Visual` advances to the next visualisation.
 - `Alchemy` applies alchemical adjustment.
 - `Speed` changes the visual agitation step.
-- Shuffle switches between order and shuffle.
+- Season switches between Summer and the Autumn preview on the development branch.
 - The transport row handles previous, play/pause, and next.
 
 ## Project Notes

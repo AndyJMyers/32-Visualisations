@@ -98,14 +98,9 @@
               <span id="carAgitationSymbol" class="car-symbol">&gt;</span>
               <span id="carAgitationLabel" class="car-button-kicker">Speed</span>
             </button>
-            <button id="carShuffleButton" class="car-icon-button car-shuffle-button" type="button" aria-label="Shuffle off" aria-pressed="false">
-              <span class="shuffle-deck-icon" aria-hidden="true">
-                <span class="shuffle-hand shuffle-hand-left"></span>
-                <span class="shuffle-card shuffle-card-left"></span>
-                <span class="shuffle-card shuffle-card-right"></span>
-                <span class="shuffle-hand shuffle-hand-right"></span>
-              </span>
-              <span id="carShuffleLabel" class="car-button-kicker">Order</span>
+            <button id="carSeasonButton" class="car-icon-button car-season-button" type="button" aria-label="Season: Summer. Switch to Autumn">
+              <span class="car-symbol season-symbol" aria-hidden="true">◒</span>
+              <span id="carSeasonLabel" class="car-button-kicker">Summer</span>
             </button>
           </div>
           <div class="car-transport-row">
@@ -149,10 +144,8 @@
               <span>Alchemy</span><strong>&gt;</strong>
             </button>
           </div>
-          <label class="toggle">
-            <input id="shuffleToggle" type="checkbox">
-            <span>Shuffle</span>
-          </label>
+          <button id="desktopSeasonButton" class="season-control" type="button" aria-label="Season: Summer. Switch to Autumn">Season · Summer</button>
+          <input id="shuffleToggle" type="checkbox" hidden aria-hidden="true" tabindex="-1">
         </section>
 
         <dialog id="settingsCatalogue" class="settings-catalogue" aria-labelledby="settingsCatalogueTitle">
@@ -356,6 +349,7 @@
       </section>
     </main>
 
+    <script src="autumn.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
