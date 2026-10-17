@@ -102,15 +102,15 @@ assert.ok(stats.time < 1, 'The scene resets for continuous listening');
 assert.equal(new Set(Array.from(pictures.values(), b => b.toString('base64'))).size, 5, 'Light and weather change across the day');
 // Autumn 02 has independent recipes and survives a seasonal round trip without touching audio.
 run('visualizerSelect.value="toadstools"; visualizerSelect.dispatchEvent(new Event("change"))');
-assert.equal(run('activeAlchemyRecipes().length'), 5);
-for (let i = 0; i < 5; i++) {
+assert.equal(run('activeAlchemyRecipes().length'), 6);
+for (let i = 0; i < 6; i++) {
   run(`applyAlchemicalAdjustment(${i})`);
   assert.equal(run('handCount.value'), String(w.AutumnToadstools.recipes[i].count));
   assert.equal(run('fireworkFormSelect.selectedIndex'), w.AutumnToadstools.recipes[i].form);
 }
 run('setSeason("summer"); setSeason("autumn")');
 assert.equal(run('visualizerSelect.value'), 'toadstools');
-assert.equal(run('fireworkFormSelect.value'), 'enchanted');
+assert.equal(run('fireworkFormSelect.value'), 'skysnow');
 assert.equal(audio.currentTime, 37.5); assert.equal(audioLoads + plays + pauses, 0);
 run('saveSessionNow(); setSeason("summer",{save:false}); restoreControlPreferences(loadSavedSession())');
 assert.equal(run('visualizerSelect.value'), 'toadstools', 'Saved Autumn 02 restores');

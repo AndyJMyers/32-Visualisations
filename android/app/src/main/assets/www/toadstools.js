@@ -9,12 +9,13 @@ window.AutumnToadstools = (() => {
     { name: 'The Skirt Committee', form: 0, theme: 0, speed: 1.3, size: 1.4, count: 12, grasp: .65, smiles: 0, insanity: 0 },
     { name: 'After Hours in the Moss', form: 2, theme: 0, speed: .8, size: 1, count: 8, grasp: .85, smiles: 0, insanity: 0 },
     { name: 'Spore Score', form: 3, theme: 0, speed: 1.5, size: .85, count: 14, grasp: 1, smiles: 0, insanity: 0 },
+    { name: 'Snow Above the Woodland', form: 4, theme: 0, speed: 1, size: 1.1, count: 9, grasp: .4, smiles: 0, insanity: 0 },
   ];
   let state;
   const noise = n => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
   function reset() {
     state = { time: 0, last: null, bass: 0, treble: 0, mid: 0, average: 0, pulse: 0,
-      cooldown: 0, births: 0, mushrooms: [], background: null, backgroundKey: '' };
+      cooldown: 0, births: 0, mushrooms: [], background: null, backgroundKey: '', skyTime: 0, skyActive: false };
   }
   function ellipse(c, x, y, rx, ry, fill) {
     c.fillStyle = fill; c.beginPath(); c.ellipse(x, y, Math.max(.01, rx), Math.max(.01, ry), 0, 0, tau); c.fill();
@@ -70,8 +71,8 @@ window.AutumnToadstools = (() => {
     const r = scale * (.035 + m.depth * .095) * opts.size * g;
     const stem = r * (1.05 + noise(m.seed) * .6), t = s.time;
     const sway = Math.sin(t * .75 + m.seed) * (.025 + s.bass * .13);
-    c.save(); c.translate(m.x * w, m.y * h); c.rotate(sway);
-    ellipse(c, 0, 0, r * 1.18, r * .17, '#00000055');
+    c.save(); c.translate(m.x * w, m.y * h); c.rotate(sway + (m.flightTilt || 0));
+    if (!m.airborne) ellipse(c, 0, 0, r * 1.18, r * .17, '#00000055');
     const stalk = c.createLinearGradient(-r * .17, 0, r * .2, 0);
     stalk.addColorStop(0, '#a48b67'); stalk.addColorStop(.5, '#fff0c8'); stalk.addColorStop(1, '#b9a17c');
     c.fillStyle = stalk; c.beginPath(); c.moveTo(-r * .2, 0);
@@ -143,6 +144,41 @@ window.AutumnToadstools = (() => {
     c.moveTo(0, -r * .4); c.lineTo(-r * .9, -r * .8); c.moveTo(0, -r * .4); c.lineTo(r * .8, -r * 1.3); c.stroke();
     c.restore(); return true;
   }
+  function skyAltitude(time) {
+    const smooth = value => { const x = clamp(value, 0, 1); return x * x * (3 - 2 * x); };
+    const phase = time % 40;
+    return smooth((phase - 2) / 9) * (1 - smooth((phase - 29) / 9));
+  }
+  function skySnow(c, w, h, time, altitude, treble) {
+    if (altitude <= 0) return 0;
+    const count = 72, scale = Math.min(w, h);
+    c.save(); c.lineCap = 'round';
+    for (let i = 0; i < count; i++) {
+      const fall = time * (.025 + noise(i + 260) * .035);
+      const x = ((noise(i + 333) + Math.sin(time * .25 + i) * .045 + 1) % 1) * w;
+      const y = ((noise(i + 444) + fall) % 1) * h;
+      const r = clamp(scale * (.009 + noise(i + 42) * .019), 2, 13);
+      const twinkle = Math.max(0, Math.sin(time * (1.4 + noise(i) * 2) + i * 4.7));
+      const flash = twinkle > .96 && noise(i + 100) > .6;
+      c.strokeStyle = flash ? (i % 2 ? '#ff524d' : '#fff265') : (i % 2 ? '#fff0c0' : '#e4f3ff');
+      c.globalAlpha = altitude * (.25 + twinkle * (.5 + treble * .2));
+      c.lineWidth = Math.max(.6, r * .11); c.save(); c.translate(x, y); c.rotate(time * .12 + i);
+      c.beginPath();
+      for (let arm = 0; arm < 6; arm++) {
+        const a = arm * tau / 6, dx = Math.cos(a), dy = Math.sin(a);
+        c.moveTo(0, 0); c.lineTo(dx * r, dy * r);
+        if (r > 4) {
+          for (const side of [-1, 1]) {
+            const b = a + side * .65;
+            c.moveTo(dx * r * .65, dy * r * .65);
+            c.lineTo(dx * r * .65 - Math.cos(b) * r * .27, dy * r * .65 - Math.sin(b) * r * .27);
+          }
+        }
+      }
+      c.stroke(); c.restore();
+    }
+    c.restore(); return count;
+  }
   function draw(c, w, h, now, options = {}) {
     if (!state) reset();
     const s = state, o = { speed: 1, size: 1, count: 9, mischief: .4, bass: 0, mid: 0, treble: 0, form: 'golden', animate: true, ...options };
@@ -152,6 +188,11 @@ window.AutumnToadstools = (() => {
     const smoothing = 1 - Math.exp(-dt * 8);
     for (const band of ['bass', 'mid', 'treble']) s[band] += (clamp(Number(o[band]) || 0, 0, 1) - s[band]) * smoothing;
     s.time += dt * clamp(Number(o.speed) || 1, .2, 3);
+    const skyActive = o.form === 'skysnow';
+    if (skyActive && !s.skyActive) s.skyTime = 0;
+    if (skyActive) s.skyTime += dt * clamp(Number(o.speed) || 1, .2, 3);
+    s.skyActive = skyActive;
+    const altitude = skyActive ? skyAltitude(s.skyTime) : 0;
     s.average += (s.bass - s.average) * (1 - Math.exp(-dt * 1.4));
     s.cooldown = Math.max(0, s.cooldown - dt); s.pulse *= Math.exp(-dt * 4);
     const wanted = clamp(Math.round(Number(o.count) || 9), 3, 14);
@@ -167,8 +208,14 @@ window.AutumnToadstools = (() => {
     for (const m of s.mushrooms) { m.growth = Math.min(1, m.growth + dt * (.17 + s.bass * .9)); m.age += dt; }
     const key = `${w}:${h}:${o.form}`;
     if (s.backgroundKey !== key) { s.background = background(w, h, o.form); s.backgroundKey = key; }
-    c.save(); c.drawImage(s.background, 0, 0);
-    s.mushrooms.slice().sort((a, b) => a.y - b.y).forEach(m => drawMushroom(c, m, w, h, o));
+    c.save();
+    if (skyActive) {
+      const sky = c.createLinearGradient(0, 0, 0, h);
+      sky.addColorStop(0, '#071426'); sky.addColorStop(.55, '#33465c'); sky.addColorStop(1, '#a98e79');
+      c.fillStyle = sky; c.fillRect(0, 0, w, h);
+    }
+    c.save(); c.globalAlpha = 1 - altitude * .95; c.translate(0, altitude * h * 1.12); c.drawImage(s.background, 0, 0);
+    if (!skyActive) s.mushrooms.slice().sort((a, b) => a.y - b.y).forEach(m => drawMushroom(c, m, w, h, o));
     // Drifting spores are deterministic and constant in number: no accumulating particles.
     c.globalCompositeOperation = 'screen';
     for (let i = 0; i < 42; i++) {
@@ -179,11 +226,27 @@ window.AutumnToadstools = (() => {
     c.globalCompositeOperation = 'source-over';
     let sprites = 0;
     for (let i = 0; i < 3; i++) if (sprite(c, i, w, h, clamp(o.mischief, 0, 1))) sprites++;
+    c.restore();
+    const snowflakes = skyActive ? skySnow(c, w, h, s.skyTime, altitude, s.treble) : 0;
+    let airborne = 0;
+    if (skyActive) {
+      // The amanitas follow winding individual paths, returning to their original places.
+      const travellers = s.mushrooms.map(m => {
+        const orbit = s.skyTime * .65 + m.seed;
+        const targetX = .5 + (m.x - .5) * .7 + Math.sin(orbit) * .12;
+        const targetY = .22 + m.depth * .42 + Math.cos(orbit * .8) * .06;
+        return { ...m, x: m.x + (targetX - m.x) * altitude,
+          y: m.y + (targetY - m.y) * altitude,
+          flightTilt: Math.sin(orbit) * .24 * altitude, airborne: altitude > .01 };
+      });
+      travellers.sort((a, b) => a.y - b.y).forEach(m => drawMushroom(c, m, w, h, o));
+      if (altitude > .01) airborne = travellers.length;
+    }
     const vignette = c.createRadialGradient(w * .5, h * .5, Math.min(w, h) * .25, w * .5, h * .5, Math.max(w, h) * .75);
     vignette.addColorStop(0, '#00000000'); vignette.addColorStop(1, '#001410b0'); c.fillStyle = vignette; c.fillRect(0, 0, w, h);
     c.restore();
     return { time: s.time, mushrooms: s.mushrooms.length, growing: s.mushrooms.filter(m => m.growth < 1).length,
-      births: s.births, sprites, spores: 42, bass: s.bass, treble: s.treble };
+      births: s.births, sprites, spores: 42, bass: s.bass, treble: s.treble, altitude, snowflakes, airborne };
   }
   return { draw, reset, recipes };
 })();

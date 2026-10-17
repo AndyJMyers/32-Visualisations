@@ -502,7 +502,7 @@ const visualizerConfigs = {
     ariaLabel: 'Toadstools: scarlet fly agarics dancing in an autumn woodland with flying sprites',
     controls: { size: true, count: true, grasp: true, speed: true, theme: false },
     labels: { form: 'Woodland light', speed: 'Dance', size: 'Cap size', count: 'Mushrooms', grasp: 'Pixie mischief' },
-    forms: [['golden', 'Golden woodland'], ['dawn', 'Dew at dawn'], ['moonlight', 'Moonlit moss'], ['enchanted', 'Enchanted gills']],
+    forms: [['golden', 'Golden woodland'], ['dawn', 'Dew at dawn'], ['moonlight', 'Moonlit moss'], ['enchanted', 'Enchanted gills'], ['skysnow', 'Snow above the woodland']],
     defaults: { speed: '1', size: '1', count: '9', grasp: '0.4' },
   },
   ralphwatch: {
