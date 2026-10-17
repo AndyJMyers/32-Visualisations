@@ -1,3 +1,4 @@
+// Seasonal development: Summer is the original 32; Autumn 01 is in production.
 const folderInput = document.querySelector("#folderInput");
 const directoryName = document.querySelector("#directoryName");
 const statusLight = document.querySelector("#statusLight");
@@ -58,8 +59,8 @@ const carAlchemyButton = document.querySelector("#carAlchemyButton");
 const carAgitationButton = document.querySelector("#carAgitationButton");
 const carAgitationSymbol = document.querySelector("#carAgitationSymbol");
 const carAgitationLabel = document.querySelector("#carAgitationLabel");
-const carShuffleButton = document.querySelector("#carShuffleButton");
-const carShuffleLabel = document.querySelector("#carShuffleLabel");
+const carSeasonButton = document.querySelector("#carSeasonButton");
+const carSeasonLabel = document.querySelector("#carSeasonLabel");
 const carPreviousButton = document.querySelector("#carPreviousButton");
 const carPlayButton = document.querySelector("#carPlayButton");
 const carNextButton = document.querySelector("#carNextButton");
@@ -71,6 +72,83 @@ if (window.AndroidWaveDeck) {
   audio.removeAttribute("crossorigin");
 } else {
   audio.crossOrigin = "anonymous";
+}
+
+const desktopSeasonButton = document.querySelector('#desktopSeasonButton');
+const summerVisualOptions = Array.from(visualizerSelect.options, o => [o.value, o.textContent]);
+let currentSeason = 'summer';
+let seasonMemories = {};
+
+function captureSeasonPreferences() {
+  return { visualizer: visualizerSelect.value, form: fireworkFormSelect.value, theme: themeSelect.value,
+    speed: fireworkSpeed.value, size: handSize.value, count: handCount.value, grasp: handGrasp.value,
+    carAgitationGear, spectrumPad: { ...spectrumPad } };
+}
+
+function setSeason(next, { save = true, remember = true, restore = true } = {}) {
+  next = next === 'autumn' ? 'autumn' : 'summer';
+  if (next === currentSeason) { updateSeasonLabels(); return; }
+  if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
+  currentSeason = next;
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year']];
+  visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
+  syncVisualizerControls();
+  applyVisualizerDefaults(visualizerConfig());
+  if (next === 'autumn' && !seasonMemories[next]) {
+    spectrumPad.smilesDecadence = 0;
+    spectrumPad.psychedeliaInsanity = 0;
+    updateSpectrumDials();
+  }
+  if (restore && seasonMemories[next]) restoreControlPreferences({ controls: seasonMemories[next] });
+  visualizer.setAttribute('aria-label', visualizerConfig().ariaLabel);
+  updateSeasonLabels();
+  syncGarageFlywheels();
+  restartVisualizer();
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 04 scenes in evaluation'); scheduleSessionSave(120); }
+}
+
+function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
+function activeAlchemyRecipes() {
+  if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'lastmow') return window.LastMow.recipes;
+  if (visualizerSelect.value === 'dawncobweb') return window.DawnCobweb.recipes;
+  return visualizerSelect.value === 'toadstools' ? window.AutumnToadstools.recipes : window.AutumnWatch.recipes;
+}
+function drawAutumnFrame(c, buffer = null) {
+  let bass = 0, mid = 0, treble = 0;
+  if (buffer && analyser) {
+    analyser.getByteFrequencyData(buffer);
+    const low = Math.max(1, Math.floor(buffer.length * .08));
+    for (let i = 0; i < low; i++) bass += buffer[i] / (255 * low);
+    const high = Math.floor(buffer.length * .5);
+    for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
+    for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'dawncobweb') {
+    window.DawnCobweb.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), bass, treble, animate: Boolean(buffer),
+      recipeIndex: ['firstlight', 'bluehour', 'rose', 'gold', 'mist'].indexOf(fireworkFormSelect.value),
+    });
+    return;
+  }
+  if (visualizerSelect.value === 'lastmow') {
+    window.LastMow.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
+  }
+  if (visualizerSelect.value === 'toadstools') {
+    window.AutumnToadstools.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), size: Number(handSize.value), count: Number(handCount.value),
+      mischief: Number(handGrasp.value), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
+  }
+  window.AutumnWatch.draw(c, visualizer.width, visualizer.height, performance.now(), {
+    speed: fireworkSpeedMultiplier(), snow: Number(handSize.value), count: Number(handCount.value),
+    gore: Number(handGrasp.value), form: fireworkFormSelect.value, bass, treble,
+    recipeIndex: Math.max(0, (alchemicalStepByVisual.ralphwatch || 1) - 1), animate: Boolean(buffer),
+  });
 }
 
 let tracks = [];
@@ -420,6 +498,34 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  lastmow: {
+    ariaLabel: 'Last Mow of the Year: a gardener, a robin and an autumn lawn beneath a rainy sky',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Garden weather', speed: 'Pace' },
+    forms: [['overcast', 'Grey afternoon'], ['golden', 'Late autumn light'], ['rain', 'Rain approaching'], ['wind', 'A blustery day']],
+    defaults: { speed: '1' },
+  },
+  dawncobweb: {
+    ariaLabel: 'Dawn Cobweb: spiders weave a dew-covered web in the morning light',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Dawn light', speed: 'Pace' },
+    forms: [['firstlight', 'First Light'], ['bluehour', 'Blue Hour'], ['rose', 'Rose Morning'], ['gold', 'Gold Thread'], ['mist', 'Prismatic Mist']],
+    defaults: { speed: '1' },
+  },
+  toadstools: {
+    ariaLabel: 'Toadstools: scarlet fly agarics dancing in an autumn woodland with flying sprites',
+    controls: { size: true, count: true, grasp: true, speed: true, theme: false },
+    labels: { form: 'Woodland light', speed: 'Dance', size: 'Cap size', count: 'Mushrooms', grasp: 'Pixie mischief' },
+    forms: [['golden', 'Golden woodland'], ['dawn', 'Dew at dawn'], ['moonlight', 'Moonlit moss'], ['enchanted', 'Enchanted gills'], ['skysnow', 'Snow above the woodland']],
+    defaults: { speed: '1', size: '1', count: '9', grasp: '0.4' },
+  },
+  ralphwatch: {
+    ariaLabel: "Ralph's Last Watch: sheep, wolves and a snowbound day",
+    controls: { size: true, count: true, grasp: true, speed: true, theme: false },
+    labels: { form: 'Time of day', speed: 'Pace', size: 'Snow depth', count: 'Pack size', grasp: 'Slaughter' },
+    forms: [['cycle', 'The whole day'], ['dawn', 'Mist at dawn'], ['morning', 'Dark mid-morning'], ['afternoon', 'Winter eyes'], ['evening', 'No promise of morning'], ['night', 'Somewhere else']],
+    defaults: { speed: '1', size: '1', count: '8', grasp: '0.6', theme: 'ice' },
+  },
   equalizer: {
     ariaLabel: "Graphic equaliser visualisation",
     controls: { peak: true, speed: false },
@@ -1116,7 +1222,6 @@ function setControlsEnabled(enabled) {
     carPreviousButton,
     carPlayButton,
     carNextButton,
-    carShuffleButton,
   ].forEach((control) => {
     control.disabled = !enabled;
   });
@@ -1128,6 +1233,8 @@ function setControlsEnabled(enabled) {
     carAgitationButton,
     desktopNextVisualButton,
     desktopAlchemyButton,
+    carSeasonButton,
+    desktopSeasonButton,
     settingsButton,
     carSettingsButton,
     settingsFolderButton,
@@ -1234,12 +1341,13 @@ document.querySelectorAll(".car-deck button").forEach((button) => {
   });
 });
 
-function updateCarShuffleState() {
-  const enabled = shuffleToggle.checked;
-  carShuffleButton.classList.toggle("active", enabled);
-  carShuffleButton.setAttribute("aria-pressed", String(enabled));
-  carShuffleButton.setAttribute("aria-label", enabled ? "Shuffle on" : "Shuffle off");
-  carShuffleLabel.textContent = enabled ? "Shuffle" : "Order";
+function updateSeasonLabels() {
+  const label = currentSeason === 'summer' ? 'Summer' : 'Autumn';
+  document.body.dataset.season = currentSeason;
+  carSeasonButton.setAttribute('aria-label', `Season: ${label}. Switch to ${currentSeason === 'summer' ? 'Autumn' : 'Summer'}`);
+  carSeasonLabel.textContent = label;
+  desktopSeasonButton.textContent = `Season · ${label}`;
+  desktopSeasonButton.setAttribute('aria-label', carSeasonButton.getAttribute('aria-label'));
 }
 
 function updateAlchemyProgress() {
@@ -1389,15 +1497,23 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'lastmow') {
+    const selected = ['overcast', 'golden', 'rain', 'wind'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
+  if (visualizerSelect.value === 'dawncobweb') {
+    const selected = ['firstlight', 'bluehour', 'rose', 'gold', 'mist'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   const step = alchemicalStepByVisual[visualizerSelect.value] || 0;
-  return (step + alchemicalRecipes.length - 1) % alchemicalRecipes.length;
+  return (step + activeAlchemyRecipes().length - 1) % activeAlchemyRecipes().length;
 }
 
 function garageAlchemyValues() {
   const selectedIndex = alchemyRecipeIndex();
-  const previous = alchemicalRecipes[(selectedIndex + alchemicalRecipes.length - 1) % alchemicalRecipes.length];
-  const current = alchemicalRecipes[selectedIndex];
-  const next = alchemicalRecipes[(selectedIndex + 1) % alchemicalRecipes.length];
+  const previous = activeAlchemyRecipes()[(selectedIndex + activeAlchemyRecipes().length - 1) % activeAlchemyRecipes().length];
+  const current = activeAlchemyRecipes()[selectedIndex];
+  const next = activeAlchemyRecipes()[(selectedIndex + 1) % activeAlchemyRecipes().length];
   formFlywheel.querySelector(".garage-cover-card.previous").textContent = previous.name;
   formFlywheel.querySelector(".garage-cover-card.current").textContent = current.name;
   formFlywheel.querySelector(".garage-cover-card.next").textContent = next.name;
@@ -1432,7 +1548,7 @@ function wakeGarageFlywheel(wheel) {
 
 function stepGarageFlywheel(wheel, select, step) {
   if (wheel === formFlywheel) {
-    const next = (alchemyRecipeIndex() + step + alchemicalRecipes.length * 10) % alchemicalRecipes.length;
+    const next = (alchemyRecipeIndex() + step + activeAlchemyRecipes().length * 10) % activeAlchemyRecipes().length;
     applyAlchemicalAdjustment(next);
     wakeGarageFlywheel(wheel);
     return;
@@ -1456,7 +1572,8 @@ function wireGarageFlywheel(wheel, select) {
   let pointer = null;
 
   coverflow.addEventListener("pointerdown", (event) => {
-    pointer = { id: event.pointerId, y: event.clientY, distance: 0, moved: false };
+    const card = event.target.closest('[data-cover-step]');
+    pointer = { id: event.pointerId, y: event.clientY, distance: 0, moved: false, step: Number(card?.dataset.coverStep) || 1 };
     coverflow.setPointerCapture?.(event.pointerId);
     wakeGarageFlywheel(wheel);
   });
@@ -1480,11 +1597,10 @@ function wireGarageFlywheel(wheel, select) {
     if (!pointer || event.pointerId !== pointer.id) {
       return;
     }
-    const moved = pointer.moved;
+    const { moved, step } = pointer;
     pointer = null;
     if (!moved) {
-      const card = event.target.closest("[data-cover-step]");
-      stepGarageFlywheel(wheel, select, Number(card?.dataset.coverStep) || 1);
+      stepGarageFlywheel(wheel, select, step);
     }
     settleGarageFlywheel(wheel);
   });
@@ -1530,7 +1646,10 @@ function sessionSnapshot() {
     audioState: currentAudioState(),
     controls: {
       sort: sortSelect.value,
-      shuffle: shuffleToggle.checked,
+      shuffle: false,
+      season: currentSeason,
+      seasonMemories: { ...seasonMemories, [currentSeason]: captureSeasonPreferences() },
+      alchemicalSteps: { ...alchemicalStepByVisual },
       visualizer: visualizerSelect.value,
       form: fireworkFormSelect.value,
       theme: themeSelect.value,
@@ -1607,8 +1726,11 @@ function restoreControlPreferences(session) {
   }
 
   setSelectValueIfPresent(sortSelect, controls.sort);
-  shuffleToggle.checked = Boolean(controls.shuffle);
-  updateCarShuffleState();
+  shuffleToggle.checked = false; // Migrate saved shuffle sessions to manual/sequential playback.
+  if (controls.seasonMemories) seasonMemories = controls.seasonMemories;
+  if (controls.alchemicalSteps) Object.assign(alchemicalStepByVisual, controls.alchemicalSteps);
+  if (controls.season) setSeason(controls.season, { save: false, remember: false, restore: false });
+  updateSeasonLabels();
   peakToggle.checked = controls.peak !== false;
   fireworkSpeed.value = controls.speed || fireworkSpeed.value;
   carAgitationGear = clampNumber(Number(controls.carAgitationGear ?? carAgitationGear), 0, carAgitationGears.length - 1);
@@ -1749,6 +1871,7 @@ function syncVisualizerControls() {
   const graspLabel = handGrasp.closest("label");
 
   formLabel.hidden = formOptions.length === 0;
+  formLabel.classList.toggle("autumn-time-control", visualizer === "ralphwatch");
   setControlLabel(fireworkFormSelect, labels.form);
   if (formOptions.length > 0) {
     fireworkFormSelect.replaceChildren(...formOptions.map(([value, label]) => {
@@ -1923,7 +2046,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex : step;
-  const recipe = alchemicalRecipes[selectedIndex % alchemicalRecipes.length];
+  const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 
   syncVisualizerControls();
@@ -3136,7 +3259,9 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === "snakeconga") {
+      if (currentSeason === 'autumn') {
+        drawAutumnFrame(canvasContext, buffer);
+      } else if (visualizerSelect.value === "snakeconga") {
         drawSnakeCongaFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "lingerie") {
         drawLingerieFrame(canvasContext, buffer);
@@ -12485,7 +12610,9 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === "snakeconga") {
+  if (currentSeason === 'autumn') {
+    drawAutumnFrame(canvasContext);
+  } else if (visualizerSelect.value === "snakeconga") {
     drawIdleSnakeConga();
   } else if (visualizerSelect.value === "lingerie") {
     drawIdleLingerie();
@@ -13721,16 +13848,9 @@ carNextButton.addEventListener("click", () => changeTrackByStep(1));
 carNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
 carAlchemyButton.addEventListener("click", () => applyAlchemicalAdjustment());
 carAgitationButton.addEventListener("click", cycleCarAgitationGear);
-carShuffleButton.addEventListener("click", () => {
-  shuffleToggle.checked = !shuffleToggle.checked;
-  updateCarShuffleState();
-  scheduleSessionSave(120);
-});
+carSeasonButton.addEventListener('click', toggleSeason);
+desktopSeasonButton.addEventListener('click', toggleSeason);
 
-shuffleToggle.addEventListener("change", () => {
-  updateCarShuffleState();
-  scheduleSessionSave();
-});
 fireworkSpeed.addEventListener("input", () => {
   updateFireworkSpeedLabel();
   scheduleSessionSave();
@@ -13937,7 +14057,7 @@ restoreControlPreferences(restoredSession);
 resizeCanvas();
 updateFireworkSpeedLabel();
 updateCarAgitationLabel();
-updateCarShuffleState();
+updateSeasonLabels();
 updateAlchemyProgress();
 updateHandControlLabels();
 updateSpectrumDials();

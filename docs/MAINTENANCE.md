@@ -40,4 +40,4 @@ Android behaviour.
 
 ## Seasonal development
 
-See [SEASONS.md](SEASONS.md) and root `seasons.json` for Summer baseline and Autumn status. Autumn is in creative production, not yet released. Use `development/autumn` for seasonal runtime work; branch hotfixes from the recorded release baseline. The Season-for-Shuffle control replacement is an explicitly agreed exception to the existing button-order rule: retain the same slot and button count, and verify both desktop and Android assets when it is implemented.
+See [SEASONS.md](SEASONS.md) and root `seasons.json` for Summer baseline and Autumn status. Autumn is in creative production, not yet released. Develop on `master`; branch hotfixes from the verified release baseline. The Season-for-Shuffle control replacement is an explicitly agreed exception to the existing button-order rule: retain the same slot and button count, and verify both desktop and Android assets when it is implemented.

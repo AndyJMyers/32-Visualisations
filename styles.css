@@ -2495,3 +2495,16 @@ html.android-car body {
     padding-inline: 14px;
   }
 }
+
+/* Seasonal surroundings: the scene retains its own light and weather. */
+body[data-season="summer"] { background: radial-gradient(ellipse at top, #253039, #0b1119 72%); }
+body[data-season="autumn"] { background: radial-gradient(ellipse at top, #48302c, #101722 72%); }
+body[data-season="autumn"] .car-deck { background: linear-gradient(160deg, #352a2b, #151d28 60%, #392c26); }
+body[data-season="autumn"] .settings-catalogue { --season-accent: #d6a16b; }
+.season-control { color: #f0dfc0; border: 1px solid #9b7a55; border-radius: 10px; padding: 10px 14px; background: #282b31; cursor: pointer; font: inherit; }
+.season-control:focus-visible, .car-season-button:focus-visible { outline: 3px solid #e6c18a; outline-offset: 3px; }
+.car-season-button .season-symbol { color: #f6cd8c; text-shadow: 0 0 12px #d69142; }
+body[data-season="autumn"] .car-season-button .season-symbol { color: #efbb96; text-shadow: 0 0 12px #c57156; }
+
+/* Autumn exposes the clock alongside its Alchemy wheel. */
+.garage-native-select.autumn-time-control { position: static; width: auto; height: auto; overflow: visible; clip: auto; clip-path: none; white-space: normal; }

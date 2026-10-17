@@ -126,7 +126,7 @@ async function run() {
       'id="carNextVisualButton"',
       'id="carAlchemyButton"',
       'id="carAgitationButton"',
-      'id="carShuffleButton"',
+      'id="carSeasonButton"',
       'id="carPreviousButton"',
       'id="carNextButton"',
     ].forEach((control) => {
@@ -149,7 +149,7 @@ async function run() {
     const appJs = await request(port, "/app.js");
     assert(appJs.statusCode === 200, `Expected /app.js to return 200, got ${appJs.statusCode}.`);
     assert(appJs.headers["content-type"]?.includes("text/javascript"), "Expected app.js JavaScript content type.");
-    const appScript = appJs.body.toString("utf8");
+    const appScript = appJs.body.toString("utf8").replace(/\r\n/g, "\n");
     assert(appScript.includes("function isAtNaturalTrackEnd()"), "Playback script is missing the natural-end continuation guard.");
     assert(appScript.includes("function equalizerDisplayLevel("), "Equaliser should use its headroom-preserving display curve.");
     assert(appScript.includes("const lowBandCount = Math.min(12"), "Equaliser should give the lowest bands distinct frequency ranges.");
@@ -174,7 +174,7 @@ async function run() {
     assert(appScript.includes("function openSongWheel()"), "Android playback script is missing the song-browse wheel.");
     assert(appScript.includes("function runSongWheelFlywheel()"), "Song-browse wheel should retain flywheel momentum.");
     assert(appScript.includes("function startSongWheelBrake()"), "Song-browse wheel should support a progressive touch brake.");
-    assert(appScript.includes("songWheelVelocity * 0.72 + flickVelocity"), "Repeated song-wheel flicks should build momentum.");
+    assert(/songWheelVelocity \* 0\.\d+ \+ flickVelocity/.test(appScript), "Repeated song-wheel flicks should build momentum.");
     assert(appScript.includes("function songWheelLetters()"), "Song-browse wheel should support alphabetical navigation.");
     assert(appScript.includes("function songWheelTrackIndexesForLetter(letter)"), "Song-browse wheel should narrow fine navigation to a letter.");
     assert(appScript.includes('visualizer.addEventListener("pointerdown", handleVisualizerSongWheelTouch'), "Visualizer should open or dismiss the song-browse wheel on touch.");

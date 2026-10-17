@@ -41,16 +41,27 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Plays local audio files from a folder on your Android device.
 - Works without internet connectivity once installed.
 - Supports `.wav`, `.mp3`, `.m4a`, `.aac`, `.flac`, `.ogg`, and `.opus`.
-- Provides a fixed set of **32** audio-reactive visualisations.
+- Preserves Summer’s **32** audio-reactive visualisations and adds an Autumn collection in development.
 - Runs as a desktop browser app or an offline-first Android WebView app.
-- Offers car-style Android controls for play/pause, previous/next track, next visualisation, shuffle, `Alchemy`, and `Speed`.
+- Offers car-style Android controls for play/pause, previous/next track, next visualisation, `Season`, `Alchemy`, and `Speed`.
 - Uses `Alchemy` to apply artistically chosen visual settings.
 - Uses `Speed` to cycle visual agitation through five colour-coded steps.
 - Lets Android and desktop listeners browse large libraries with a temporary dual flywheel: alphabet outside, songs inside.
 - Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
-Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The planned Season control selects the collection within the same player.
+Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player. Ralph's Last Watch, Toadstools, Dawn Cobweb and Last Mow of the Year are available for evaluation alongside Summer’s original 32.
+
+### Autumn Collection
+
+Four glimpses of the collection in development, from a watchful winter landscape to the last mow of the year.
+
+<p>
+  <img src="docs/images/autumn-teasers/01-ralphs-last-watch.png" alt="Ralph's Last Watch: sheep and wolves in an autumn landscape" width="24%">
+  <img src="docs/images/autumn-teasers/02-toadstools.png" alt="Toadstools: red-capped mushrooms in the woodland" width="24%">
+  <img src="docs/images/autumn-teasers/03-dawn-cobweb.png" alt="Dawn Cobweb: spiders and dew in the morning light" width="24%">
+  <img src="docs/images/autumn-teasers/04-last-mow.png" alt="Last Mow of the Year: the gardener and robin" width="24%">
+</p>
 
 ## A Glimpse
 
@@ -122,7 +133,8 @@ The app opens ready for your own local music. Use Android's folder picker to cho
 
 Desktop:
 
-- `Play`, `Stop`, `Prev`, `Next`, and `Shuffle` handle the library.
+- `Play/Pause`, `Prev`, and `Next` handle the library.
+- `Season` switches Summer and Autumn without changing the music.
 - `Up` and `Down` move through visualisations.
 - `Left` and `Right` move through tracks.
 - `F` or `F4` toggles the visual stage.
@@ -134,7 +146,7 @@ Android car mode:
 - `Visual` advances to the next visualisation.
 - `Alchemy` applies alchemical adjustment.
 - `Speed` changes the visual agitation step.
-- Shuffle switches between order and shuffle.
+- Season switches between Summer and the Autumn preview.
 - The transport row handles previous, play/pause, and next.
 
 ## Status
