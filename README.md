@@ -50,7 +50,7 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
-Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player. On the Autumn development branch, Autumn 01 is available as a first draft alongside Summer’s original 32.
+Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player. On the Autumn development branch, Ralph's Last Watch, Toadstools and Dawn Cobweb are available as first drafts alongside Summer’s original 32.
 
 ## A Glimpse
 

@@ -90,7 +90,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -104,12 +104,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 02 scenes in production'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 03 scenes in production'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'dawncobweb') return window.DawnCobweb.recipes;
   return visualizerSelect.value === 'toadstools' ? window.AutumnToadstools.recipes : window.AutumnWatch.recipes;
 }
 function drawAutumnFrame(c, buffer = null) {
@@ -121,6 +122,13 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'dawncobweb') {
+    window.DawnCobweb.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), bass, treble, animate: Boolean(buffer),
+      recipeIndex: ['firstlight', 'bluehour', 'rose', 'gold', 'mist'].indexOf(fireworkFormSelect.value),
+    });
+    return;
   }
   if (visualizerSelect.value === 'toadstools') {
     window.AutumnToadstools.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -483,6 +491,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  dawncobweb: {
+    ariaLabel: 'Dawn Cobweb: spiders weave a dew-covered web in the morning light',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Dawn light', speed: 'Pace' },
+    forms: [['firstlight', 'First Light'], ['bluehour', 'Blue Hour'], ['rose', 'Rose Morning'], ['gold', 'Gold Thread'], ['mist', 'Prismatic Mist']],
+    defaults: { speed: '1' },
+  },
   toadstools: {
     ariaLabel: 'Toadstools: scarlet fly agarics dancing in an autumn woodland with flying sprites',
     controls: { size: true, count: true, grasp: true, speed: true, theme: false },
@@ -1468,6 +1483,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'dawncobweb') {
+    const selected = ['firstlight', 'bluehour', 'rose', 'gold', 'mist'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   const step = alchemicalStepByVisual[visualizerSelect.value] || 0;
   return (step + activeAlchemyRecipes().length - 1) % activeAlchemyRecipes().length;
 }
@@ -1535,7 +1554,8 @@ function wireGarageFlywheel(wheel, select) {
   let pointer = null;
 
   coverflow.addEventListener("pointerdown", (event) => {
-    pointer = { id: event.pointerId, y: event.clientY, distance: 0, moved: false };
+    const card = event.target.closest('[data-cover-step]');
+    pointer = { id: event.pointerId, y: event.clientY, distance: 0, moved: false, step: Number(card?.dataset.coverStep) || 1 };
     coverflow.setPointerCapture?.(event.pointerId);
     wakeGarageFlywheel(wheel);
   });
@@ -1559,11 +1579,10 @@ function wireGarageFlywheel(wheel, select) {
     if (!pointer || event.pointerId !== pointer.id) {
       return;
     }
-    const moved = pointer.moved;
+    const { moved, step } = pointer;
     pointer = null;
     if (!moved) {
-      const card = event.target.closest("[data-cover-step]");
-      stepGarageFlywheel(wheel, select, Number(card?.dataset.coverStep) || 1);
+      stepGarageFlywheel(wheel, select, step);
     }
     settleGarageFlywheel(wheel);
   });

@@ -38,6 +38,7 @@ const vm = require('node:vm');
 const run = code => vm.runInContext(code, dom.getInternalVMContext());
 run(read('autumn.js'));
 run(read('toadstools.js'));
+run(read('cobweb.js'));
 run(read('app.js'));
 assert.equal(run('visualizerSelect.options.length'), 32, 'Summer retains all 32 visuals');
 assert.equal(run('currentSeason'), 'summer');
@@ -51,7 +52,7 @@ audio.load = () => { audioLoads++; }; audio.play = () => { plays++; return Promi
 w.document.querySelector('#desktopSeasonButton').click();
 assert.equal(run('currentSeason'), 'autumn');
 assert.equal(run('visualizerSelect.value'), 'ralphwatch');
-assert.equal(run('visualizerSelect.options.length'), 2, 'Expose only the two implemented Autumn scenes');
+assert.equal(run('visualizerSelect.options.length'), 3, 'Expose only the three implemented Autumn scenes');
 assert.equal(audio.currentTime, 37.5); assert.equal(audioLoads + plays + pauses, 0, 'Season switching must not touch transport');
 assert.equal(w.document.body.dataset.season, 'autumn');
 assert.equal(run('activeAlchemyRecipes().length'), 7);
@@ -133,7 +134,17 @@ for (const form of ['golden','dawn','moonlight','enchanted']) {
   if (process.env.SEASON_TEST_OUTPUT) fs.writeFileSync(path.join(process.env.SEASON_TEST_OUTPUT,`toadstools-${form}.png`),image);
 }
 assert.equal(new Set(lightPictures).size,4,'All four woodland lighting treatments are distinct');
-for (const name of ['app.js','autumn.js','toadstools.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
+run('visualizerSelect.value="dawncobweb"; visualizerSelect.dispatchEvent(new Event("change"))');
+assert.equal(run('activeAlchemyRecipes().length'), 5);
+for (let i = 0; i < 5; i++) {
+  run(`applyAlchemicalAdjustment(${i})`);
+  assert.equal(run('fireworkFormSelect.selectedIndex'), i, 'Cobweb Alchemy selects its own light');
+}
+run('saveSessionNow(); setSeason("summer",{save:false}); restoreControlPreferences(loadSavedSession())');
+assert.equal(run('visualizerSelect.value'), 'dawncobweb', 'Saved Dawn Cobweb restores');
+assert.equal(run('fireworkFormSelect.value'), 'mist');
+assert.equal(audio.currentTime, 37.5); assert.equal(audioLoads + plays + pauses, 0);
+for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
 assert.deepEqual(failures, []);
 dom.window.close();
 console.log('Season integration and full-day Canvas simulation passed.');

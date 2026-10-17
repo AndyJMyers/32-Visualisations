@@ -18,10 +18,12 @@
       "plannedVisualCount": 32,
       "status": "in-development",
       "firstVisual": "Ralph's Last Watch",
-      "implementedVisualCount": 2,
+      "implementedVisualCount": 3,
       "firstVisualStatus": "first-procedural-draft",
       "secondVisual": "Toadstools",
-      "secondVisualStatus": "first-procedural-draft"
+      "secondVisualStatus": "first-procedural-draft",
+      "thirdVisual": "Dawn Cobweb",
+      "thirdVisualStatus": "first-procedural-draft"
     }
   ],
   "baseline": {

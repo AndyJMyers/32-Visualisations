@@ -149,7 +149,7 @@ async function run() {
     const appJs = await request(port, "/app.js");
     assert(appJs.statusCode === 200, `Expected /app.js to return 200, got ${appJs.statusCode}.`);
     assert(appJs.headers["content-type"]?.includes("text/javascript"), "Expected app.js JavaScript content type.");
-    const appScript = appJs.body.toString("utf8");
+    const appScript = appJs.body.toString("utf8").replace(/\r\n/g, "\n");
     assert(appScript.includes("function isAtNaturalTrackEnd()"), "Playback script is missing the natural-end continuation guard.");
     assert(appScript.includes("function equalizerDisplayLevel("), "Equaliser should use its headroom-preserving display curve.");
     assert(appScript.includes("const lowBandCount = Math.min(12"), "Equaliser should give the lowest bands distinct frequency ranges.");
