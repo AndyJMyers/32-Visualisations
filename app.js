@@ -90,7 +90,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -104,12 +104,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 03 scenes in production'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 04 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'lastmow') return window.LastMow.recipes;
   if (visualizerSelect.value === 'dawncobweb') return window.DawnCobweb.recipes;
   return visualizerSelect.value === 'toadstools' ? window.AutumnToadstools.recipes : window.AutumnWatch.recipes;
 }
@@ -127,6 +128,12 @@ function drawAutumnFrame(c, buffer = null) {
     window.DawnCobweb.draw(c, visualizer.width, visualizer.height, performance.now(), {
       speed: fireworkSpeedMultiplier(), bass, treble, animate: Boolean(buffer),
       recipeIndex: ['firstlight', 'bluehour', 'rose', 'gold', 'mist'].indexOf(fireworkFormSelect.value),
+    });
+    return;
+  }
+  if (visualizerSelect.value === 'lastmow') {
+    window.LastMow.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
     });
     return;
   }
@@ -491,6 +498,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  lastmow: {
+    ariaLabel: 'Last Mow of the Year: a gardener, a robin and an autumn lawn beneath a rainy sky',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Garden weather', speed: 'Pace' },
+    forms: [['overcast', 'Grey afternoon'], ['golden', 'Late autumn light'], ['rain', 'Rain approaching'], ['wind', 'A blustery day']],
+    defaults: { speed: '1' },
+  },
   dawncobweb: {
     ariaLabel: 'Dawn Cobweb: spiders weave a dew-covered web in the morning light',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1483,6 +1497,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'lastmow') {
+    const selected = ['overcast', 'golden', 'rain', 'wind'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'dawncobweb') {
     const selected = ['firstlight', 'bluehour', 'rose', 'gold', 'mist'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
