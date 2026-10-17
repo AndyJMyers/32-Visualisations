@@ -50,7 +50,18 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
-Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player. On the Autumn development branch, Ralph's Last Watch, Toadstools and Dawn Cobweb are available as first drafts alongside Summer’s original 32.
+Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player. On the Autumn development branch, Ralph's Last Watch, Toadstools, Dawn Cobweb and Last Mow of the Year are available for evaluation alongside Summer’s original 32.
+
+### Autumn Collection
+
+Four glimpses of the collection in development, from a watchful winter landscape to the last mow of the year.
+
+<p>
+  <img src="docs/images/autumn-teasers/01-ralphs-last-watch.png" alt="Ralph's Last Watch: sheep and wolves in an autumn landscape" width="24%">
+  <img src="docs/images/autumn-teasers/02-toadstools.png" alt="Toadstools: red-capped mushrooms in the woodland" width="24%">
+  <img src="docs/images/autumn-teasers/03-dawn-cobweb.png" alt="Dawn Cobweb: spiders and dew in the morning light" width="24%">
+  <img src="docs/images/autumn-teasers/04-last-mow.png" alt="Last Mow of the Year: the gardener and robin" width="24%">
+</p>
 
 ## A Glimpse
 
