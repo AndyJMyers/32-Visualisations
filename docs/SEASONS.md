@@ -40,16 +40,30 @@ Music supplies movement and atmosphere: bass weights pursuit, percussion accents
 
 Initial alchemies: First Snow; The Hungry Dark; Whiteout; Blood Moon; Red on White. Vary weather, light, palette and behavioural pressures. Proposed treatment: a wide view, strong animal silhouettes and crimson on snow.
 
-Status: first procedural scene draft implemented, with Season switching on desktop and Android assets. Autumn slots 02–32 remain to be designed. Live Google Play is unchanged.
+Status: first procedural scene draft implemented, with Season switching on desktop and Android assets. Autumn slots 03–32 remain to be designed. Live Google Play is unchanged.
 
 The full day takes four minutes at 1× visual speed: misty dawn, dark snowy mid-morning, low afternoon glare, a copper-violet sunset, then night. Dawn returns under a snow curtain. GARAGE can hold a particular time of day, adjust pace, snow depth, pack size and slaughter. There is no separate gore ceiling. Autumn Alchemy and the GARAGE Alchemy wheel share seven recipes: First Snow, The Hungry Dark, Whiteout, Blood Moon, Red on White, Woolly Pandemonium and Last Light. Some recipes hold a time of day; choose The whole day in GARAGE to resume the cycle.
 
 The characters and scenery are original procedural drawings with cartoon timing and silhouettes. The slaughter ranges from wool bursts to crimson stains, scattered remains and blood particles; this is a first stylised draft rather than detailed anatomical animation. Pack members choose different targets, retreat from Ralph and exploit limited visibility. Casualties are paced across the day to preserve the narrative. Audio bass changes pursuit energy; treble increases blowing snow. All drawing stays offline.
 
-Season switching leaves audio and library state alone. Per-season visual preferences and alchemical progress survive switches and session restores. Saved shuffle preferences migrate to sequential playback. Summer retains all 32; Autumn exposes only its completed first draft, not 31 placeholders.
+Season switching leaves audio and library state alone. Per-season visual preferences and alchemical progress survive switches and session restores. Saved shuffle preferences migrate to sequential playback. Summer retains all 32; Autumn exposes its two implemented drafts without placeholders.
+
+## Autumn 02 — Toadstools (A2/32-A)
+
+An original procedural woodland theatre inspired by the fly agaric concept image. Scarlet caps turn and tilt above radial cream gills; stems sway and ruffle their pleated annuli. Smoothed bass drives sway and detected musical transients trigger fresh sprouts among the background mushrooms. Mid frequencies animate the skirts and cap rotation; treble sends travelling light through the gills and brightens drifting spores. Quiet passages keep a gentle breathing motion, without artificial beat triggers. Paused redraws hold the scene still.
+
+GARAGE controls: Woodland light (Golden woodland, Dew at dawn, Moonlit moss, Enchanted gills), Dance, Cap size, Mushrooms and Pixie mischief. Up to three small winged, clothed woodland sprites make intermittent aerial appearances; reducing mischief to zero hides them. The five scene-specific alchemies are Scarlet Matinee, Dew at Dawn, The Skirt Committee, After Hours in the Moss and Spore Score.
+
+The birch woodland, moss, leaves and ferns are cached per canvas size/light treatment. Populations are bounded at 14 mushrooms, three sprites and 42 spores. A clamped delta time and smoothed frequency bands keep motion stable across frame rates and returning tabs. Root and Android offline assets share the same implementation. This is a stylised animated first draft, not an animation of the photographic concept itself; device performance and artistic review remain release checks.
 
 ## Verification
 
-Run `node tools/system-test.js`. Optional integration and native Canvas tests use test-only `jsdom` and `@napi-rs/canvas` dependencies: `NODE_PATH=/path/to/node_modules node tools/season-test.js`. These exercise season switching without transport calls, save/restore, Summer visual retention, Autumn Alchemy, the complete day, casualty pacing and matching Android assets.
+Run `node tools/system-test.js`. Optional integration and native Canvas tests use test-only `jsdom` and `@napi-rs/canvas` dependencies: `NODE_PATH=/path/to/node_modules node tools/season-test.js`. These exercise season switching without transport calls, save/restore, Summer visual retention, scene-specific Autumn Alchemy, the complete day, casualty pacing, repeated musical sprouting, bounded populations, four woodland lighting treatments and matching Android assets.
 
 An Android device build and real-device playback check are required before release. No APK or Play update is produced by this development change.
+
+### Toadstools draft verification
+
+System tests and seasonal integration/Canvas simulation pass. A headless Chromium smoke test played a local WAV with Autumn 02 selected, confirmed active animation with no page errors, rendered landscape and portrait layouts, and restored Autumn 02 after reload. No Android APK was built in this Linux environment; real-device testing remains outstanding.
+
+![Toadstools procedural first draft](images/toadstools-first-draft.png)

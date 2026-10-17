@@ -90,7 +90,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"]];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -104,19 +104,30 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 01 in production'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 02 scenes in production'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
-function activeAlchemyRecipes() { return currentSeason === 'autumn' ? window.AutumnWatch.recipes : alchemicalRecipes; }
+function activeAlchemyRecipes() {
+  if (currentSeason !== 'autumn') return alchemicalRecipes;
+  return visualizerSelect.value === 'toadstools' ? window.AutumnToadstools.recipes : window.AutumnWatch.recipes;
+}
 function drawAutumnFrame(c, buffer = null) {
-  let bass = 0, treble = 0;
+  let bass = 0, mid = 0, treble = 0;
   if (buffer && analyser) {
     analyser.getByteFrequencyData(buffer);
     const low = Math.max(1, Math.floor(buffer.length * .08));
     for (let i = 0; i < low; i++) bass += buffer[i] / (255 * low);
     const high = Math.floor(buffer.length * .5);
+    for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'toadstools') {
+    window.AutumnToadstools.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), size: Number(handSize.value), count: Number(handCount.value),
+      mischief: Number(handGrasp.value), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   window.AutumnWatch.draw(c, visualizer.width, visualizer.height, performance.now(), {
     speed: fireworkSpeedMultiplier(), snow: Number(handSize.value), count: Number(handCount.value),
@@ -472,6 +483,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  toadstools: {
+    ariaLabel: 'Toadstools: scarlet fly agarics dancing in an autumn woodland with flying sprites',
+    controls: { size: true, count: true, grasp: true, speed: true, theme: false },
+    labels: { form: 'Woodland light', speed: 'Dance', size: 'Cap size', count: 'Mushrooms', grasp: 'Pixie mischief' },
+    forms: [['golden', 'Golden woodland'], ['dawn', 'Dew at dawn'], ['moonlight', 'Moonlit moss'], ['enchanted', 'Enchanted gills']],
+    defaults: { speed: '1', size: '1', count: '9', grasp: '0.4' },
+  },
   ralphwatch: {
     ariaLabel: "Ralph's Last Watch: sheep, wolves and a snowbound day",
     controls: { size: true, count: true, grasp: true, speed: true, theme: false },
@@ -3204,7 +3222,7 @@ function drawVisualizer() {
       canvasContext.setTransform(1, 0, 0, 1, 0, 0);
       canvasContext.globalAlpha = 1;
       canvasContext.globalCompositeOperation = "source-over";
-      if (visualizerSelect.value === 'ralphwatch') {
+      if (currentSeason === 'autumn') {
         drawAutumnFrame(canvasContext, buffer);
       } else if (visualizerSelect.value === "snakeconga") {
         drawSnakeCongaFrame(canvasContext, buffer);
@@ -12555,7 +12573,7 @@ function drawIdleVisualizer() {
   canvasContext.globalAlpha = 1;
   canvasContext.globalCompositeOperation = "source-over";
 
-  if (visualizerSelect.value === 'ralphwatch') {
+  if (currentSeason === 'autumn') {
     drawAutumnFrame(canvasContext);
   } else if (visualizerSelect.value === "snakeconga") {
     drawIdleSnakeConga();
