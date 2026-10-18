@@ -91,7 +91,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -105,12 +105,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 04 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 05 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'squirrel') return window.SquirrelSequestering.recipes;
   if (visualizerSelect.value === 'lastmow') return window.LastMow.recipes;
   if (visualizerSelect.value === 'dawncobweb') return window.DawnCobweb.recipes;
   return visualizerSelect.value === 'toadstools' ? window.AutumnToadstools.recipes : window.AutumnWatch.recipes;
@@ -124,6 +125,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'squirrel') {
+    window.SquirrelSequestering.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'dawncobweb') {
     window.DawnCobweb.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -499,6 +506,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  squirrel: {
+    ariaLabel: 'Squirrel Sequestering: squirrels gather and hide nuts in an autumn woodland',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Woodland mood', speed: 'Pace' },
+    forms: [['amber', 'Amber afternoon'], ['mist', 'Misty morning'], ['wind', 'The great gathering'], ['dusk', 'Last light']],
+    defaults: { speed: '1' },
+  },
   lastmow: {
     ariaLabel: 'Last Mow of the Year: a gardener, a robin and an autumn lawn beneath a rainy sky',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1498,6 +1512,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'squirrel') {
+    const selected = ['amber', 'mist', 'wind', 'dusk'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'lastmow') {
     const selected = ['overcast', 'golden', 'rain', 'wind'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
