@@ -1207,7 +1207,8 @@ select {
   left: 50%;
   bottom: max(20px, env(safe-area-inset-bottom));
   display: flex;
-  width: auto;
+  width: max-content;
+  max-width: calc(100vw - 32px);
   padding: 7px;
   transform: translateX(-50%);
   border: 1px solid rgba(159, 215, 238, 0.28);
@@ -2501,7 +2502,10 @@ body[data-season="summer"] { background: radial-gradient(ellipse at top, #253039
 body[data-season="autumn"] { background: radial-gradient(ellipse at top, #48302c, #101722 72%); }
 body[data-season="autumn"] .car-deck { background: linear-gradient(160deg, #352a2b, #151d28 60%, #392c26); }
 body[data-season="autumn"] .settings-catalogue { --season-accent: #d6a16b; }
-.season-control { color: #f0dfc0; border: 1px solid #9b7a55; border-radius: 10px; padding: 10px 14px; background: #282b31; cursor: pointer; font: inherit; }
+.season-control { display: inline-flex; align-items: center; gap: 8px; color: #f0dfc0; border: 1px solid #9b7a55; border-radius: 10px; padding: 10px 14px; background: #282b31; cursor: pointer; font: inherit; }
+.season-icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.season-autumn-icon, body[data-season="autumn"] .season-summer-icon { display: none; }
+body[data-season="autumn"] .season-autumn-icon { display: block; }
 .season-control:focus-visible, .car-season-button:focus-visible { outline: 3px solid #e6c18a; outline-offset: 3px; }
 .car-season-button .season-symbol { color: #f6cd8c; text-shadow: 0 0 12px #d69142; }
 body[data-season="autumn"] .car-season-button .season-symbol { color: #efbb96; text-shadow: 0 0 12px #c57156; }

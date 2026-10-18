@@ -15,7 +15,9 @@ window.AutumnToadstools = (() => {
   const noise = n => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
   function reset() {
     state = { time: 0, last: null, bass: 0, treble: 0, mid: 0, average: 0, pulse: 0,
-      cooldown: 0, births: 0, mushrooms: [], background: null, backgroundKey: '', skyTime: 0, skyActive: false };
+      cooldown: 0, births: 0, mushrooms: [], background: null, backgroundKey: '', skyTime: 0, skyActive: false,
+      spores: [], sporeAverage: 0, sporeCooldown: 0, backgroundSporeCooldown: .8,
+      burstCooldown: 0, emissions: 0, backgroundEmissions: 0, bursts: 0 };
   }
   function ellipse(c, x, y, rx, ry, fill) {
     c.fillStyle = fill; c.beginPath(); c.ellipse(x, y, Math.max(.01, rx), Math.max(.01, ry), 0, 0, tau); c.fill();
@@ -179,6 +181,75 @@ window.AutumnToadstools = (() => {
     }
     c.restore(); return count;
   }
+  function travellingMushroom(m, time, altitude) {
+    const orbit = time * .65 + m.seed;
+    const targetX = .5 + (m.x - .5) * .7 + Math.sin(orbit) * .12;
+    const targetY = .22 + m.depth * .42 + Math.cos(orbit * .8) * .06;
+    return { ...m, x: m.x + (targetX - m.x) * altitude,
+      y: m.y + (targetY - m.y) * altitude,
+      flightTilt: Math.sin(orbit) * .24 * altitude, airborne: altitude > .01 };
+  }
+  function releaseSpores(mushrooms, w, h, size, burst, background = false) {
+    const s = state, count = background ? 18 : burst ? 84 : 24;
+    const ranked = mushrooms.slice().sort((a, b) => b.depth - a.depth);
+    const boundary = Math.max(1, Math.ceil(ranked.length / 2));
+    const mature = (background ? ranked.slice(boundary) : ranked.slice(0, boundary)).filter(m => m.growth > .5);
+    if (!mature.length) return;
+    const active = s.spores.filter(p => p.background === background).length;
+    const available = Math.min(count, (background ? 60 : 180) - active);
+    if (available <= 0) return;
+    if (background) s.backgroundEmissions++; else s.emissions++;
+    if (burst) s.bursts++;
+    const emission = background ? s.backgroundEmissions : s.emissions;
+    const style = (emission + (background ? 2 : 0)) % 4;
+    for (let i = 0; i < available; i++) {
+      const seed = emission * 71 + i * 13 + (background ? 319 : 0);
+      const m = mature[(emission + (background ? Math.floor(i / 9) : burst ? Math.floor(i / 28) : 0)) % Math.min(mature.length, 4)];
+      const r = Math.min(w, h) * (.035 + m.depth * .095) * size * (1 - Math.pow(1 - m.growth, 3));
+      const stem = r * (1.05 + noise(m.seed) * .6);
+      const sway = Math.sin(s.time * .75 + m.seed) * (.025 + s.bass * .13) + (m.flightTilt || 0);
+      const capTilt = Math.sin(s.time * .43 + m.seed) * (.04 + s.mid * .11);
+      const across = (noise(seed) - .5) * r * 1.75;
+      const below = r * (.04 + noise(seed + 4) * .13);
+      const capX = across * Math.cos(capTilt) - below * Math.sin(capTilt);
+      const capY = -stem + across * Math.sin(capTilt) + below * Math.cos(capTilt);
+      s.spores.push({ x: m.x + (capX * Math.cos(sway) - capY * Math.sin(sway)) / w,
+        y: m.y + (capX * Math.sin(sway) + capY * Math.cos(sway)) / h,
+        vx: (noise(seed + 1) - .5) * (burst ? .05 : .025),
+        vy: (.025 + noise(seed + 2) * (burst ? .09 : .045)) * (background ? .75 : 1), age: 0,
+        life: 3.2 + noise(seed + 3) * 2.8, seed, background,
+        scale: background ? clamp(.42 + m.depth * .38, .42, .7) : 1,
+        kind: burst && i % 4 === 0 ? (style + 1) % 4 : style });
+    }
+  }
+  function drawSpores(c, w, h) {
+    const s = state, scale = Math.min(w, h);
+    c.save(); c.globalCompositeOperation = 'screen';
+    for (const p of s.spores) {
+      const fade = Math.min(1, p.age * 5, (p.life - p.age) * 1.2);
+      const x = p.x * w, y = p.y * h, r = clamp(scale * (.006 + noise(p.seed) * .004), 2, 8) * p.scale;
+      c.save(); c.translate(x, y); c.rotate(s.time * (1 + noise(p.seed)) + p.seed); c.globalAlpha = fade * (.8 + s.treble * .2);
+      if (p.kind === 0) {
+        ellipse(c, 0, 0, r, r * .8, '#e1f7ff');
+        lineSpore(c, r * 1.8, '#ffffff');
+      } else if (p.kind === 1) {
+        c.fillStyle = '#be82ff'; c.beginPath(); c.moveTo(0, -r * 1.7); c.lineTo(r, 0); c.lineTo(0, r * 1.7); c.lineTo(-r, 0); c.closePath(); c.fill();
+        c.strokeStyle = '#f7d9ff'; c.lineWidth = .8; c.beginPath(); c.moveTo(0, -r); c.lineTo(0, r); c.stroke();
+      } else if (p.kind === 2) {
+        c.rotate(-s.time * (1 + noise(p.seed)) - p.seed); c.fillStyle = '#ff8a3e'; c.beginPath(); c.moveTo(0, -r * 2.3);
+        c.quadraticCurveTo(r * 1.5, -r * .3, r * .65, r * .7); c.quadraticCurveTo(0, r * 1.4, -r * .65, r * .7);
+        c.quadraticCurveTo(-r * 1.5, -r * .3, 0, -r * 2.3); c.fill(); ellipse(c, 0, r * .2, r * .34, r * .55, '#ffe8a0');
+      } else {
+        lineSpore(c, r * 2, '#ffd268'); ellipse(c, 0, 0, r * .55, r * .55, '#fff7cf');
+      }
+      c.restore();
+    }
+    c.restore();
+  }
+  function lineSpore(c, r, colour) {
+    c.strokeStyle = colour; c.lineWidth = Math.max(.7, r * .12); c.beginPath();
+    c.moveTo(-r, 0); c.lineTo(r, 0); c.moveTo(0, -r); c.lineTo(0, r); c.stroke();
+  }
   function draw(c, w, h, now, options = {}) {
     if (!state) reset();
     const s = state, o = { speed: 1, size: 1, count: 9, mischief: .4, bass: 0, mid: 0, treble: 0, form: 'golden', animate: true, ...options };
@@ -195,6 +266,10 @@ window.AutumnToadstools = (() => {
     const altitude = skyActive ? skyAltitude(s.skyTime) : 0;
     s.average += (s.bass - s.average) * (1 - Math.exp(-dt * 1.4));
     s.cooldown = Math.max(0, s.cooldown - dt); s.pulse *= Math.exp(-dt * 4);
+    const level = s.bass * .5 + s.mid * .3 + s.treble * .2;
+    s.sporeAverage += (level - s.sporeAverage) * (1 - Math.exp(-dt * 1.2));
+    s.sporeCooldown = Math.max(0, s.sporeCooldown - dt);
+    s.burstCooldown = Math.max(0, s.burstCooldown - dt);
     const wanted = clamp(Math.round(Number(o.count) || 9), 3, 14);
     if (!s.mushrooms.length) s.mushrooms = Array.from({ length: wanted }, (_, i) => mushroom(i));
     while (s.mushrooms.length < wanted) s.mushrooms.push(mushroom(s.mushrooms.length));
@@ -206,6 +281,26 @@ window.AutumnToadstools = (() => {
       if (candidates.length) { const m = candidates[s.births % candidates.length]; m.growth = .025; m.age = 0; s.births++; }
     }
     for (const m of s.mushrooms) { m.growth = Math.min(1, m.growth + dt * (.17 + s.bass * .9)); m.age += dt; }
+    const travellers = skyActive ? s.mushrooms.map(m => travellingMushroom(m, s.skyTime, altitude)) : s.mushrooms;
+    if (dt > 0 && level > .035) {
+      s.backgroundSporeCooldown = Math.max(0, s.backgroundSporeCooldown - dt);
+      const burst = level > .32 && level - s.sporeAverage > .065 && s.burstCooldown === 0;
+      if (burst || s.sporeCooldown === 0) {
+        releaseSpores(travellers, w, h, o.size, burst);
+        s.sporeCooldown = burst ? 1.2 : Math.max(.65, 2.3 - level * 1.4);
+        if (burst) s.burstCooldown = 4;
+      }
+      if (s.backgroundSporeCooldown === 0) {
+        releaseSpores(travellers, w, h, o.size, false, true);
+        s.backgroundSporeCooldown = Math.max(1.1, 3.1 - level * .8);
+      }
+    }
+    for (const p of s.spores) {
+      const breeze = Math.sin(s.time * .65) * .035 + Math.sin(s.time * 1.5 + p.seed) * .008;
+      p.age += dt; p.x += (p.vx + breeze) * dt; p.y += p.vy * dt;
+      p.vx *= Math.exp(-dt * .5); p.vy += .014 * dt;
+    }
+    s.spores = s.spores.filter(p => p.age < p.life);
     const key = `${w}:${h}:${o.form}`;
     if (s.backgroundKey !== key) { s.background = background(w, h, o.form); s.backgroundKey = key; }
     c.save();
@@ -216,14 +311,6 @@ window.AutumnToadstools = (() => {
     }
     c.save(); c.globalAlpha = 1 - altitude * .95; c.translate(0, altitude * h * 1.12); c.drawImage(s.background, 0, 0);
     if (!skyActive) s.mushrooms.slice().sort((a, b) => a.y - b.y).forEach(m => drawMushroom(c, m, w, h, o));
-    // Drifting spores are deterministic and constant in number: no accumulating particles.
-    c.globalCompositeOperation = 'screen';
-    for (let i = 0; i < 42; i++) {
-      const x = ((noise(i + 90) + Math.sin(s.time * .14 + i) * .035 + 1) % 1) * w;
-      const y = ((noise(i + 40) - s.time * (.004 + noise(i) * .007)) % 1 + 1) % 1 * h;
-      ellipse(c, x, y, 1 + noise(i) * Math.min(w, h) * .002, 1 + noise(i) * Math.min(w, h) * .002, `rgba(255,226,159,${.12 + s.treble * .45})`);
-    }
-    c.globalCompositeOperation = 'source-over';
     let sprites = 0;
     for (let i = 0; i < 3; i++) if (sprite(c, i, w, h, clamp(o.mischief, 0, 1))) sprites++;
     c.restore();
@@ -231,22 +318,18 @@ window.AutumnToadstools = (() => {
     let airborne = 0;
     if (skyActive) {
       // The amanitas follow winding individual paths, returning to their original places.
-      const travellers = s.mushrooms.map(m => {
-        const orbit = s.skyTime * .65 + m.seed;
-        const targetX = .5 + (m.x - .5) * .7 + Math.sin(orbit) * .12;
-        const targetY = .22 + m.depth * .42 + Math.cos(orbit * .8) * .06;
-        return { ...m, x: m.x + (targetX - m.x) * altitude,
-          y: m.y + (targetY - m.y) * altitude,
-          flightTilt: Math.sin(orbit) * .24 * altitude, airborne: altitude > .01 };
-      });
       travellers.sort((a, b) => a.y - b.y).forEach(m => drawMushroom(c, m, w, h, o));
       if (altitude > .01) airborne = travellers.length;
     }
+    drawSpores(c, w, h);
     const vignette = c.createRadialGradient(w * .5, h * .5, Math.min(w, h) * .25, w * .5, h * .5, Math.max(w, h) * .75);
     vignette.addColorStop(0, '#00000000'); vignette.addColorStop(1, '#001410b0'); c.fillStyle = vignette; c.fillRect(0, 0, w, h);
     c.restore();
     return { time: s.time, mushrooms: s.mushrooms.length, growing: s.mushrooms.filter(m => m.growth < 1).length,
-      births: s.births, sprites, spores: 42, bass: s.bass, treble: s.treble, altitude, snowflakes, airborne };
+      births: s.births, sprites, spores: s.spores.length, sporeEmissions: s.emissions, sporeBursts: s.bursts,
+      backgroundSporeEmissions: s.backgroundEmissions, backgroundSpores: s.spores.filter(p => p.background).length,
+      sporeKinds: [...new Set(s.spores.map(p => p.kind))], fallingSpores: s.spores.filter(p => p.vy > 0).length,
+      bass: s.bass, treble: s.treble, altitude, snowflakes, airborne };
   }
   return { draw, reset, recipes };
 })();

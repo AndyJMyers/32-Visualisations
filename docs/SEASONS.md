@@ -50,11 +50,11 @@ Season switching leaves audio and library state alone. Per-season visual prefere
 
 ## Autumn 02 — Toadstools (A2/32-A)
 
-An original procedural woodland theatre inspired by the fly agaric concept image. Scarlet caps turn and tilt above radial cream gills; stems sway and ruffle their pleated annuli. Smoothed bass drives sway and detected musical transients trigger fresh sprouts among the background mushrooms. Mid frequencies animate the skirts and cap rotation; treble sends travelling light through the gills and brightens drifting spores. Quiet passages keep a gentle breathing motion, without artificial beat triggers. Paused redraws hold the scene still.
+An original procedural woodland theatre inspired by the fly agaric concept image. Scarlet caps turn and tilt above radial cream gills; stems sway and ruffle their pleated annuli. Smoothed bass drives sway and detected musical transients trigger fresh sprouts among the background mushrooms. Mid frequencies animate the skirts and cap rotation; treble sends travelling light through the gills. Mushrooms release pulses of silver, purple foil, flame and spark spores, with larger showers on intense musical accents and smaller, independently timed waves in the background. Quiet passages keep a gentle breathing motion, without artificial beat triggers. Paused redraws hold the scene still.
 
 GARAGE controls: Woodland light (Golden woodland, Dew at dawn, Moonlit moss, Enchanted gills), Dance, Cap size, Mushrooms and Pixie mischief. Up to three small winged, clothed woodland sprites make intermittent aerial appearances; reducing mischief to zero hides them. The five scene-specific alchemies are Scarlet Matinee, Dew at Dawn, The Skirt Committee, After Hours in the Moss and Spore Score.
 
-The birch woodland, moss, leaves and ferns are cached per canvas size/light treatment. Populations are bounded at 14 mushrooms, three sprites and 42 spores. A clamped delta time and smoothed frequency bands keep motion stable across frame rates and returning tabs. Root and Android offline assets share the same implementation. This is a stylised animated first draft, not an animation of the photographic concept itself; device performance and artistic review remain release checks.
+The birch woodland, moss, leaves and ferns are cached per canvas size/light treatment. Populations are bounded at 14 mushrooms, three sprites and 240 spores. A clamped delta time and smoothed frequency bands keep motion stable across frame rates and returning tabs. Root and Android offline assets share the same implementation. This is a stylised animated first draft, not an animation of the photographic concept itself; device performance and artistic review remain release checks.
 
 ## Autumn 03 — Dawn Cobweb
 

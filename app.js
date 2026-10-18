@@ -75,6 +75,7 @@ if (window.AndroidWaveDeck) {
 }
 
 const desktopSeasonButton = document.querySelector('#desktopSeasonButton');
+const desktopSeasonLabel = document.querySelector('#desktopSeasonLabel');
 const summerVisualOptions = Array.from(visualizerSelect.options, o => [o.value, o.textContent]);
 let currentSeason = 'summer';
 let seasonMemories = {};
@@ -1346,7 +1347,7 @@ function updateSeasonLabels() {
   document.body.dataset.season = currentSeason;
   carSeasonButton.setAttribute('aria-label', `Season: ${label}. Switch to ${currentSeason === 'summer' ? 'Autumn' : 'Summer'}`);
   carSeasonLabel.textContent = label;
-  desktopSeasonButton.textContent = `Season · ${label}`;
+  desktopSeasonLabel.textContent = label;
   desktopSeasonButton.setAttribute('aria-label', carSeasonButton.getAttribute('aria-label'));
 }
 

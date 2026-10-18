@@ -43,6 +43,7 @@ run(read('last-mow.js'));
 run(read('app.js'));
 assert.equal(run('visualizerSelect.options.length'), 32, 'Summer retains all 32 visuals');
 assert.equal(run('currentSeason'), 'summer');
+assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Summer');
 // A saved shuffle preference must migrate to sequential playback.
 run('restoreControlPreferences({controls:{shuffle:true,visualizer:"fireworks",form:"woman",speed:"1.4",grasp:"0.75"}})');
 assert.equal(run('shuffleToggle.checked'), false);
@@ -56,6 +57,8 @@ assert.equal(run('visualizerSelect.value'), 'ralphwatch');
 assert.equal(run('visualizerSelect.options.length'), 4, 'Expose the four implemented Autumn scenes');
 assert.equal(audio.currentTime, 37.5); assert.equal(audioLoads + plays + pauses, 0, 'Season switching must not touch transport');
 assert.equal(w.document.body.dataset.season, 'autumn');
+assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Autumn');
+assert.equal(w.document.querySelectorAll('#desktopSeasonButton .season-icon').length, 2, 'Season icons survive updates');
 assert.equal(run('activeAlchemyRecipes().length'), 7);
 assert.ok(w.document.querySelector('#fireworkFormSelect').closest('label').classList.contains('autumn-time-control'), 'GARAGE exposes the time-of-day selector');
 // The entire Garage flywheel and direct Alchemy action use the Autumn recipes.
@@ -122,7 +125,7 @@ fungi.reset();
 let fungalStats;
 for (let i = 0; i < 900; i++) {
   fungalStats = fungi.draw(fungalContext, 160, 240, i * 50, { bass: i % 50 < 12 ? .9 : .02, mid:.4, treble:.6, count:14 });
-  assert.equal(fungalStats.mushrooms, 14); assert.ok(fungalStats.sprites <= 3); assert.equal(fungalStats.spores, 42);
+  assert.equal(fungalStats.mushrooms, 14); assert.ok(fungalStats.sprites <= 3); assert.ok(fungalStats.spores <= 240);
 }
 assert.ok(fungalStats.births > 2, 'Musical transients trigger repeated sprouting');
 const stopped = fungi.draw(fungalContext,160,240,999999,{animate:false});
