@@ -91,7 +91,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -105,12 +105,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 05 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 06 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'autumndrive') return window.AutumnDrive.recipes;
   if (visualizerSelect.value === 'squirrel') return window.SquirrelSequestering.recipes;
   if (visualizerSelect.value === 'lastmow') return window.LastMow.recipes;
   if (visualizerSelect.value === 'dawncobweb') return window.DawnCobweb.recipes;
@@ -125,6 +126,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'autumndrive') {
+    window.AutumnDrive.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'squirrel') {
     window.SquirrelSequestering.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -506,6 +513,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  autumndrive: {
+    ariaLabel: 'Autumn Drive: a first-person drive through autumn countryside in a classic car',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Car', speed: 'Pace' },
+    forms: [['chimaera', 'TVR Chimaera'], ['cloud', 'Rolls-Royce Silver Cloud'], ['azure', 'Bentley Azure'], ['sagaris', 'TVR Sagaris'], ['gt40', 'Ford GT40'], ['duesenberg', 'Duesenberg'], ['miura', 'Lamborghini Miura']],
+    defaults: { speed: '1' },
+  },
   squirrel: {
     ariaLabel: 'Squirrel Sequestering: squirrels gather and hide nuts in an autumn woodland',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1512,6 +1526,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'autumndrive') {
+    const selected = ['chimaera', 'cloud', 'azure', 'sagaris', 'gt40', 'duesenberg', 'miura'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'squirrel') {
     const selected = ['amber', 'mist', 'wind', 'dusk'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
