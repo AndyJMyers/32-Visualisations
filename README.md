@@ -73,7 +73,9 @@ One working day moves relentlessly left: alarm, coffee, the commute, office hour
 | Office hours | Home again |
 | ![Rat Race: office work as afternoon light crosses the windows](docs/images/rat-race/03-office-hours.png) | ![Rat Race: the commuter returns home to a steaming cup](docs/images/rat-race/04-home-again.png) |
 
-**[Watch one day of Rat Race in 22 seconds (silent MP4)](docs/images/rat-race/rat-race-one-day.mp4)**. The clip compresses the full left-scrolling cycle; the player itself runs at its normal, music-responsive pace.
+https://github.com/user-attachments/assets/b5d425aa-8f05-4c8e-b055-44b53dcfbd3a
+
+[Download the 22-second silent MP4](docs/images/rat-race/rat-race-one-day.mp4). The clip compresses the full left-scrolling cycle; the player itself runs at its normal, music-responsive pace.
 
 ## A Glimpse
 
