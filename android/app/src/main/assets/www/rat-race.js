@@ -255,6 +255,46 @@ window.RatRace = (() => {
       line(c,'#527e5d',4,[140,280,130,232,146,242,154,219]);
       oval(c,130,230,12,7,'#6e9a70'); oval(c,154,220,12,7,'#6e9a70');
     }
+    if (form === 'clockwork') {
+      c.save(); c.globalAlpha = .7;
+      clock(c, 832, 66, 23, tick * 2.4, '#d9a85b');
+      for (let i = 0; i < 13; i++) {
+        const x = i * 72 + (tick * 11 % 72);
+        line(c, '#caa46a99', i % 3 ? 2 : 4, [x, 486, x, i % 3 ? 478 : 469]);
+      }
+      c.restore();
+    } else if (form === 'neon') {
+      const pulse = .55 + .35 * Math.sin(tick * 2.8);
+      c.save(); c.shadowBlur = 18 + sound * 12; c.shadowColor = '#fb61c1';
+      line(c, `rgba(255, 93, 192, ${pulse})`, 5, [0, 42, 900, 42]);
+      line(c, '#61e7e0cc', 3, [0, 48, 900, 48]);
+      if (name.startsWith('walk') || name.startsWith('train') || name.startsWith('subway') || name === 'office') {
+        c.fillStyle = '#182b48'; c.fillRect(57, 100, 160, 65);
+        c.strokeStyle = '#fb61c1'; c.lineWidth = 4; c.strokeRect(57, 100, 160, 65);
+        c.fillStyle = '#a4fff3'; c.font = 'bold 28px sans-serif'; c.fillText('GO', 108, 143);
+      }
+      c.restore();
+    } else if (form === 'after') {
+      c.save();
+      c.fillStyle = '#16253a29'; c.fillRect(0, 0, 900, 500);
+      if (name.startsWith('walk') || name.startsWith('train') || name.startsWith('subway')) {
+        c.strokeStyle = '#c5d9e399'; c.lineWidth = 1.5;
+        for (let i = 0; i < 50; i++) {
+          const x = (i * 173 + tick * 53) % 980 - 40;
+          const y = (i * 107 + tick * 137) % 540 - 20;
+          c.beginPath(); c.moveTo(x, y); c.lineTo(x - 7, y + 19); c.stroke();
+        }
+        for (let i = 0; i < 8; i++) oval(c, i * 130 + 20, 392, 27, 3, '#eac2a566');
+      } else if (name === 'office') {
+        c.fillStyle = '#dbc9a7';
+        for (let i = 0; i < 4; i++) {
+          const x = 98 + i * 35;
+          shape(c, '#e6d8bc', [x, 308, x + 27, 304 - i * 3, x + 29, 312, x + 2, 315]);
+        }
+        oval(c, 685, 280, 48, 6, '#acd6dd66');
+      }
+      c.restore();
+    }
     c.restore();
   }
   function sceneAt(t) {

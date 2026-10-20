@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const gradient = { addColorStop() {} };
-const context = new Proxy({ createLinearGradient: () => gradient }, {
+const context = new Proxy({ createLinearGradient: () => gradient, createRadialGradient: () => gradient }, {
   get(target, key) { return key in target ? target[key] : () => {}; },
   set(target, key, value) { target[key] = value; return true; },
 });

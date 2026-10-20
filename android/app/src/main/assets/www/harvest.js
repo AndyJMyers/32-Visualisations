@@ -239,11 +239,19 @@ window.HarvestTime = (() => {
     const colours = mood === 'blue' ? ['#41576d','#b29f86','#c7a661'] : mood === 'storm' ? ['#495557','#ac9872','#d4ad58'] : ['#71878a','#eac189','#e9b963'];
     sky.addColorStop(0, colours[0]); sky.addColorStop(.68, colours[1]); sky.addColorStop(1, colours[2]);
     c.fillStyle = sky; c.fillRect(0, 0, 900, 500);
-    oval(c, 640, 98, 72, 69, mood === 'storm' ? '#d0bd8b77' : '#ffe5a6aa');
+    if (mood === 'blue') {
+      for (let i = 0; i < 32; i++) {
+        const x = 20 + noise(i * 37) * 850, y = 12 + noise(i * 71) * 155;
+        oval(c, x, y, 1 + noise(i * 13), 1 + noise(i * 13), '#fff4d4aa');
+      }
+    }
+    oval(c, 640, 98, mood === 'blue' ? 32 : 72, mood === 'blue' ? 32 : 69,
+      mood === 'storm' ? '#d0bd8b55' : mood === 'blue' ? '#f3ebca' : '#ffe5a6aa');
     for (let i = 0; i < 4; i++) {
       const x = (i * 265 + time * (2 + i * .4)) % 1200 - 120;
-      oval(c, x, 70 + i * 22, 91, 15, '#ddd0b890');
-      oval(c, x + 39, 66 + i * 22, 58, 19, '#ddd0b890');
+      const cloud = mood === 'storm' ? '#364447cc' : mood === 'blue' ? '#8996a199' : '#ddd0b890';
+      oval(c, x, 70 + i * 22, mood === 'storm' ? 135 : 91, mood === 'storm' ? 27 : 15, cloud);
+      oval(c, x + 39, 66 + i * 22, 58, mood === 'storm' ? 29 : 19, cloud);
     }
     shape(c, '#76816b', [0,245,150,199,310,231,460,186,650,224,800,195,900,227,900,330,0,330]);
     shape(c, '#576d58', [0,255,220,224,455,246,677,217,900,240,900,330,0,330]);
@@ -268,6 +276,17 @@ window.HarvestTime = (() => {
     combine(c, story.combineX, story.combineY, story.pass < 0 ? 1 : 1 + story.pass * .04,
       story.facing, story.stage === 'boarding' ? story.progress : 1,
       time * (3 + bass * 4), story.stage === 'unloading' && story.progress > .3);
+    if (mood === 'blue') {
+      const beam = c.createRadialGradient(story.combineX + story.facing * 85, story.combineY - 25, 2,
+        story.combineX + story.facing * 85, story.combineY - 25, 115);
+      beam.addColorStop(0, '#fff3c899'); beam.addColorStop(1, '#fff3c800');
+      c.fillStyle = beam; c.fillRect(story.combineX - 130, story.combineY - 140, 320, 230);
+      oval(c, story.combineX + story.facing * 85, story.combineY - 25, 6, 5, '#fff4d5');
+      for (let i = 0; i < 12; i++) {
+        const x = noise(i * 41) * 900, y = 265 + noise(i * 17) * 210;
+        oval(c, x, y + Math.sin(time * 2 + i) * 4, 1.5, 1.5, '#efdc9aaa');
+      }
+    }
     if (story.stage === 'cutting' || story.stage === 'unloading') for (let i = 0; i < 65; i++) {
       const age = (time * (.42 + bass * .24 + noise(i + 17) * .12) + noise(i * 11)) % 1;
       const spread = 35 + age * (85 + noise(i + 29) * 45);
@@ -295,6 +314,20 @@ window.HarvestTime = (() => {
       shape(c, '#6b5140', [736,214,819,177,880,212]);
       c.fillStyle = `rgba(26, 42, 41, ${story.barnEntry * .9})`;
       c.fillRect(789, 230, 38, 38);
+    }
+    if (mood === 'storm') {
+      c.save(); c.strokeStyle = '#dce5e888'; c.lineWidth = 1.5;
+      for (let i = 0; i < 95; i++) {
+        const x = (noise(i * 23) * 1000 + time * (95 + bass * 80)) % 1000 - 50;
+        const y = (noise(i * 47) * 570 + time * (220 + treble * 90)) % 570 - 35;
+        c.beginPath(); c.moveTo(x, y); c.lineTo(x - 10, y + 24); c.stroke();
+      }
+      const flash = Math.max(0, 1 - Math.abs(time % 17 - 11) * 7) * (.3 + bass * .4);
+      if (flash > 0) {
+        path(c, `rgba(242, 245, 222, ${flash})`, 3, [427,0,449,43,432,68,467,106,451,144]);
+        c.fillStyle = `rgba(238, 234, 192, ${flash * .2})`; c.fillRect(0, 0, 900, 500);
+      }
+      c.restore();
     }
     c.restore();
     return { time, mood, bass, treble, ...story, birds };
