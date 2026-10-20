@@ -42,6 +42,7 @@ run(read('cobweb.js'));
 run(read('last-mow.js'));
 run(read('squirrel.js'));
 run(read('driving.js'));
+run(read('harvest.js'));
 run(read('app.js'));
 assert.equal(run('visualizerSelect.options.length'), 32, 'Summer retains all 32 visuals');
 assert.equal(run('currentSeason'), 'summer');
@@ -56,7 +57,7 @@ audio.load = () => { audioLoads++; }; audio.play = () => { plays++; return Promi
 w.document.querySelector('#desktopSeasonButton').click();
 assert.equal(run('currentSeason'), 'autumn');
 assert.equal(run('visualizerSelect.value'), 'ralphwatch');
-assert.equal(run('visualizerSelect.options.length'), 6, 'Expose the six implemented Autumn scenes');
+assert.equal(run('visualizerSelect.options.length'), 7, 'Expose the seven implemented Autumn scenes');
 assert.equal(audio.currentTime, 37.5); assert.equal(audioLoads + plays + pauses, 0, 'Season switching must not touch transport');
 assert.equal(w.document.body.dataset.season, 'autumn');
 assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Autumn');
@@ -176,7 +177,16 @@ for (let i = 0; i < 7; i++) {
 }
 run('setSeason("summer"); setSeason("autumn")');
 assert.equal(run('visualizerSelect.value'), 'autumndrive', 'The drive restores after a season change');
-for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
+run('visualizerSelect.value="harvest"; visualizerSelect.dispatchEvent(new Event("change"))');
+assert.equal(run('activeAlchemyRecipes().length'), 3, 'Harvest Time offers three lighting treatments');
+for (let i = 0; i < 3; i++) {
+  run(`applyAlchemicalAdjustment(${i})`);
+  assert.equal(run('alchemyRecipeIndex()'), i, 'The harvest mood and Alchemy label agree');
+  assert.equal(run('fireworkFormSelect.value'), ['amber','blue','storm'][i]);
+}
+run('setSeason("summer"); setSeason("autumn")');
+assert.equal(run('visualizerSelect.value'), 'harvest', 'The harvest restores after a season change');
+for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
 assert.deepEqual(failures, []);
 dom.window.close();
 console.log('Season integration and full-day Canvas simulation passed.');

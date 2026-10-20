@@ -15,5 +15,6 @@ Copy-Item -LiteralPath (Join-Path $repoRoot "cobweb.js") -Destination (Join-Path
 Copy-Item -LiteralPath (Join-Path $repoRoot "last-mow.js") -Destination (Join-Path $assetRoot "last-mow.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "squirrel.js") -Destination (Join-Path $assetRoot "squirrel.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "driving.js") -Destination (Join-Path $assetRoot "driving.js") -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot "harvest.js") -Destination (Join-Path $assetRoot "harvest.js") -Force
 
 Write-Host "Synced web assets into android/app/src/main/assets/www"
