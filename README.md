@@ -50,7 +50,7 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
-Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player. Ralph's Last Watch, Toadstools, Dawn Cobweb and Last Mow of the Year are available for evaluation alongside Summer’s original 32.
+Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player. Eight Autumn scenes are currently available for creative evaluation alongside Summer's original 32.
 
 ### Autumn Collection
 
@@ -62,6 +62,18 @@ Four glimpses of the collection in development, from a watchful winter landscape
   <img src="docs/images/autumn-teasers/03-dawn-cobweb.png" alt="Dawn Cobweb: spiders and dew in the morning light" width="24%">
   <img src="docs/images/autumn-teasers/04-last-mow.png" alt="Last Mow of the Year: the gardener and robin" width="24%">
 </p>
+
+#### Rat Race v1.0
+
+One working day moves relentlessly left: alarm, coffee, the commute, office hours, and the journey home. The light changes, the face gives away just enough, and bedtime delivers us straight back to the alarm.
+
+| Wake-up call | Morning train |
+|---|---|
+| ![Rat Race: the alarm clock interrupts the dark bedroom](docs/images/rat-race/01-wake-up.png) | ![Rat Race: the commuter rides the morning train](docs/images/rat-race/02-morning-train.png) |
+| Office hours | Home again |
+| ![Rat Race: office work as afternoon light crosses the windows](docs/images/rat-race/03-office-hours.png) | ![Rat Race: the commuter returns home to a steaming cup](docs/images/rat-race/04-home-again.png) |
+
+**[Watch one day of Rat Race in 22 seconds (silent MP4)](docs/images/rat-race/rat-race-one-day.mp4)**. The clip compresses the full left-scrolling cycle; the player itself runs at its normal, music-responsive pace.
 
 ## A Glimpse
 
