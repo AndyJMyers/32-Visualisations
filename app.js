@@ -91,7 +91,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -105,12 +105,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 08 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 09 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'starrynight') return window.StarryNight.recipes;
   if (visualizerSelect.value === 'ratrace') return window.RatRace.recipes;
   if (visualizerSelect.value === 'harvest') return window.HarvestTime.recipes;
   if (visualizerSelect.value === 'autumndrive') return window.AutumnDrive.recipes;
@@ -128,6 +129,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'starrynight') {
+    window.StarryNight.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'ratrace') {
     window.RatRace.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -527,6 +534,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  starrynight: {
+    ariaLabel: 'Starry Night: a village and cypress beneath a swirling, music-responsive night sky',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Night palette', speed: 'Current' },
+    forms: [['cobalt', 'Cobalt Current'], ['amber', 'Amber Constellation'], ['silver', 'Negative Tempest']],
+    defaults: { speed: '1' },
+  },
   ratrace: {
     ariaLabel: 'Rat Race: an endless working day scrolling from alarm clock to commute, office and home',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1554,6 +1568,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'starrynight') {
+    const selected = ['cobalt', 'amber', 'silver'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'ratrace') {
     const selected = ['clockwork', 'neon', 'after'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
@@ -2118,7 +2136,8 @@ function selectOptionByRecipe(select, index) {
 function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
-  const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex : step;
+  const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
+    : visualizer === "starrynight" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 

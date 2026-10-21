@@ -376,13 +376,15 @@ h1 {
 .transport-fullscreen { margin-left: 2px; }
 
 .desktop-creative-controls {
-  display: none;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   margin-left: 4px;
 }
 
 .creative-control {
+  display: inline-flex;
+  align-items: center;
   min-width: 122px;
   min-height: 50px;
   padding: 0 12px 0 15px;
