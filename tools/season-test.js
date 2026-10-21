@@ -46,6 +46,7 @@ run(read('harvest.js'));
 run(read('rat-race.js'));
 run(read('starry-night.js'));
 run(read('water-lilies.js'));
+run(read('the-scream.js'));
 run(read('app.js'));
 assert.equal(run('visualizerSelect.options.length'), 32, 'Summer retains all 32 visuals');
 assert.equal(run('currentSeason'), 'summer');
@@ -216,7 +217,16 @@ for (let i = 0; i < 4; i++) {
 }
 run('setSeason("summer"); setSeason("autumn")');
 assert.equal(run('visualizerSelect.value'), 'waterlilies', 'Water Lilies restores after a season change');
-for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
+run('visualizerSelect.value="thescream"; visualizerSelect.dispatchEvent(new Event("change"))');
+assert.equal(run('activeAlchemyRecipes().length'), 4, 'The Scream offers four bridge moods');
+for (let i = 0; i < 4; i++) {
+  run(`applyAlchemicalAdjustment(${i})`);
+  assert.equal(run('alchemyRecipeIndex()'), i, 'The Scream mood and Alchemy label agree');
+  assert.equal(run('fireworkFormSelect.value'), ['burning','flight','negative','electric'][i]);
+}
+run('setSeason("summer"); setSeason("autumn")');
+assert.equal(run('visualizerSelect.value'), 'thescream', 'The Scream restores after a season change');
+for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
 assert.deepEqual(failures, []);
 dom.window.close();
 console.log('Season integration and full-day Canvas simulation passed.');

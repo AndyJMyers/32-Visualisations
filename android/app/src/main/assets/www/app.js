@@ -91,7 +91,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -105,12 +105,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 10 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 11 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'thescream') return window.TheScream.recipes;
   if (visualizerSelect.value === 'waterlilies') return window.WaterLilies.recipes;
   if (visualizerSelect.value === 'starrynight') return window.StarryNight.recipes;
   if (visualizerSelect.value === 'ratrace') return window.RatRace.recipes;
@@ -130,6 +131,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'thescream') {
+    window.TheScream.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'waterlilies') {
     window.WaterLilies.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -541,6 +548,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  thescream: {
+    ariaLabel: 'The Scream: a traveller on a winding bridge beneath a music-responsive sky',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Bridge mood', speed: 'Pace' },
+    forms: [['burning', 'The Burning Sky'], ['flight', 'Flight from the Fjord'], ['negative', 'Negative Nerves'], ['electric', 'Electric Dread']],
+    defaults: { speed: '1' },
+  },
   waterlilies: {
     ariaLabel: 'Water Lilies: floating pads and flowers on a music-responsive garden pond',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1582,6 +1596,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'thescream') {
+    const selected = ['burning', 'flight', 'negative', 'electric'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'waterlilies') {
     const selected = ['pond', 'negative', 'orange', 'awake'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
@@ -2155,7 +2173,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : visualizer === "starrynight" || visualizer === "waterlilies" ? alchemyRecipeIndex() + 1 : step;
+    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 
