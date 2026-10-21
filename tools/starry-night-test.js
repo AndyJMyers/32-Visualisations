@@ -39,12 +39,19 @@ for (let i = 0; i < firstSky.length; i += 4) {
       + Math.abs(firstSky[i + 2] - laterSky[i + 2]) > 35) changed++;
 }
 assert.ok(changed > 15000, `The sky must visibly transform over a few seconds, not merely flicker (${changed} changed pixels)`);
-visual.reset();
-visual.draw(context, 900, 500, 1000, { speed: 3 });
-const firstVillage = Buffer.from(context.getImageData(200, 425, 680, 20).data);
-for (let i = 1; i <= 180; i++) visual.draw(context, 900, 500, 1000 + i * 80, { speed: 3 });
-const laterVillage = Buffer.from(context.getImageData(200, 425, 680, 20).data);
-assert.notEqual(Buffer.compare(firstVillage, laterVillage), 0, 'Village windows change over time');
+for (const form of ['cobalt', 'amber', 'silver']) {
+  visual.reset();
+  visual.draw(context, 900, 500, 1000, { form, speed: 3 });
+  const firstVillage = Buffer.from(context.getImageData(260, 420, 440, 35).data);
+  for (let i = 1; i <= 100; i++) visual.draw(context, 900, 500, 1000 + i * 80, { form, speed: 3 });
+  const laterVillage = Buffer.from(context.getImageData(260, 420, 440, 35).data);
+  let villageChanges = 0;
+  for (let i = 0; i < firstVillage.length; i += 4) {
+    if (Math.abs(firstVillage[i] - laterVillage[i]) + Math.abs(firstVillage[i + 1] - laterVillage[i + 1])
+        + Math.abs(firstVillage[i + 2] - laterVillage[i + 2]) > 35) villageChanges++;
+  }
+  assert.ok(villageChanges > 50, `${form} village must show visible window activity (${villageChanges} changed pixels)`);
+}
 const paused = visual.draw(context, 360, 640, 3000, { animate: false });
 const pausedImage = Buffer.from(context.getImageData(0, 0, 360, 640).data);
 visual.draw(context, 360, 640, 9000, { animate: false });

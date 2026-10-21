@@ -178,22 +178,25 @@ window.StarryNight = (() => {
   }
   function windowLight(c, palette, x, y, index) {
     const width = 10, height = 14;
-    const cycle = 50 + hash(index + 2500) * 35;
+    const cycle = 31 + hash(index + 2500) * 18;
     const position = (time + hash(index + 2600) * cycle) / cycle;
     const step = Math.floor(position);
-    const blend = clamp((position - step) * cycle / 2, 0, 1);
+    const blend = clamp((position - step) * cycle / 2.5, 0, 1);
     const before = hash(index * 31 + (step - 1) * 43 + 2700) > .32 ? 1 : 0;
     const after = hash(index * 31 + step * 43 + 2700) > .32 ? 1 : 0;
-    const brightness = before + (after - before) * (blend * blend * (3 - 2 * blend));
+    const ordinaryLight = before + (after - before) * (blend * blend * (3 - 2 * blend));
+    const hasVisitor = index % 5 === 2 && x > 260 && x < 700;
+    const crossingCycle = 26 + hash(index + 2900) * 9;
+    const crossing = (time + hash(index + 2800) * crossingCycle) % crossingCycle;
+    const visitorProgress = hasVisitor && crossing < 4.5 ? crossing / 4.5 : -1;
+    const visitorLight = visitorProgress < 0 ? 0 : Math.min(1, crossing * 1.3, (4.5 - crossing) * 1.3);
+    const brightness = Math.max(ordinaryLight, visitorLight);
     if (brightness < .01) return;
     c.globalAlpha = brightness;
     c.fillStyle = palette.window; c.fillRect(x, y, width, height);
     c.globalAlpha = 1;
-    if (index % 5 !== 2) return;
-    const crossingCycle = 63 + hash(index + 2900) * 15;
-    const crossing = (time + hash(index + 2800) * crossingCycle) % crossingCycle;
-    if (crossing > 3.4) return;
-    const figureX = x - 3 + crossing / 3.4 * (width + 6);
+    if (visitorProgress < 0) return;
+    const figureX = x - 3 + visitorProgress * (width + 6);
     c.save(); c.beginPath(); c.rect(x, y, width, height); c.clip();
     c.globalAlpha = brightness * .88;
     c.fillStyle = palette.cypress;
