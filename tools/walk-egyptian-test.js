@@ -1,0 +1,56 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const { createCanvas } = require('@napi-rs/canvas');
+
+const sandbox = { window: {}, Math };
+vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'walk-egyptian.js'), 'utf8'), sandbox);
+const visual = sandbox.window.WalkEgyptian;
+assert.equal(visual.recipes.length, 4);
+const canvas = createCanvas(900, 500), context = canvas.getContext('2d');
+const output = process.env.EGYPTIAN_TEST_OUTPUT;
+if (output) fs.mkdirSync(output, { recursive: true });
+const save = name => {
+  const image = canvas.toBuffer('image/png');
+  if (output) fs.writeFileSync(path.join(output, `${name}.png`), image);
+  return image;
+};
+const checkpoints = new Map([
+  [50, 'procession'], [185, 'desert'], [320, 'nile'],
+  [470, 'book'], [585, 'sphinx'], [720, 'battle'],
+]);
+const frames = [];
+visual.reset();
+for (let i = 0; i <= 820; i++) {
+  const frame = visual.draw(context, 900, 500, i * 80, {
+    form: 'gold', bass: i % 10 === 0 ? .8 : .4, mid: .6, treble: .5,
+  });
+  if (checkpoints.has(i)) {
+    assert.equal(frame.phase, checkpoints.get(i), `Shot at ${i * 80} ms`);
+    frames.push(save(frame.phase));
+  }
+  if (i === 12) assert.ok(frame.beats > 0, 'Bass beats drive accents');
+}
+assert.equal(frames.length, 6);
+assert.equal(new Set(frames.map(image => image.toString('base64'))).size, 6, 'All shots differ');
+const treatments = [];
+const openingShots = { gold: 'procession', lapis: 'nile', papyrus: 'book', storm: 'battle' };
+for (const form of Object.keys(openingShots)) {
+  visual.reset();
+  let frame;
+  for (let i = 0; i <= 50; i++) frame = visual.draw(context, 900, 500, i * 80, { form, bass: .4, mid: .5 });
+  assert.equal(frame.phase, openingShots[form], `${form} follows its own route`);
+  treatments.push(save(`${form}-opening`));
+}
+assert.equal(new Set(treatments.map(image => image.toString('base64'))).size, 4, 'Alchemy treatments differ');
+visual.reset();
+visual.draw(context, 900, 500, 0, { form: 'gold', bass: .5 });
+const paused = visual.draw(context, 900, 500, 80, { form: 'gold', animate: false });
+const still = save('paused');
+visual.draw(context, 900, 500, 30000, { form: 'gold', animate: false });
+assert.equal(Buffer.compare(still, canvas.toBuffer('image/png')), 0, 'Pause freezes artwork');
+assert.equal(visual.draw(context, 900, 500, 40000, { form: 'gold' }).time, paused.time, 'Resume does not jump');
+visual.reset();
+assert.equal(visual.draw(context, 360, 640, 50000, { form: 'lapis' }).phase, 'nile');
+console.log('Egyptian shots, Alchemy, music, portrait and pause/resume passed.');

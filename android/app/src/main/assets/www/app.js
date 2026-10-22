@@ -91,7 +91,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -105,12 +105,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 15 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 16 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'walkegyptian') return window.WalkEgyptian.recipes;
   if (visualizerSelect.value === 'birdseye') return window.BirdsEye.recipes;
   if (visualizerSelect.value === 'yourcall') return window.YourCall.recipes;
   if (visualizerSelect.value === 'pollocks') return window.Pollocks.recipes;
@@ -135,6 +136,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'walkegyptian') {
+    window.WalkEgyptian.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'birdseye') {
     window.BirdsEye.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -576,6 +583,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  walkegyptian: {
+    ariaLabel: 'Walk like an Egyptian: dancing figures, scarabs, pyramids, a Nile voyage, papyrus, Sphinx and a river battle',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Egyptian passage', speed: 'Journey pace' },
+    forms: [['gold', 'Gold of Ra'], ['lapis', 'Lapis Underworld'], ['papyrus', 'Living Papyrus'], ['storm', 'Sandstorm and Fire']],
+    defaults: { speed: '1' },
+  },
   birdseye: {
     ariaLabel: 'Birds Eye: meet a magpie, fly over fields, watch a fox hunt, then visit a pipe smoker on a bench',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1663,6 +1677,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'walkegyptian') {
+    const selected = ['gold', 'lapis', 'papyrus', 'storm'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'birdseye') {
     const selected = ['orchard', 'village', 'rain', 'twilight'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
@@ -2256,7 +2274,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" ? alchemyRecipeIndex() + 1 : step;
+    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 
@@ -2290,6 +2308,7 @@ function restartVisualizer() {
   if (window.Pollocks) window.Pollocks.reset();
   if (window.YourCall) window.YourCall.reset();
   if (window.BirdsEye) window.BirdsEye.reset();
+  if (window.WalkEgyptian) window.WalkEgyptian.reset();
 
   peakLevels = [];
   peakUpdatedAt = [];
@@ -2411,6 +2430,7 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
   if (window.Pollocks) window.Pollocks.reset();
   if (window.YourCall) window.YourCall.reset();
   if (window.BirdsEye) window.BirdsEye.reset();
+  if (window.WalkEgyptian) window.WalkEgyptian.reset();
 
   const shouldAutoplay = autoplay || continuousPlaybackRequested;
   playbackGeneration += 1;
