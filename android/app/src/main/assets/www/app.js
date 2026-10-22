@@ -91,7 +91,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -105,12 +105,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 14 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 15 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'birdseye') return window.BirdsEye.recipes;
   if (visualizerSelect.value === 'yourcall') return window.YourCall.recipes;
   if (visualizerSelect.value === 'pollocks') return window.Pollocks.recipes;
   if (visualizerSelect.value === 'mondrian') return window.Mondrian.recipes;
@@ -134,6 +135,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'birdseye') {
+    window.BirdsEye.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'yourcall') {
     window.YourCall.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -569,6 +576,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  birdseye: {
+    ariaLabel: 'Birds Eye: meet a magpie, fly over fields, watch a fox hunt, then visit a pipe smoker on a bench',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Flight route', speed: 'Flight pace' },
+    forms: [['orchard', 'Orchard Watch'], ['village', 'Village Mischief'], ['rain', 'Rain Patrol'], ['twilight', 'Last Light']],
+    defaults: { speed: '1' },
+  },
   yourcall: {
     ariaLabel: 'Your call is important to us: a music-responsive maze of impossible customer-service screens',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1406,6 +1420,17 @@ function closeSettingsCatalogue() {
   settingsCatalogue.removeAttribute("open");
 }
 
+function hideDesktopControls() {
+  if (isAndroidCarMode) return;
+  hideSongWheel();
+  document.querySelector(".player").classList.add("desktop-controls-hidden");
+}
+
+function showDesktopControls() {
+  if (isAndroidCarMode) return;
+  document.querySelector(".player").classList.remove("desktop-controls-hidden");
+}
+
 function visualizerTheme() {
   return visualizerThemes[themeSelect.value] || visualizerThemes.mono;
 }
@@ -1638,6 +1663,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'birdseye') {
+    const selected = ['orchard', 'village', 'rain', 'twilight'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'yourcall') {
     const selected = ['menu', 'verify', 'queue', 'agent'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
@@ -2227,7 +2256,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" ? alchemyRecipeIndex() + 1 : step;
+    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 
@@ -2260,6 +2289,7 @@ function restartVisualizer() {
   }
   if (window.Pollocks) window.Pollocks.reset();
   if (window.YourCall) window.YourCall.reset();
+  if (window.BirdsEye) window.BirdsEye.reset();
 
   peakLevels = [];
   peakUpdatedAt = [];
@@ -2380,6 +2410,7 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
   }
   if (window.Pollocks) window.Pollocks.reset();
   if (window.YourCall) window.YourCall.reset();
+  if (window.BirdsEye) window.BirdsEye.reset();
 
   const shouldAutoplay = autoplay || continuousPlaybackRequested;
   playbackGeneration += 1;
@@ -14128,6 +14159,21 @@ function handleGlobalKey(event) {
   const tagName = event.target.tagName.toLowerCase();
   const isEditingTarget = tagName === "input" || tagName === "select" || tagName === "textarea";
 
+  if (lowerKey === "h" && !isAndroidCarMode && !isEditingTarget && !event.repeat
+    && !event.altKey && !event.ctrlKey && !event.metaKey) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (player.classList.contains("desktop-controls-hidden")) showDesktopControls();
+    else hideDesktopControls();
+    return;
+  }
+
+  if (player.classList.contains("desktop-controls-hidden")) showDesktopControls();
+
+  if (isEditingTarget) {
+    return;
+  }
+
   if (key === "Escape" && player.classList.contains("visual-fullscreen") && !document.fullscreenElement) {
     event.preventDefault();
     exitVisualStage();
@@ -14147,7 +14193,7 @@ function handleGlobalKey(event) {
     return;
   }
 
-  if (!isEditingTarget && ["KeyA", "KeyD", "KeyW", "KeyS"].includes(code)) {
+  if (["KeyA", "KeyD", "KeyW", "KeyS"].includes(code)) {
     event.preventDefault();
     if (document.activeElement && typeof document.activeElement.blur === "function") {
       document.activeElement.blur();
@@ -14185,10 +14231,6 @@ function handleGlobalKey(event) {
     return;
   }
 
-  if (isEditingTarget) {
-    return;
-  }
-
   if ((key === " " || code === "Space") && tagName !== "button") {
     event.preventDefault();
     togglePlayPause();
@@ -14222,6 +14264,9 @@ function handleGlobalKey(event) {
 }
 
 document.addEventListener("keydown", handleGlobalKey, true);
+for (const eventName of ["pointermove", "pointerdown", "wheel", "touchstart"]) {
+  document.addEventListener(eventName, showDesktopControls, { passive: true });
+}
 document.addEventListener("keyup", (event) => {
   asteroidKeys.delete(event.code);
   if (event.key === "F4" || event.code === "F4" || event.keyCode === 115) {

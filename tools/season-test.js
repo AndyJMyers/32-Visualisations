@@ -50,7 +50,29 @@ run(read('the-scream.js'));
 run(read('mondrian.js'));
 run(read('pollocks.js'));
 run(read('your-call.js'));
+run(read('birds-eye.js'));
 run(read('app.js'));
+assert.equal(w.document.querySelector('#settingsCatalogue').open, false, 'Desktop Garage stays closed at startup');
+const pressHideKey = key => w.document.body.dispatchEvent(new w.KeyboardEvent('keydown', {
+  key, code: `Key${key.toUpperCase()}`, bubbles: true, cancelable: true,
+}));
+pressHideKey('h');
+assert.equal(w.document.querySelector('.player').classList.contains('desktop-controls-hidden'), true, 'H hides desktop controls');
+w.document.dispatchEvent(new w.Event('pointermove', { bubbles: true }));
+assert.equal(w.document.querySelector('.player').classList.contains('desktop-controls-hidden'), false, 'Pointer movement restores controls');
+pressHideKey('h');
+pressHideKey('x');
+assert.equal(w.document.querySelector('.player').classList.contains('desktop-controls-hidden'), false, 'Another key restores controls');
+const search = w.document.querySelector('#songWheelSearch');
+search.focus();
+run('visualizerSelect.value="asteroids"');
+for (const [key, code] of [['f', 'KeyF'], ['t', 'KeyT'], ['w', 'KeyW'], [' ', 'Space']]) {
+  const event = new w.KeyboardEvent('keydown', { key, code, bubbles: true, cancelable: true });
+  search.dispatchEvent(event);
+  assert.equal(event.defaultPrevented, false, `Track search keeps ${code} for text input`);
+  assert.equal(w.document.activeElement, search, `Track search retains focus on ${code}`);
+}
+search.blur();
 assert.equal(run('visualizerSelect.options.length'), 32, 'Summer retains all 32 visuals');
 assert.equal(run('currentSeason'), 'summer');
 assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Summer');
@@ -64,7 +86,7 @@ audio.load = () => { audioLoads++; }; audio.play = () => { plays++; return Promi
 w.document.querySelector('#desktopSeasonButton').click();
 assert.equal(run('currentSeason'), 'autumn');
 assert.equal(run('visualizerSelect.value'), 'ralphwatch');
-assert.equal(run('visualizerSelect.options.length'), 14, 'Expose the fourteen implemented Autumn scenes');
+assert.equal(run('visualizerSelect.options.length'), 15, 'Expose the fifteen implemented Autumn scenes');
 assert.equal(audio.currentTime, 37.5); assert.equal(audioLoads + plays + pauses, 0, 'Season switching must not touch transport');
 assert.equal(w.document.body.dataset.season, 'autumn');
 assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Autumn');
@@ -256,7 +278,13 @@ for (let i = 0; i < 4; i++) {
 }
 run('setSeason("summer"); setSeason("autumn")');
 assert.equal(run('visualizerSelect.value'), 'yourcall', 'Your call restores after a season change');
-for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','mondrian.js','pollocks.js','your-call.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
+run('visualizerSelect.value="birdseye"; visualizerSelect.dispatchEvent(new Event("change"))');
+assert.equal(run('activeAlchemyRecipes().length'), 4, 'Birds Eye offers four flight routes');
+for (const [i, form] of ['orchard', 'village', 'rain', 'twilight'].entries()) {
+  run(`fireworkFormSelect.value="${form}"; fireworkFormSelect.dispatchEvent(new Event("change"))`);
+  assert.equal(run('alchemyRecipeIndex()'), i, 'The flight route and Alchemy label agree');
+}
+for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','mondrian.js','pollocks.js','your-call.js','birds-eye.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
 assert.deepEqual(failures, []);
 dom.window.close();
 console.log('Season integration and full-day Canvas simulation passed.');
