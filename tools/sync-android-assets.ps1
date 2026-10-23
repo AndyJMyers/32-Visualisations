@@ -25,5 +25,7 @@ Copy-Item -LiteralPath (Join-Path $repoRoot "pollocks.js") -Destination (Join-Pa
 Copy-Item -LiteralPath (Join-Path $repoRoot "your-call.js") -Destination (Join-Path $assetRoot "your-call.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "birds-eye.js") -Destination (Join-Path $assetRoot "birds-eye.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "walk-egyptian.js") -Destination (Join-Path $assetRoot "walk-egyptian.js") -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot "romans.js") -Destination (Join-Path $assetRoot "romans.js") -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot "life-studies.js") -Destination (Join-Path $assetRoot "life-studies.js") -Force
 
 Write-Host "Synced web assets into android/app/src/main/assets/www"
