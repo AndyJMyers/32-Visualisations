@@ -91,7 +91,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -105,12 +105,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 18 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 19 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'oldschoolgames') return window.OldSchoolGames.recipes;
   if (visualizerSelect.value === 'lifestudies') return window.LifeStudies.recipes;
   if (visualizerSelect.value === 'romans') return window.Romans.recipes;
   if (visualizerSelect.value === 'walkegyptian') return window.WalkEgyptian.recipes;
@@ -138,6 +139,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'oldschoolgames') {
+    window.OldSchoolGames.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'lifestudies') {
     window.LifeStudies.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -597,6 +604,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  oldschoolgames: {
+    ariaLabel: 'Old School Games: robots, Kerplunk, maze chase, space invaders, Pong, Hover Bovver, Gridrunner and Forbidden Forest move to the music',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Toybox mood', speed: 'Game pace' },
+    forms: [['tabletop', 'Kitchen Table'], ['afterdark', 'After Dark'], ['blueprint', 'Toybox Blueprint'], ['popart', 'Pop-Art Pandemonium']],
+    defaults: { speed: '1' },
+  },
   lifestudies: {
     ariaLabel: 'Life Studies: suggestive charcoal figure sketches gather strokes and flashes of colour before the page turns',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1705,6 +1719,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'oldschoolgames') {
+    const selected = ['tabletop', 'afterdark', 'blueprint', 'popart'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'lifestudies') {
     const selected = ['atelier', 'nocturne', 'vermilion', 'bluewash'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
@@ -2310,7 +2328,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" ? alchemyRecipeIndex() + 1 : step;
+    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 
@@ -2347,6 +2365,7 @@ function restartVisualizer() {
   if (window.WalkEgyptian) window.WalkEgyptian.reset();
   if (window.Romans) window.Romans.reset();
   if (window.LifeStudies) window.LifeStudies.reset();
+  if (window.OldSchoolGames) window.OldSchoolGames.reset();
 
   peakLevels = [];
   peakUpdatedAt = [];
@@ -2471,6 +2490,7 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
   if (window.WalkEgyptian) window.WalkEgyptian.reset();
   if (window.Romans) window.Romans.reset();
   if (window.LifeStudies) window.LifeStudies.reset();
+  if (window.OldSchoolGames) window.OldSchoolGames.reset();
 
   const shouldAutoplay = autoplay || continuousPlaybackRequested;
   playbackGeneration += 1;
