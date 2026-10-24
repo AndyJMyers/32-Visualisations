@@ -57,6 +57,7 @@ run(read('life-studies.js'));
 run(read('old-school-games.js'));
 run(read('spaced.js'));
 run(read('inner-space.js'));
+run(read('champagne-fountain.js'));
 run(read('app.js'));
 assert.equal(w.document.querySelector('#settingsCatalogue').open, false, 'Desktop Garage stays closed at startup');
 const pressHideKey = key => w.document.body.dispatchEvent(new w.KeyboardEvent('keydown', {
@@ -92,7 +93,7 @@ audio.load = () => { audioLoads++; }; audio.play = () => { plays++; return Promi
 w.document.querySelector('#desktopSeasonButton').click();
 assert.equal(run('currentSeason'), 'autumn');
 assert.equal(run('visualizerSelect.value'), 'ralphwatch');
-assert.equal(run('visualizerSelect.options.length'), 21, 'Expose the twenty-one implemented Autumn scenes');
+assert.equal(run('visualizerSelect.options.length'), 22, 'Expose the twenty-two implemented Autumn scenes');
 assert.equal(audio.currentTime, 37.5); assert.equal(audioLoads + plays + pauses, 0, 'Season switching must not touch transport');
 assert.equal(w.document.body.dataset.season, 'autumn');
 assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Autumn');
@@ -326,7 +327,13 @@ for (const [i, form] of ['anatomy', 'bioluminescent', 'watercolour', 'radiograph
   run(`fireworkFormSelect.value="${form}"; fireworkFormSelect.dispatchEvent(new Event("change"))`);
   assert.equal(run('alchemyRecipeIndex()'), i, 'Inner Space Alchemy label matches its scene');
 }
-for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','mondrian.js','pollocks.js','your-call.js','birds-eye.js','walk-egyptian.js','romans.js','life-studies.js','old-school-games.js','spaced.js','inner-space.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
+run('visualizerSelect.value="champagnefountain"; visualizerSelect.dispatchEvent(new Event("change"))');
+assert.equal(run('activeAlchemyRecipes().length'), 4, 'Champagne Fountain offers four cocktail moods');
+for (const [i, form] of ['gilded', 'rose', 'absinthe', 'midnight'].entries()) {
+  run(`fireworkFormSelect.value="${form}"; fireworkFormSelect.dispatchEvent(new Event("change"))`);
+  assert.equal(run('alchemyRecipeIndex()'), i, 'Champagne Fountain Alchemy label matches its mood');
+}
+for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','mondrian.js','pollocks.js','your-call.js','birds-eye.js','walk-egyptian.js','romans.js','life-studies.js','old-school-games.js','spaced.js','inner-space.js','champagne-fountain.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
 assert.deepEqual(failures, []);
 dom.window.close();
 console.log('Season integration and full-day Canvas simulation passed.');
