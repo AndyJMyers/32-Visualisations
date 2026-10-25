@@ -91,7 +91,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain'], ['shysmiles', '23 · Shy Smiles']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -105,12 +105,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 22 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 23 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'shysmiles') return window.ShySmiles.recipes;
   if (visualizerSelect.value === 'champagnefountain') return window.ChampagneFountain.recipes;
   if (visualizerSelect.value === 'innerspace') return window.InnerSpace.recipes;
   if (visualizerSelect.value === 'spaced') return window.Spaced.recipes;
@@ -142,6 +143,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'shysmiles') {
+    window.ShySmiles.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'champagnefountain') {
     window.ChampagneFountain.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -625,6 +632,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  shysmiles: {
+    ariaLabel: 'Shy Smiles: summer dresses, veiled glances, ice cream, golden light and shoes kicked off beneath slow fireworks',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Light and colour', speed: 'Moment pace' },
+    forms: [['firstlight', 'First Light'], ['sorbet', 'Summer Sorbet'], ['amber', 'Amber Memory'], ['nocturne', 'Firework Nocturne']],
+    defaults: { speed: '1' },
+  },
   champagnefountain: {
     ariaLabel: 'Champagne Fountain: two evening guests and a grand tourer frame cascading glasses that become a spinning cocktail carousel',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1761,6 +1775,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'shysmiles') {
+    const selected = ['firstlight', 'sorbet', 'amber', 'nocturne'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'champagnefountain') {
     const selected = ['gilded', 'rose', 'absinthe', 'midnight'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
@@ -2382,7 +2400,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" ? alchemyRecipeIndex() + 1 : step;
+    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "shysmiles" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 
@@ -2423,6 +2441,7 @@ function restartVisualizer() {
   if (window.Spaced) window.Spaced.reset();
   if (window.InnerSpace) window.InnerSpace.reset();
   if (window.ChampagneFountain) window.ChampagneFountain.reset();
+  if (window.ShySmiles) window.ShySmiles.reset();
 
   peakLevels = [];
   peakUpdatedAt = [];
