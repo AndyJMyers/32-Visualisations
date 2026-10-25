@@ -64,6 +64,7 @@ run(read('hansel-gretel.js'));
 run(read('opium-eater.js'));
 run(read('there-will-be-bones.js'));
 run(read('churchill.js'));
+run(read('iron-lady.js'));
 run(read('app.js'));
 assert.equal(w.document.querySelector('#settingsCatalogue').open, false, 'Desktop Garage stays closed at startup');
 const pressHideKey = key => w.document.body.dispatchEvent(new w.KeyboardEvent('keydown', {
@@ -99,7 +100,7 @@ audio.load = () => { audioLoads++; }; audio.play = () => { plays++; return Promi
 w.document.querySelector('#desktopSeasonButton').click();
 assert.equal(run('currentSeason'), 'autumn');
 assert.equal(run('visualizerSelect.value'), 'ralphwatch');
-assert.equal(run('visualizerSelect.options.length'), 28, 'Expose the twenty-eight implemented Autumn scenes');
+assert.equal(run('visualizerSelect.options.length'), 29, 'Expose the twenty-nine implemented Autumn scenes');
 assert.equal(audio.currentTime, 37.5); assert.equal(audioLoads + plays + pauses, 0, 'Season switching must not touch transport');
 assert.equal(w.document.body.dataset.season, 'autumn');
 assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Autumn');
@@ -380,7 +381,13 @@ for (const [i, form] of ['newsreel', 'dispatches', 'oils', 'blackout'].entries()
   run(`applyAlchemicalAdjustment(${i})`);
   assert.equal(run('fireworkFormSelect.value'), form, 'Churchill Alchemy selects the intended treatment');
 }
-for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','mondrian.js','pollocks.js','your-call.js','birds-eye.js','walk-egyptian.js','romans.js','life-studies.js','old-school-games.js','spaced.js','inner-space.js','champagne-fountain.js','shy-smiles.js','beowulf.js','hansel-gretel.js','opium-eater.js','there-will-be-bones.js','churchill.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
+run('visualizerSelect.value="ironlady"; visualizerSelect.dispatchEvent(new Event("change"))');
+assert.equal(run('activeAlchemyRecipes().length'), 4, 'The Iron Lady offers four distinct treatments');
+for (const [i, form] of ['steel', 'ink', 'coal', 'neon'].entries()) {
+  run(`applyAlchemicalAdjustment(${i})`);
+  assert.equal(run('fireworkFormSelect.value'), form, 'Iron Lady Alchemy selects the intended treatment');
+}
+for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','mondrian.js','pollocks.js','your-call.js','birds-eye.js','walk-egyptian.js','romans.js','life-studies.js','old-school-games.js','spaced.js','inner-space.js','champagne-fountain.js','shy-smiles.js','beowulf.js','hansel-gretel.js','opium-eater.js','there-will-be-bones.js','churchill.js','iron-lady.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
 assert.deepEqual(failures, []);
 dom.window.close();
 console.log('Season integration and full-day Canvas simulation passed.');
