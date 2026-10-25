@@ -91,7 +91,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain'], ['shysmiles', '23 · Shy Smiles'], ['beowulf', '24 · Beowulf'], ['hanselgretel', '25 · Hansel & Gretel'], ['opiumeater', '26 · Confessions of an Opium Eater']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain'], ['shysmiles', '23 · Shy Smiles'], ['beowulf', '24 · Beowulf'], ['hanselgretel', '25 · Hansel & Gretel'], ['opiumeater', '26 · Confessions of an Opium Eater'], ['bones', '27 · There Will Be Bones'], ['churchill', '28 · The Life of Winston Churchill']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -105,12 +105,14 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 26 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 28 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'churchill') return window.Churchill.recipes;
+  if (visualizerSelect.value === 'bones') return window.ThereWillBeBones.recipes;
   if (visualizerSelect.value === 'opiumeater') return window.OpiumEater.recipes;
   if (visualizerSelect.value === 'hanselgretel') return window.HanselGretel.recipes;
   if (visualizerSelect.value === 'beowulf') return window.Beowulf.recipes;
@@ -146,6 +148,18 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'churchill') {
+    window.Churchill.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
+  }
+  if (visualizerSelect.value === 'bones') {
+    window.ThereWillBeBones.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'hanselgretel') {
     window.HanselGretel.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -653,6 +667,20 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  churchill: {
+    ariaLabel: 'The Life of Winston Churchill: Blenheim, the Omdurman cavalry charge, Boer War reporting and escape, the Admiralty, Chartwell, writing and wartime leadership',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Historical alchemy', speed: 'Life pace' },
+    forms: [['newsreel', 'Imperial Newsreel'], ['dispatches', 'Ink & Dispatches'], ['oils', 'Chartwell Oils'], ['blackout', 'Blackout & Dawn']],
+    defaults: { speed: '1' },
+  },
+  bones: {
+    ariaLabel: 'There Will Be Bones: voles, ducks, humans, dinosaurs and android skeletons parade through four musical treatments',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Bone alchemy', speed: 'Procession pace' },
+    forms: [['cabinet', 'Cabinet of Curiosities'], ['xray', 'X-Ray Nocturne'], ['fossil', 'Fossil Fever'], ['cabaret', 'Midnight Cabaret']],
+    defaults: { speed: '1' },
+  },
   opiumeater: {
     ariaLabel: 'Confessions of an Opium Eater: a left-to-right journey from Oxford Street through music, visions and troubled dreams to dawn',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1817,6 +1845,14 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'churchill') {
+    const selected = ['newsreel', 'dispatches', 'oils', 'blackout'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
+  if (visualizerSelect.value === 'bones') {
+    const selected = ['cabinet', 'xray', 'fossil', 'cabaret'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'opiumeater') {
     const selected = ['london', 'scotland', 'greece', 'paris', 'rome'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
@@ -2457,7 +2493,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" ? alchemyRecipeIndex() + 1 : step;
+    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 
@@ -2502,6 +2538,8 @@ function restartVisualizer() {
   if (window.Beowulf) window.Beowulf.reset();
   if (window.HanselGretel) window.HanselGretel.reset();
   if (window.OpiumEater) window.OpiumEater.reset();
+  if (window.ThereWillBeBones) window.ThereWillBeBones.reset();
+  if (window.Churchill) window.Churchill.reset();
 
   peakLevels = [];
   peakUpdatedAt = [];
