@@ -14,6 +14,12 @@ It plays local audio from your device, works without an internet connection once
 
 No streaming account. No subscription. No bundled catalogue pretending to know your taste. Just your files, your device, your speakers, and thirty-two vivid ways to make sound visible.
 
+### Autumn is taking the stage
+
+![Autumn moving exhibition: Starry Night, The Scream, Old School Games and Beowulf](docs/images/autumn-gallery/autumn-exhibition.png)
+
+**29 new scenes in creative evaluation.** Paintings move. Myths misbehave. Arcades light up. [Walk through the Autumn exhibition](#autumn-collection).
+
 ## No Cloud. No Account. No Alibi.
 
 **32 Visualisations is a local tool, not a service asking to become a permanent feature of your life.**
@@ -50,11 +56,11 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
-Each collection has thirty-two visualisations. The original collection is Summer; Autumn is in development with another 32. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player. Eight Autumn scenes are currently available for creative evaluation alongside Summer's original 32.
+Each collection is planned for thirty-two visualisations. The original collection is Summer; Autumn is in development with 29 scenes currently available for creative evaluation. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player.
 
 ### Autumn Collection
 
-Four glimpses of the collection in development, from a watchful winter landscape to the last mow of the year.
+It began in the woods and the garden. Four early glimpses, from a watchful landscape to the last mow of the year:
 
 <p>
   <img src="docs/images/autumn-teasers/01-ralphs-last-watch.png" alt="Ralph's Last Watch: sheep and wolves in an autumn landscape" width="24%">
@@ -62,6 +68,54 @@ Four glimpses of the collection in development, from a watchful winter landscape
   <img src="docs/images/autumn-teasers/03-dawn-cobweb.png" alt="Dawn Cobweb: spiders and dew in the morning light" width="24%">
   <img src="docs/images/autumn-teasers/04-last-mow.png" alt="Last Mow of the Year: the gardener and robin" width="24%">
 </p>
+
+Since then the collection has gone through paintings, myth, arcades, politics, inner space and a fair amount of trouble. These are **frames captured from the running visualisations**, not concept art. In the player they move, change alchemy, and answer the music.
+
+#### Paint Escapes the Frame
+
+**Starry Night** / A village beneath an impossible, restless sky. Vincent had to stop painting; ours does not.
+
+![Starry Night: a cobalt village beneath a swirling, incandescent sky](docs/images/autumn-gallery/01-starry-night.png)
+
+**Water Lilies** / Reflections break, reform and dance to the music.
+
+![Water Lilies: luminous flowers and ripples in an animated pond](docs/images/autumn-gallery/02-water-lilies.png)
+
+<p>
+  <img src="docs/images/autumn-gallery/03-the-scream.png" alt="The Scream: a lone figure on a bridge beneath an orange sky" width="49%">
+  <img src="docs/images/autumn-gallery/04-mondrian.png" alt="Mondrian: coloured rectangles held in a bold black grid" width="49%">
+</p>
+
+**The Scream** / A bridge with somewhere unsettling to go. &nbsp;&nbsp; **Mondrian** / Geometry with a beat.
+
+**A load of Pollocks** / Paint arrives with conviction, then keeps arriving.
+
+![A load of Pollocks: thrown enamel lines and splashes crossing a pale canvas](docs/images/autumn-gallery/05-pollocks.png)
+
+Each scene has its own alchemies: different palettes, moods, viewpoints and degrees of glorious misbehaviour.
+
+#### Stories With Teeth
+
+**Walk like an Egyptian** / A procession with its own rhythm. The Nile, the desert and the Book of the Dead take turns.
+
+![Walk like an Egyptian: a sunlit procession of dancing figures](docs/images/autumn-gallery/06-walk-egyptian.png)
+
+**Old School Games** / Insert coin, summon chaos. Robots, Kerplunk, invaders and company.
+
+![Old School Games: colourful Space Invaders and a flying saucer](docs/images/autumn-gallery/07-old-school-games.png)
+
+**Beowulf** / The old hall answers back. Grendel, the mere and the dragon await.
+
+![Beowulf: Grendel confronts the hero in a torchlit hall](docs/images/autumn-gallery/08-beowulf.png)
+
+<p>
+  <img src="docs/images/autumn-gallery/09-churchill.png" alt="The Life of Winston Churchill: the War Rooms and a map under pressure" width="49%">
+  <img src="docs/images/autumn-gallery/10-iron-lady.png" alt="The Iron Lady: Margaret Thatcher at the door of Number Ten" width="49%">
+</p>
+
+**The Life of Winston Churchill** / From Blenheim to the War Rooms. &nbsp;&nbsp; **The Iron Lady** / Number Ten, and the arguments that followed.
+
+Elsewhere in Autumn: a magpie takes flight, a squirrel hides a nut, a combine crosses the field, and a commute refuses to end. There are 29 scenes in evaluation, with three places still to fill.
 
 #### Rat Race v1.0
 
