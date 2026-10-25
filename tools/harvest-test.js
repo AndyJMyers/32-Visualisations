@@ -26,6 +26,11 @@ for (let i = 0; i <= 1460; i++) {
   if (i === 150) departingBirds = frame.birds;
   if (i === 250) laterBirds = frame.birds;
   stages.add(frame.stage);
+  assert.equal(frame.dogs.length, 2, 'Two dogs run through the harvest');
+  for (const dog of frame.dogs) {
+    assert.ok(dog.y - 40 > frame.combineY + 22 || Math.abs(dog.x - frame.combineX) > 180,
+      'Dogs remain clear of the combine and its header');
+  }
   if (i > 700 && frame.stage === 'boarding') boardedAgain = true;
   if (i === 700) scrollStart = frame;
   if (i === 730) scrollMiddle = frame;
@@ -70,6 +75,7 @@ assert.ok(nextFieldCut.cut[0] > 0, 'The combine cuts the new field');
 assert.equal(boardedAgain, false, 'The farmer boards only once');
 assert.ok(frame.bass > .6 && frame.treble > .3, 'Music changes motion and dust');
 assert.ok(frame.fieldIndex >= 2, 'The harvest can continue through further fields');
+assert.notEqual(earlyBirds.kiteX, laterBirds.kiteX);
 assert.equal(earlyBirds.robinStage, 'perched');
 assert.equal(departingBirds.robinStage, 'departing');
 assert.equal(laterBirds.robinStage, 'gone');

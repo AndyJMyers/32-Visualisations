@@ -71,6 +71,28 @@ window.HarvestTime = (() => {
     }
     c.restore();
   }
+  function dogsAt(t) {
+    return [0, 1].map(i => {
+      const run = (t * (.21 + i * .07) + i * .43) % 2;
+      return { x: 90 + (run < 1 ? run : 2 - run) * 705,
+        y: 452 + i * 25 + Math.sin(t * 2.1 + i * 3) * 3,
+        facing: run < 1 ? 1 : -1, gait: t * (10 + i * 3) };
+    });
+  }
+  function dog(c, state, colour) {
+    c.save(); c.translate(state.x, state.y); c.scale(state.facing, 1);
+    const stride = Math.sin(state.gait) * 5;
+    oval(c, 0, 3, 29, 4, '#47382355');
+    path(c, colour, 5, [-12,-12,-17 + stride,0]);
+    path(c, colour, 5, [10,-12,15 - stride,0]);
+    path(c, colour, 4, [-20,-19,-31,-30 + Math.sin(state.gait * .5) * 5]);
+    oval(c, 0, -19, 22, 11, colour);
+    oval(c, 20, -24, 9, 8, colour);
+    shape(c, colour, [16,-29,15,-40,22,-33]);
+    oval(c, 28, -21, 4, 3, '#2d2b2a');
+    oval(c, 23, -26, 1.5, 1.5, '#f5e6c5');
+    c.restore();
+  }
   function wheat(c, x, y, scale, sway, colour) {
     path(c, colour, Math.max(.8, scale), [x, y, x + sway, y - 9 * scale]);
     oval(c, x + sway, y - 10 * scale, 1.7 * scale, 4 * scale, colour);
@@ -234,6 +256,7 @@ window.HarvestTime = (() => {
     const mood = ['amber', 'blue', 'storm'].includes(opts.form) ? opts.form : 'amber';
     const story = storyAt(time);
     const birds = birdsAt(time);
+    const dogs = dogsAt(time);
     c.save(); c.scale(w / 900, h / 500);
     const sky = c.createLinearGradient(0, 0, 0, 300);
     const colours = mood === 'blue' ? ['#41576d','#b29f86','#c7a661'] : mood === 'storm' ? ['#495557','#ac9872','#d4ad58'] : ['#71878a','#eac189','#e9b963'];
@@ -315,6 +338,8 @@ window.HarvestTime = (() => {
       c.fillStyle = `rgba(26, 42, 41, ${story.barnEntry * .9})`;
       c.fillRect(789, 230, 38, 38);
     }
+    dog(c, dogs[0], '#5b4533');
+    dog(c, dogs[1], '#dbbb82');
     if (mood === 'storm') {
       c.save(); c.strokeStyle = '#dce5e888'; c.lineWidth = 1.5;
       for (let i = 0; i < 95; i++) {
@@ -330,7 +355,7 @@ window.HarvestTime = (() => {
       c.restore();
     }
     c.restore();
-    return { time, mood, bass, treble, ...story, birds };
+    return { time, mood, bass, treble, ...story, birds, dogs };
   }
   return { recipes, draw, reset };
 })();
