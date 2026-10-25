@@ -780,7 +780,7 @@ const visualizerConfigs = {
     defaults: { speed: '1' },
   },
   autumndrive: {
-    ariaLabel: 'Autumn Drive: a first-person drive through autumn countryside in a classic car',
+    ariaLabel: 'Autumn Drive: a first-person classic-car drive through Yorkshire, New England, Tokyo, Tuscany and the Alps',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
     labels: { form: 'Car', speed: 'Pace' },
     forms: [['chimaera', 'TVR Chimaera'], ['cloud', 'Rolls-Royce Silver Cloud'], ['azure', 'Bentley Azure'], ['sagaris', 'TVR Sagaris'], ['gt40', 'Ford GT40'], ['duesenberg', 'Duesenberg'], ['miura', 'Lamborghini Miura']],
