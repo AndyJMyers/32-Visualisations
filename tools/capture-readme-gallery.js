@@ -22,6 +22,7 @@ const shots = [
 ];
 
 fs.mkdirSync(output, { recursive: true });
+if (!process.argv.includes('--poster-only')) {
 for (const [filename, source, exportedName, form, seconds] of shots) {
   const sandbox = { window: {}, Math };
   vm.runInNewContext(fs.readFileSync(path.join(root, source), 'utf8'), sandbox);
@@ -40,6 +41,7 @@ for (const [filename, source, exportedName, form, seconds] of shots) {
   fs.writeFileSync(path.join(output, filename), canvas.toBuffer('image/png'));
   console.log(`${filename}: ${JSON.stringify(state)}`);
 }
+}
 
 async function captureExhibitionPoster() {
   const poster = createCanvas(1600, 920);
@@ -52,7 +54,7 @@ async function captureExhibitionPoster() {
   context.font = 'bold 34px Arial';
   context.textAlign = 'right';
   context.fillStyle = '#f3bd62';
-  context.fillText('29 / 32', 1556, 82);
+  context.fillText('30 / 32', 1556, 82);
 
   const panels = [
     ['01-starry-night.png', 'STARRY NIGHT', 0, 0],
