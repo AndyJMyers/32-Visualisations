@@ -1,4 +1,4 @@
-/* Autumn 30: a satirical, music-led passage through the Blair years. */
+/* Autumn 30: a music-led interpretation of the Blair years. */
 window.TonyBlair = (() => {
   const TAU = Math.PI * 2;
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));

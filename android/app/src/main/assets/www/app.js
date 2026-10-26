@@ -682,7 +682,7 @@ const defaultVisualizerLabels = {
 
 const visualizerConfigs = {
   blair: {
-    ariaLabel: 'Tony Blair: a satirical procession through the landslide, immigration policy, a contested fiscal bargain, arm\'s-length government, the Iraq dossier, war and public debt',
+    ariaLabel: 'Tony Blair: a music-led interpretation of the landslide, immigration policy, the fiscal bargain, arm\'s-length government, the Iraq dossier, war and public debt',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
     labels: { form: 'Political alchemy', speed: 'Story pace' },
     forms: [['red', 'New Labour Red'], ['newsprint', 'Westminster Newsprint'], ['dossier', 'Dossier Green'], ['neon', 'Debt Neon']],

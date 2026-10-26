@@ -115,7 +115,7 @@ Each scene has its own alchemies: different palettes, moods, viewpoints and degr
 
 **The Life of Winston Churchill** / From Blenheim to the War Rooms. &nbsp;&nbsp; **The Iron Lady** / Number Ten, and the arguments that followed.
 
-**Tony Blair: The Great Satan** / A satirical procession through the landslide, the gates, the fiscal bargain, Iraq and the public debt ledger.
+**Tony Blair: The Great Satan** / A music-led interpretation of the landslide, the gates, the fiscal bargain, Iraq and the public debt ledger.
 
 Elsewhere in Autumn: a magpie takes flight, a squirrel hides a nut, a combine crosses the field, and a commute refuses to end. There are 30 scenes in evaluation, with two places still to fill.
 
