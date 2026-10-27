@@ -91,7 +91,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain'], ['shysmiles', '23 · Shy Smiles'], ['beowulf', '24 · Beowulf'], ['hanselgretel', '25 · Hansel & Gretel'], ['opiumeater', '26 · Confessions of an Opium Eater'], ['bones', '27 · There Will Be Bones'], ['churchill', '28 · The Life of Winston Churchill'], ['ironlady', '29 · The Iron Lady'], ['blair', '30 · Tony Blair: The Great Satan'], ['pnp', '31 · P = NP?']];
+  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain'], ['shysmiles', '23 · Shy Smiles'], ['beowulf', '24 · Beowulf'], ['hanselgretel', '25 · Hansel & Gretel'], ['opiumeater', '26 · Confessions of an Opium Eater'], ['bones', '27 · There Will Be Bones'], ['churchill', '28 · The Life of Winston Churchill'], ['ironlady', '29 · The Iron Lady'], ['blair', '30 · Tony Blair: The Great Satan'], ['pnp', '31 · P = NP?'], ['plentyofpuff', '32 · Plenty of Puff']];
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -105,12 +105,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 31 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 32 scenes in evaluation'); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (currentSeason !== 'autumn') return alchemicalRecipes;
+  if (visualizerSelect.value === 'plentyofpuff') return window.PlentyOfPuff.recipes;
   if (visualizerSelect.value === 'pnp') return window.PEqualsNP.recipes;
   if (visualizerSelect.value === 'blair') return window.TonyBlair.recipes;
   if (visualizerSelect.value === 'ironlady') return window.IronLady.recipes;
@@ -151,6 +152,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'plentyofpuff') {
+    window.PlentyOfPuff.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'pnp') {
     window.PEqualsNP.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -688,6 +695,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  plentyofpuff: {
+    ariaLabel: 'Plenty of Puff: a great steam engine drives mill machinery while a chimney climber ascends and a forge strikes iron',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Industrial alchemy', speed: 'Engine pace' },
+    forms: [['brass', 'Brass & Soot'], ['furnace', 'Furnace Glow'], ['blueprint', "Engineer’s Blueprint"], ['night', 'Night Shift']],
+    defaults: { speed: '1' },
+  },
   pnp: {
     ariaLabel: 'P equals NP question: branching search, quick verification, a hidden-cost oracle and an unresolved conjecture',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -1887,6 +1901,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'plentyofpuff') {
+    const selected = ['brass', 'furnace', 'blueprint', 'night'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'pnp') {
     const selected = ['blueprint', 'chalk', 'clockwork', 'cosmos'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
@@ -2547,7 +2565,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" ? alchemyRecipeIndex() + 1 : step;
+    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" || visualizer === "plentyofpuff" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 

@@ -18,7 +18,7 @@ No streaming account. No subscription. No bundled catalogue pretending to know y
 
 ![Autumn moving exhibition: Starry Night, The Scream, Old School Games and Beowulf](docs/images/autumn-gallery/autumn-exhibition.png)
 
-**31 new scenes in creative evaluation.** Paintings move. Myths misbehave. Arcades light up. [Walk through the Autumn exhibition](#autumn-collection).
+**32 new scenes in creative evaluation.** Paintings move. Myths misbehave. Arcades light up. [Walk through the Autumn exhibition](#autumn-collection).
 
 ## No Cloud. No Account. No Alibi.
 
@@ -56,7 +56,7 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
-Each collection is planned for thirty-two visualisations. The original collection is Summer; Autumn is in development with 31 scenes currently available for creative evaluation. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player.
+Each collection is planned for thirty-two visualisations. The original collection is Summer; Autumn is in development with 32 scenes currently available for creative evaluation. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player.
 
 ### Autumn Collection
 
@@ -119,7 +119,9 @@ Each scene has its own alchemies: different palettes, moods, viewpoints and degr
 
 **P = NP?** / A branching search, a quick check, an oracle with its costs out of sight, and a question still open.
 
-Elsewhere in Autumn: a magpie takes flight, a squirrel hides a nut, a combine crosses the field, and a commute refuses to end. There are 31 scenes in evaluation, with one place still to fill.
+**Plenty of Puff** / A beam engine breathes, belts drive a mill, a flat-capped climber scales the chimney, and iron sings under the forge hammer.
+
+Elsewhere in Autumn: a magpie takes flight, a squirrel hides a nut, a combine crosses the field, and a commute refuses to end. All 32 scenes are now in creative evaluation.
 
 #### Rat Race v1.0
 
