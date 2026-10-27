@@ -54,7 +54,7 @@ async function captureExhibitionPoster() {
   context.font = 'bold 34px Arial';
   context.textAlign = 'right';
   context.fillStyle = '#f3bd62';
-  context.fillText('30 / 32', 1556, 82);
+  context.fillText('31 / 32', 1556, 82);
 
   const panels = [
     ['01-starry-night.png', 'STARRY NIGHT', 0, 0],

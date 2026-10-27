@@ -66,6 +66,7 @@ run(read('there-will-be-bones.js'));
 run(read('churchill.js'));
 run(read('iron-lady.js'));
 run(read('blair.js'));
+run(read('p-np.js'));
 run(read('app.js'));
 assert.equal(w.document.querySelector('#settingsCatalogue').open, false, 'Desktop Garage stays closed at startup');
 const pressHideKey = key => w.document.body.dispatchEvent(new w.KeyboardEvent('keydown', {
@@ -394,7 +395,13 @@ for (const [i, form] of ['red', 'newsprint', 'dossier', 'neon'].entries()) {
   run(`applyAlchemicalAdjustment(${i})`);
   assert.equal(run('fireworkFormSelect.value'), form, 'Blair Alchemy selects the intended treatment');
 }
-for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','mondrian.js','pollocks.js','your-call.js','birds-eye.js','walk-egyptian.js','romans.js','life-studies.js','old-school-games.js','spaced.js','inner-space.js','champagne-fountain.js','shy-smiles.js','beowulf.js','hansel-gretel.js','opium-eater.js','there-will-be-bones.js','churchill.js','iron-lady.js','blair.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
+run('visualizerSelect.value="pnp"; visualizerSelect.dispatchEvent(new Event("change"))');
+assert.equal(run('activeAlchemyRecipes().length'), 4, 'P = NP? offers four distinct treatments');
+for (const [i, form] of ['blueprint', 'chalk', 'clockwork', 'cosmos'].entries()) {
+  run(`applyAlchemicalAdjustment(${i})`);
+  assert.equal(run('fireworkFormSelect.value'), form, 'P = NP? Alchemy selects the intended treatment');
+}
+for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','mondrian.js','pollocks.js','your-call.js','birds-eye.js','walk-egyptian.js','romans.js','life-studies.js','old-school-games.js','spaced.js','inner-space.js','champagne-fountain.js','shy-smiles.js','beowulf.js','hansel-gretel.js','opium-eater.js','there-will-be-bones.js','churchill.js','iron-lady.js','blair.js','p-np.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
 assert.deepEqual(failures, []);
 dom.window.close();
 console.log('Season integration and full-day Canvas simulation passed.');
