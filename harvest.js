@@ -294,6 +294,13 @@ window.HarvestTime = (() => {
     } else {
       field(c, story.cut, story.fieldIndex);
     }
+    const deliveredLoads = story.fieldIndex + (story.stage === 'delivery' && story.barnEntry > .9 ? 1 : 0);
+    // Each completed trip leaves a visible stack beside the grain store.
+    for (let i = 0; i < Math.min(deliveredLoads, 7); i++) {
+      const x = 753 + i % 4 * 25, y = 286 + Math.floor(i / 4) * 15;
+      shape(c, '#a98149', [x,y,x + 19,y,x + 22,y + 12,x - 2,y + 12]);
+      path(c, '#e9c984', 2, [x + 1,y + 2,x + 17,y + 2]);
+    }
     robin(c, time);
     if (story.stage === 'unloading' || story.stage === 'delivery') lorry(c, story.lorryX, story.lorryY, story.lorrySize, story.load, story.lorryTurn || 0);
     combine(c, story.combineX, story.combineY, story.pass < 0 ? 1 : 1 + story.pass * .04,
@@ -355,7 +362,7 @@ window.HarvestTime = (() => {
       c.restore();
     }
     c.restore();
-    return { time, mood, bass, treble, ...story, birds, dogs };
+    return { time, mood, bass, treble, ...story, deliveredLoads, birds, dogs };
   }
   return { recipes, draw, reset };
 })();

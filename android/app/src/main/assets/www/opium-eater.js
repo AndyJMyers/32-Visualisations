@@ -237,6 +237,62 @@ window.OpiumEater = (() => {
       oval(c, x, y, 1.5 + pulse * 2, 1.5 + pulse * 2, `${p.light}88`);
     }
   }
+  function worldSignature(c, p, form, tick, pulse, chapter) {
+    if (form === 'london') {
+      for (let i = 0; i < 5; i++) {
+        const x = 45 + i * 205 + Math.sin(tick * .27 + i) * 19;
+        oval(c, x, 350 + i % 2 * 23, 120 + pulse * 24, 27, '#a6a5a222');
+      }
+      for (let i = 0; i < 4; i++) {
+        const x = 103 + i * 221;
+        oval(c, x, 286, 21 + pulse * 10, 53 + pulse * 15, `${p.light}20`);
+        line(c, p.ink, 5, [x, 500, x, 289]);
+      }
+    } else if (form === 'scotland') {
+      for (let i = 0; i < 55; i++) {
+        const x = (noise(i * 11) * 1100 + tick * 75) % 1050 - 75;
+        const y = (noise(i * 19) * 570 + tick * 155) % 540 - 20;
+        line(c, `${p.mist}67`, 1.2, [x, y, x - 12, y + 28]);
+      }
+      for (let i = 0; i < 3; i++) {
+        const x = 112 + i * 310;
+        shape(c, '#181b30b0', [x,350,x + 22,284,x + 42,350]);
+      }
+    } else if (form === 'greece') {
+      for (let i = 0; i < 9; i++) {
+        const x = (i * 137 + tick * 7) % 1010 - 40;
+        const y = 380 + i % 3 * 34;
+        line(c, '#fff3d277', 2, [x,y,x + 35 + pulse * 20,y - 3]);
+      }
+      for (let i = 0; i < 6; i++) {
+        const x = 80 + i * 160, y = 54 + i % 3 * 35;
+        oval(c, x + Math.sin(tick + i) * 8, y, 5 + pulse * 3, 2, '#f7e8c5aa');
+      }
+    } else if (form === 'paris') {
+      for (let i = 0; i < 8; i++) {
+        const x = i * 135 + Math.sin(tick * .3 + i) * 12;
+        line(c, `${p.light}59`, 3, [x,361,x - 19,500]);
+        oval(c, x - 8, 427, 12 + pulse * 8, 41, `${p.accent}33`);
+      }
+      if (chapter === 'music' || chapter === 'city') {
+        for (let i = 0; i < 11; i++) {
+          const x = (tick * 24 + i * 91) % 950;
+          oval(c, x, 80 + Math.sin(tick + i) * 30, 2 + pulse * 3, 2 + pulse * 3, p.light);
+        }
+      }
+    } else {
+      for (let i = 0; i < 18; i++) {
+        const x = (noise(i * 17) * 950 + Math.sin(tick * .43 + i) * 26) % 920;
+        const y = 70 + noise(i * 23) * 340;
+        oval(c, x, y, 2 + pulse * 2, 2, `${p.light}70`);
+      }
+      for (let i = 0; i < 4; i++) {
+        const x = 100 + i * 239;
+        c.strokeStyle = `${p.light}4c`; c.lineWidth = 2;
+        c.beginPath(); c.ellipse(x, 405, 78 + pulse * 12, 13, 0, 0, Math.PI * 2); c.stroke();
+      }
+    }
+  }
   const scenes = { street, apothecary, music: concert, city, dream, dawn };
   function chapterAt(t) {
     let elapsed = ((t % duration) + duration) % duration;
@@ -251,6 +307,7 @@ window.OpiumEater = (() => {
     sky.addColorStop(0, p.sky); sky.addColorStop(1, p.wall);
     c.fillStyle = sky; c.fillRect(0, 0, 900, 500);
     scenes[chapter.id](c, p, tick, pulse, form);
+    worldSignature(c, p, form, tick, pulse, chapter.id);
     const haze = c.createLinearGradient(0, 0, 900, 0);
     haze.addColorStop(0, `${p.mist}00`); haze.addColorStop(.5, `${p.mist}19`); haze.addColorStop(1, `${p.mist}00`);
     c.fillStyle = haze; c.fillRect(0, 0, 900, 500);

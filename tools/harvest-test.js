@@ -66,15 +66,18 @@ assert.ok(deliveryEnd.lorryX < deliveryTurn.lorryX && deliveryEnd.lorryY < deliv
   'The curved tramline brings the lorry back towards the shed');
 assert.ok(deliveryEnd.lorrySize < .35 && deliveryEnd.barnEntry > .8,
   'The truck fits the doorway and disappears into the darker store');
+assert.equal(deliveryEnd.deliveredLoads, 1, 'The first delivery remains at the store');
 assert.equal(scrollStart.stage, 'reposition', 'The combine continues after the delivery');
 assert.equal(scrollMiddle.fieldIndex, 1, 'The camera advances to the next field');
 assert.ok(scrollMiddle.scroll > .4 && scrollMiddle.scroll < .6, 'The completed field scrolls out');
 assert.equal(nextFieldStart.stage, 'cutting', 'The next field starts without repeating the opening');
 assert.equal(nextFieldStart.fieldIndex, 1);
+assert.equal(nextFieldStart.deliveredLoads, 1, 'Stored grain survives the move to the next field');
 assert.ok(nextFieldCut.cut[0] > 0, 'The combine cuts the new field');
 assert.equal(boardedAgain, false, 'The farmer boards only once');
 assert.ok(frame.bass > .6 && frame.treble > .3, 'Music changes motion and dust');
 assert.ok(frame.fieldIndex >= 2, 'The harvest can continue through further fields');
+assert.ok(frame.deliveredLoads >= 2, 'Later field deliveries accumulate');
 assert.notEqual(earlyBirds.kiteX, laterBirds.kiteX);
 assert.equal(earlyBirds.robinStage, 'perched');
 assert.equal(departingBirds.robinStage, 'departing');

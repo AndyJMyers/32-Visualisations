@@ -137,6 +137,19 @@ window.LastMow = (() => {
       const fraction = clamp(pass - i, 0, 1);
       c.fillStyle = i % 2 ? '#617f55' : '#829a69';
       c.fillRect(i % 2 ? 1000 - 500 * fraction : 500, 378 + i * 68, 500 * fraction, 68);
+      if (fraction > 0) {
+        const left = i % 2 ? 1000 - 500 * fraction : 500;
+        const right = left + 500 * fraction;
+        for (const trackY of [397 + i * 68, 429 + i * 68]) {
+          line(c, left, trackY, right, trackY, '#405a3e44', 4);
+        }
+        for (let j = 0; j < 28; j++) {
+          const x = 504 + noise(i * 47 + j) * 488;
+          if (x < left || x > right) continue;
+          const y = 386 + i * 68 + noise(i * 91 + j) * 52;
+          oval(c, x, y, 3 + noise(j * 23) * 3, 1.3, '#a7ac7399');
+        }
+      }
     }
     for (let i = 0; i < 150; i++) {
       const x = noise(i + 450) * 1000, y = 391 + noise(i + 600) * 255;
@@ -177,7 +190,7 @@ window.LastMow = (() => {
     const vignette = c.createRadialGradient(500, 300, 170, 500, 300, 720);
     vignette.addColorStop(0, '#00000000'); vignette.addColorStop(1, '#1a201a88'); c.fillStyle = vignette; c.fillRect(0, 0, 1000, 650);
     c.restore();
-    return { time, stage, mowed, mowerX: mx, mowerY, direction, expression, drinking, leaves: 58, rain: 38, robin: true, tea, leaving };
+    return { time, stage, mowed, cutPasses: pass, mowerX: mx, mowerY, direction, expression, drinking, leaves: 58, rain: 38, robin: true, tea, leaving };
   }
   return { draw, reset, recipes };
 })();

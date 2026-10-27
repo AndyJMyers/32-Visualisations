@@ -30,6 +30,7 @@ assert.deepEqual([...stages].sort(), ['caching', 'carrying', 'gathering', 'searc
 assert.equal(selected.size, 2, 'The point of view switches between named squirrels');
 assert.equal(directions.size, 2, 'Squirrels face both ways along their journey');
 assert.ok(positions.size > 10, 'Squirrels travel along their routes');
+assert.ok(frame.cacheCounts[0] >= 1, 'Earlier trips leave a visible cache for each squirrel');
 assert.ok(frame.bass > .6 && frame.treble > .3, 'Music levels influence the scene');
 const paused = scene.draw(context, 400, 800, 100000, { animate: false });
 assert.equal(paused.time, frame.time);

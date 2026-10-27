@@ -29,9 +29,9 @@ window.StarryNight = (() => {
     [86, 86, 8], [192, 152, 12], [280, 65, 7], [364, 132, 10], [495, 68, 8],
     [565, 155, 12], [645, 75, 8], [734, 126, 11], [805, 65, 23], [865, 205, 7], [460, 208, 5],
   ];
-  let time = 0, phase = 0, last = null, bass = 0, mid = 0, treble = 0;
+  let time = 0, phase = 0, last = null, bass = 0, mid = 0, treble = 0, motionDrive = 0;
 
-  function reset() { time = 0; phase = 0; last = null; bass = 0; mid = 0; treble = 0; }
+  function reset() { time = 0; phase = 0; last = null; bass = 0; mid = 0; treble = 0; motionDrive = 0; }
   function ellipse(c, x, y, rx, ry, fill) {
     c.fillStyle = fill; c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, TAU); c.fill();
   }
@@ -286,9 +286,11 @@ window.StarryNight = (() => {
     bass += (clamp(Number(opts.bass) || 0, 0, 1) - bass) * easing;
     mid += (clamp(Number(opts.mid) || 0, 0, 1) - mid) * easing;
     treble += (clamp(Number(opts.treble) || 0, 0, 1) - treble) * easing;
+    const energy = clamp(bass * .35 + mid * .45 + treble * .2, 0, 1);
+    motionDrive += (energy - motionDrive) * (1 - Math.exp(-dt * (energy > motionDrive ? 3 : 1.3)));
     const speed = clamp(Number(opts.speed) || 1, .2, 3);
     time += dt * speed;
-    phase += dt * speed * (1.15 + mid * 1.2);
+    phase += dt * speed * (.28 + motionDrive * 2.2);
     const form = palettes[opts.form] ? opts.form : 'cobalt';
     const palette = palettes[form];
     const movement = phase * (form === 'silver' ? 1.25 : 1);
@@ -300,7 +302,7 @@ window.StarryNight = (() => {
     else if (form === 'silver') bareTree(c, palette, movement);
     else cypress(c, palette, movement);
     c.restore();
-    return { time, form, bass, mid, treble };
+    return { time, form, bass, mid, treble, phase, motionDrive };
   }
   return { recipes, draw, reset };
 })();

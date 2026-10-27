@@ -32,6 +32,7 @@ assert.ok(states[100].mowed > .5 && states[100].mowed < .75, 'The first pass vis
 assert.equal(states[250].stage, 'tea'); assert.equal(states[250].mowed, .75); assert.equal(states[250].tea, true);
 assert.equal(states[500].stage, 'finishing'); assert.ok(states[500].mowed > .75 && states[500].mowed < 1);
 assert.equal(states[680].stage, 'home'); assert.equal(states[680].mowed, 1); assert.equal(states[680].leaving, true);
+assert.equal(states[680].cutPasses, 4, 'All four tracked and clipped passes remain at the end of the day');
 assert.equal(states[761].stage, 'mowing', 'The story starts again after the day ends');
 assert.ok(sawFlask, 'The gardener takes a nip while mowing');
 assert.equal(directions.size, 2, 'The mower makes outward and return passes');

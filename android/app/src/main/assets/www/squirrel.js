@@ -93,6 +93,16 @@ window.SquirrelSequestering = (() => {
     const count = 4;
     for (let i = 0; i < count; i++) {
       const trip = journey(t, i), x = w * trip.x, y = h * trip.y;
+      const stored = Math.min(6, Math.floor(t / 16 + i * .17));
+      const cacheX = w * trip.cacheX, cacheY = h * trip.cacheY;
+      if (stored) {
+        ellipse(c, cacheX, cacheY + 3, w * .029, h * .015, '#473820');
+        for (let nut = 0; nut < stored; nut++) {
+          acorn(c, cacheX + (nut % 3 - 1) * w * .012, cacheY - Math.floor(nut / 3) * h * .01,
+            Math.max(.18, w / 1500));
+        }
+        ellipse(c, cacheX, cacheY + 7, w * .035, h * .012, '#876641');
+      }
       ellipse(c, x, y + 3, w * .04, h * .012, '#26312466');
       const size = Math.min(w / 560, h / 330) * (.75 + i * .09);
       squirrel(c, x, y, size, t, i, trip.stage === 'carrying', trip.facing, trip.moving);
@@ -138,7 +148,9 @@ window.SquirrelSequestering = (() => {
       acorn(c, w * .5 + sway * w * .012, h * .72 + bob, Math.min(w, h) / 145);
     } else {
       ellipse(c, w * .5, groundY + h * .02, w * .12, h * .06, '#392a20');
-      acorn(c, w * .5, groundY, Math.min(w, h) / 180);
+      const stored = Math.min(6, Math.floor(t / 16 + selected * .17));
+      for (let i = 0; i <= stored; i++) acorn(c, w * (.5 + (i % 3 - 1) * .055), groundY - Math.floor(i / 3) * h * .025,
+        Math.min(w, h) / 210);
       if (p > .9) leaf(c, w * .5, groundY - h * .015, 2.2, .8, '#c18a43');
     }
     for (const side of [-1, 1]) {
@@ -183,7 +195,8 @@ window.SquirrelSequestering = (() => {
       c.restore();
     });
     c.restore();
-    return { time, stage, portrait, squirrels: 4, selected: names[selected], journeys: names.map((_, i) => journey(time, i)), bass, treble };
+    return { time, stage, portrait, squirrels: 4, selected: names[selected], journeys: names.map((_, i) => journey(time, i)),
+      cacheCounts: names.map((_, i) => Math.floor(time / 16 + i * .17)), bass, treble };
   }
   return { recipes, draw, reset };
 })();

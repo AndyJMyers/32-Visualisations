@@ -16,6 +16,7 @@ assert.deepEqual(Array.from(drive.regions, region => region.id),
   ['yorkshire', 'newengland', 'tokyo', 'tuscany', 'alps']);
 drive.reset();
 let frame;
+let sawOpenRoad = false;
 for (let i = 0; i <= 50; i++) frame = drive.draw(context, 900, 500, i * 100, { bass: .7, treble: .4 });
 assert.equal(frame.car, 'chimaera');
 assert.ok(frame.time > 4 && frame.bass > .6 && frame.treble > .3);
@@ -43,8 +44,10 @@ for (let i = 1; i <= 1500; i++) {
   frame = drive.draw(context, 800, 480, 110100 + i * 100, { form: 'chimaera' });
   visited.add(frame.region);
   if (frame.transition > 0 && frame.transition < 1) sawTransition = true;
+  if (frame.region === 'alps' && frame.openRoad > .95) sawOpenRoad = true;
   assert.equal(frame.car, 'chimaera', 'The cockpit does not change with the landscape');
 }
 assert.deepEqual([...visited].sort(), ['alps', 'newengland', 'tokyo', 'tuscany', 'yorkshire']);
 assert.ok(sawTransition, 'Landscapes blend into one another while driving');
+assert.ok(sawOpenRoad, 'The Alpine bends open into a calmer final stretch');
 console.log('Driving regions, passing showers, car selection, music response and pause checks passed.');

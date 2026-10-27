@@ -157,9 +157,11 @@ window.AutumnDrive = (() => {
     }
   }
   function alpineCenter(depth) {
-    const sweep = Math.sin(time * .23) * .2 + Math.sin(time * .47 + 1.2) * .12;
+    const openRoad = smooth(((time % regionDuration) - 18) / 6);
+    const bendStrength = 1 - openRoad * .82;
+    const sweep = (Math.sin(time * .23) * .2 + Math.sin(time * .47 + 1.2) * .12) * bendStrength;
     return .5 + (1 - depth) * sweep
-      + Math.sin(time * .32 + (1 - depth) * Math.PI * 2.2) * Math.sin(Math.PI * depth) * .21;
+      + Math.sin(time * .32 + (1 - depth) * Math.PI * 2.2) * Math.sin(Math.PI * depth) * .21 * bendStrength;
   }
   function alpineRoad(c, motion) {
     function strip(extra) {
@@ -356,7 +358,8 @@ window.AutumnDrive = (() => {
     c.textAlign = 'left'; c.font = '600 .018px sans-serif'; c.fillStyle = '#f9e8c8cc'; c.fillText(car.name.toUpperCase(), .025, .05);
     c.textAlign = 'right'; c.fillText((transition > .5 ? nextRegion : region).name.toUpperCase(), .975, .05);
     c.restore();
-    return { time, car: car.id, region: region.id, transition, wheelSide: car.id === 'miura' ? 'left' : 'right', bass, treble, shower };
+    return { time, car: car.id, region: region.id, transition, wheelSide: car.id === 'miura' ? 'left' : 'right',
+      openRoad: region.id === 'alps' ? smooth((regionPhase - 18) / 6) : 0, bass, treble, shower };
   }
   return { cars, regions, recipes, draw, reset };
 })();

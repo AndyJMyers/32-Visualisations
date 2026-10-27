@@ -22,7 +22,9 @@ window.PlentyOfPuff = (() => {
   };
   let time = 0;
   let last = null;
-  function reset() { time = 0; last = null; }
+  let cyclePhase = 0;
+  let drive = 0;
+  function reset() { time = 0; last = null; cyclePhase = 0; drive = 0; }
   function rect(c, x, y, w, h, colour) { c.fillStyle = colour; c.fillRect(x, y, w, h); }
   function line(c, x1, y1, x2, y2, colour, width = 2) {
     c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2);
@@ -97,10 +99,18 @@ window.PlentyOfPuff = (() => {
     line(c, pistonX, 380, crankX, crankY, p.line, 15);
     rect(c, pistonX - 30, 359, 60, 42, p.metal);
     disc(c, crankX, crankY, 10, p.hot);
-    line(c, 165, 261, 661, 230 + Math.sin(phase) * 30, p.metal, 21);
+    const tilt = Math.sin(phase) * .12;
+    const beamLeft = 252 - 178 * tilt, beamRight = 252 + 318 * tilt;
+    line(c, 165, beamLeft, 661, beamRight, p.metal, 21);
     disc(c, 343, 252, 16, p.hot);
-    line(c, 661, 230 + Math.sin(phase) * 30, 639, 375, p.line, 10);
-    line(c, 173, 260, 205, 418, p.line, 13);
+    line(c, 661, beamRight, crankX, crankY, p.line, 10);
+    line(c, 173, beamLeft, 205, 418, p.line, 13);
+    const exhaust = Math.pow(Math.max(0, Math.cos(phase * 2)), 8) * (.22 + beat * .78);
+    for (let i = 0; i < 9; i++) {
+      const age = (time * 39 + i * 13) % 90;
+      disc(c, pistonX - 36 - age * .42, 356 - age * .32, 2 + age * .11,
+        `${p.smoke}${Math.round(exhaust * (1 - age / 90) * 135).toString(16).padStart(2, '0')}`);
+    }
     for (let i = 0; i < 13; i++) {
       const x = (i * 69 + time * 91) % 960;
       disc(c, x, 428 - (i % 3) * 13, 3 + beat * 2, `${p.hot}a0`);
@@ -116,14 +126,14 @@ window.PlentyOfPuff = (() => {
     line(c, 75, 119, 888, 119, p.shadow, 24);
     for (let i = 0; i < 5; i++) {
       const x = 138 + i * 170;
-      wheel(c, p, x, 125, 29, phase * (i % 2 ? -1 : 1), beat);
+      wheel(c, p, x, 125, 29, phase, beat);
       disc(c, x, 327, 22, p.metal, true, 7);
       line(c, x - 20, 125, x - 20, 327, p.shadow, 5);
       line(c, x + 20, 125, x + 20, 327, p.shadow, 5);
       rect(c, x - 51, 351, 102, 91, p.shadow);
       rect(c, x - 42, 361, 84, 60, p.metal);
       for (let j = 0; j < 8; j++) line(c, x - 38 + j * 10, 365, x - 38 + j * 10, 418, p.line, 2);
-      const shuttle = Math.sin(phase * 1.4 + i * .3) * 33;
+      const shuttle = Math.sin(phase + i * .3) * 33;
       rect(c, x - 15 + shuttle, 391, 30, 8, p.hot);
     }
     line(c, 45, 277, 915, 277, p.line, 6);
@@ -151,8 +161,11 @@ window.PlentyOfPuff = (() => {
     line(c, 429, 94, 429, 449, p.line, 5);
     line(c, 452, 94, 452, 449, p.line, 5);
     for (let y = 102; y < 452; y += 22) line(c, 429, y, 452, y, p.line, 4);
-    const climbY = 407 - (local / 14) * 304;
-    climber(c, p, 435, climbY, Math.sin(phase * 2));
+    const progress = local < 6 ? .56 * local / 6 : local < 8 ? .56 : .56 + .44 * (local - 8) / 6;
+    const resting = local >= 6 && local < 8;
+    const climbY = 407 - progress * 304;
+    climber(c, p, 435, climbY, resting ? 0 : Math.sin(phase * 2));
+    line(c, 430, climbY + 35, 448, climbY + 35, p.line, 2);
     line(c, 510, 180, 670, 180, p.metal, 5);
     line(c, 670, 180, 670, 436, p.metal, 4);
     disc(c, 670, 180, 18, p.hot, true, 5);
@@ -186,27 +199,32 @@ window.PlentyOfPuff = (() => {
     rect(c, 454, 357, 105, 10, p.hot);
     wheel(c, p, 771, 354, 79, phase, beat);
     disc(c, 771, 354, 47, p.shadow);
+    const impact = Math.pow(Math.max(0, Math.sin(phase * 1.35)), 12);
     for (let i = 0; i < 26; i++) {
       const a = i * 2.4 + time * 3;
-      const burst = strike * (20 + beat * 40);
+      const burst = impact * (20 + beat * 55);
       disc(c, 510 + Math.cos(a) * burst * (i % 4 + 1) * .35,
-        360 + Math.sin(a) * burst * (i % 3 + 1) * .35, 2 + beat * 2, p.hot);
+        360 + Math.sin(a) * burst * (i % 3 + 1) * .35, impact * (2 + beat * 2), p.hot);
     }
     text(c, 'IRON TAKES THE BEAT', 755, 223, 21, p.line);
   }
   const scenes = [engine, mill, climb, forge];
   function draw(c, width, height, now, options = {}) {
-    const elapsed = last === null ? 0 : clamp((now - last) / 1000, 0, .08);
-    last = now;
-    if (options.animate !== false) time += elapsed * clamp(Number(options.speed) || 1, .2, 3);
+    const animate = options.animate !== false;
+    const elapsed = !animate || last === null ? 0 : clamp((now - last) / 1000, 0, .08);
+    last = animate ? now : null;
+    const speed = clamp(Number(options.speed) || 1, .2, 3);
+    if (animate) time += elapsed * speed;
     const index = Math.floor(time / 14) % chapters.length;
     const local = time % 14;
     const bass = clamp(options.bass || 0, 0, 1);
     const treble = clamp(options.treble || 0, 0, 1);
     const beat = clamp(bass * .8 + (options.mid || 0) * .35 + treble * .2, 0, 1);
+    drive += (beat - drive) * (1 - Math.exp(-elapsed * 5));
+    if (animate) cyclePhase += elapsed * speed * (.48 + drive * 2.1);
     const form = palettes[options.form] ? options.form : 'brass';
     const p = palettes[form];
-    const phase = time * (1.55 + bass * 1.2);
+    const phase = cyclePhase;
     c.save(); c.scale(width / 960, height / 540);
     backdrop(c, p, form, beat);
     scenes[index](c, p, beat, phase, local);
@@ -217,7 +235,8 @@ window.PlentyOfPuff = (() => {
     text(c, chapters[index][1], 24, 521, 18, p.line, 'left');
     for (let i = 0; i < 4; i++) rect(c, 822 + i * 30, 512, 20, 7, i === index ? p.hot : p.metal);
     c.restore();
-    return { chapter: chapters[index][0], index, form, beat, time };
+    return { chapter: chapters[index][0], index, form, beat, drive, phase, time,
+      climbProgress: index === 2 ? (local < 6 ? .56 * local / 6 : local < 8 ? .56 : .56 + .44 * (local - 8) / 6) : null };
   }
   return { chapters, recipes, draw, reset };
 })();

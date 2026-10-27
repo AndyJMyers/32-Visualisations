@@ -15,20 +15,31 @@ const canvas = createCanvas(960, 540);
 const context = canvas.getContext('2d');
 const visited = new Set();
 const previews = [];
+let previousPhase = 0;
+let restingHeight = null;
 for (let frame = 0; frame < 1200; frame++) {
   const state = scene.draw(context, 960, 540, frame * 50, {
     bass: frame % 11 < 3 ? .9 : .26, mid: .4, treble: .35,
   });
   visited.add(state.chapter);
   assert.ok(state.beat >= 0 && state.beat <= 1);
+  assert.ok(state.phase >= previousPhase, 'A bass hit cannot reverse the drive shaft');
+  assert.ok(state.phase - previousPhase < .2, 'A bass hit cannot jump the drive shaft');
+  previousPhase = state.phase;
+  if (state.index === 2 && state.time % 14 >= 6 && state.time % 14 < 8) {
+    if (restingHeight === null) restingHeight = state.climbProgress;
+    assert.equal(state.climbProgress, restingHeight, 'The climber rests at a rung before continuing');
+  }
   if (Math.abs(state.time % 14 - 6) < .025 && previews.length <= state.index) {
     previews.push(canvas.toBuffer('image/png'));
   }
 }
 assert.equal(visited.size, 4, 'Every movement appears');
 assert.equal(previews.length, 4, 'Every movement has a preview');
+assert.notEqual(restingHeight, null, 'The climb includes a resting beat');
 const frozen = scene.draw(context, 960, 540, 61000, { animate: false });
 assert.equal(scene.draw(context, 960, 540, 62000, { animate: false }).time, frozen.time);
+assert.equal(scene.draw(context, 960, 540, 62000, { animate: false }).phase, frozen.phase);
 for (const form of forms) {
   assert.equal(scene.draw(context, 960, 540, 62000, { animate: false, form }).form, form);
 }
