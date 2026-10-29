@@ -91,4 +91,23 @@ assert.equal(paused.time, frame.time);
 const resumed = scene.draw(context, 400, 800, 110000);
 assert.equal(resumed.time, paused.time, 'Resuming does not skip the story');
 for (const mood of ['amber','blue','storm']) assert.equal(scene.draw(context, 800, 480, 110100, { form: mood }).mood, mood);
+scene.reset();
+const catches = new Set(), observedDives = new Set();
+let firstCatch, laterMiss;
+for (let i = 0; i <= 870; i++) {
+  const sample = scene.draw(context, 900, 500, i * 100, { speed: 3 });
+  const bird = sample.birds;
+  if (Math.abs(sample.time % 27 - 17.7) > .11 || bird.diveIndex >= 10) continue;
+  observedDives.add(bird.diveIndex);
+  assert.ok(bird.kestrelY > 270, 'The kestrel dives low enough to reach the mouse');
+  assert.ok(bird.mouseVisible, 'The mouse appears for each hunting pass');
+  if (bird.caught) catches.add(bird.diveIndex);
+  if (bird.diveIndex === 0) firstCatch = bird;
+  if (bird.diveIndex === 1) laterMiss = bird;
+}
+assert.equal(observedDives.size, 10, 'Ten complete hunting passes are observable');
+assert.deepEqual([...catches], [0], 'Exactly one of ten dives catches the mouse');
+assert.ok(Math.abs(firstCatch.mouseX - firstCatch.kestrelX) < 1 &&
+  Math.abs(firstCatch.mouseY - firstCatch.kestrelY - 17) < 1, 'The caught mouse rises in the talons');
+assert.equal(laterMiss.caught, false, 'The next mouse gets away');
 console.log('Harvest boarding, repeated fields, grain transfer, storage run, birds, music response and pause checks passed.');

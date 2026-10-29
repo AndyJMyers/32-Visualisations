@@ -31,11 +31,23 @@ window.HarvestTime = (() => {
     const kiteBank = Math.sin(orbit) * .32;
     const kiteFlap = Math.max(0, 1 - Math.abs(t % 9 - 3) / 1.5) * Math.sin(t * 12);
     const hover = t % 27;
-    const kestrelX = 530 + Math.cos(t * .25) * 85 + Math.sin(t * 1.1) * 8;
-    const kestrelY = 153 + Math.sin(t * 1.3) * 4 + (hover > 15 && hover < 20 ? Math.sin((hover - 15) * Math.PI / 5) * 53 : 0);
+    const diveIndex = Math.floor(t / 27);
+    const combineXAtDive = storyAt(diveIndex * 27 + 17.5).combineX;
+    const mouseX = clamp(combineXAtDive + (combineXAtDive < 450 ? 210 : -210), 250, 720);
+    const catchDive = diveIndex % 10 === 0;
+    const dive = hover > 15 && hover < 20 ? Math.sin((hover - 15) * Math.PI / 5) : 0;
+    const orbitX = 530 + Math.cos(t * .25) * 85 + Math.sin(t * 1.1) * 8;
+    const kestrelX = orbitX + (mouseX - orbitX) * dive;
+    const kestrelY = 153 + Math.sin(t * 1.3) * 4 + dive * 128;
     const kestrelBank = Math.sin(t * .25) * .28;
     const robinStage = t < 12 ? 'perched' : t < 18 ? 'departing' : 'gone';
-    return { kiteX, kiteY, kiteBank, kiteFlap, kestrelX, kestrelY, kestrelBank, robinStage };
+    const caught = catchDive && hover >= 17.5 && hover < 20;
+    const mouseVisible = hover >= 12 && hover < 22 && (!catchDive || hover < 20);
+    const escape = !catchDive ? smooth((hover - 17.5) / 1.4) * 85 : 0;
+    return { kiteX, kiteY, kiteBank, kiteFlap, kestrelX, kestrelY, kestrelBank, robinStage,
+      diveIndex, catchDive, caught, mouseVisible,
+      mouseX: caught ? kestrelX : mouseX + escape,
+      mouseY: caught ? kestrelY + 17 : 298 };
   }
   function kite(c, x, y, bank, flap) {
     c.save(); c.translate(x, y); c.rotate(bank);
@@ -51,6 +63,21 @@ window.HarvestTime = (() => {
     shape(c, '#624b3b', [-2,0,-12,-tip,-24,-tip-4,-14,2,-4,5,0,3,4,5,14,2,24,-tip-4,12,-tip,2,0]);
     shape(c, '#765945', [-3,4,-5,16,0,12,5,16,3,4]);
     oval(c, 0, 1, 3, 5, '#d7b881');
+    path(c, '#b49a6d', 1.5, [-3,8,-5,17]);
+    path(c, '#b49a6d', 1.5, [3,8,5,17]);
+    c.restore();
+  }
+  function mouse(c, x, y, running, carried = false) {
+    c.save(); c.translate(x, y);
+    if (carried) c.rotate(.22);
+    const step = running ? Math.sin(time * 18) * 2 : 0;
+    path(c, '#8f7962', 1.5, [-5,2,-13,1 + step,-17,-3]);
+    oval(c, 0, 0, 7, 4, '#8e7863');
+    oval(c, 6, -2, 3.5, 3, '#a18a70');
+    oval(c, 4, -5, 1.8, 2, '#bd9d80');
+    oval(c, 8, -2, .8, .8, '#1c1a18');
+    path(c, '#675844', 1, [-2,3,-4,5 + step]);
+    path(c, '#675844', 1, [3,3,5,5 - step]);
     c.restore();
   }
   function robin(c, t) {
@@ -279,7 +306,6 @@ window.HarvestTime = (() => {
     shape(c, '#76816b', [0,245,150,199,310,231,460,186,650,224,800,195,900,227,900,330,0,330]);
     shape(c, '#576d58', [0,255,220,224,455,246,677,217,900,240,900,330,0,330]);
     kite(c, birds.kiteX, birds.kiteY, birds.kiteBank, birds.kiteFlap);
-    kestrel(c, birds.kestrelX, birds.kestrelY, Math.sin(time * 12), birds.kestrelBank);
     // The store and its lane stay in sight throughout the harvest.
     shape(c, '#ddd0a0', [748,214,818,193,869,213,869,268,748,268]);
     shape(c, '#6b5140', [736,214,819,177,880,212]);
@@ -301,6 +327,9 @@ window.HarvestTime = (() => {
       shape(c, '#a98149', [x,y,x + 19,y,x + 22,y + 12,x - 2,y + 12]);
       path(c, '#e9c984', 2, [x + 1,y + 2,x + 17,y + 2]);
     }
+    if (birds.mouseVisible) mouse(c, birds.mouseX, birds.mouseY,
+      !birds.caught && time % 27 >= 17.5, birds.caught);
+    kestrel(c, birds.kestrelX, birds.kestrelY, Math.sin(time * 12), birds.kestrelBank);
     robin(c, time);
     if (story.stage === 'unloading' || story.stage === 'delivery') lorry(c, story.lorryX, story.lorryY, story.lorrySize, story.load, story.lorryTurn || 0);
     combine(c, story.combineX, story.combineY, story.pass < 0 ? 1 : 1 + story.pass * .04,
