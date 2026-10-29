@@ -12,6 +12,12 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
+    <svg class="arcana-icon-definitions" aria-hidden="true" focusable="false">
+      <symbol id="arcana-icon-cups" viewBox="0 0 24 24"><path d="M5 5h14l-1.4 8.1a5.7 5.7 0 0 1-11.2 0L5 5Zm1.2 3.1c3.7 1.7 7.9 1.7 11.6 0M19 7h1.2a2.8 2.8 0 0 1 0 5.6h-2M12 18v3m-4 0h8m-6-3h4"/><path d="M9 3c-1.4-1.4 1.4-2 0-3m6 3c-1.4-1.4 1.4-2 0-3"/></symbol>
+      <symbol id="arcana-icon-swords" viewBox="0 0 24 24"><path d="m12 2 3.4 10-3.4 3.7L8.6 12 12 2Zm0 13.7V20m-5-5h10m-8 5h6m-3-18v10"/><path d="m5 5-1.5-1.5M19 5l1.5-1.5M4 9H2m20 0h-2"/></symbol>
+      <symbol id="arcana-icon-pentacles" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="6.7"/><path d="m12 6.7 1.5 3.2H17l-2.7 2 1 3.3-3.3-2-3.3 2 1-3.3-2.7-2h3.5L12 6.7Zm0-5v2m0 16v2M1 12h2m18 0h2"/></symbol>
+      <symbol id="arcana-icon-wands" viewBox="0 0 24 24"><path d="m6 18 11-12m-13 14 2 1 1-2m9-14 2 1 1-2M6 8V5m-1.5 1.5h3M19 17v-3m-1.5 1.5h3M17 4V2m-1 1h2"/></symbol>
+    </svg>
     <script>
       if (window.AndroidWaveDeck) {
         document.body.classList.add("android-car");
@@ -98,9 +104,9 @@
               <span id="carAgitationSymbol" class="car-symbol">&gt;</span>
               <span id="carAgitationLabel" class="car-button-kicker">Speed</span>
             </button>
-            <button id="carSeasonButton" class="car-icon-button car-season-button" type="button" aria-label="Season: Summer. Switch to Autumn">
-              <span class="car-symbol season-symbol" aria-hidden="true">◒</span>
-              <span id="carSeasonLabel" class="car-button-kicker">Summer</span>
+            <button id="carSeasonButton" class="car-icon-button car-season-button" type="button" aria-label="Arcana suit: Wands. Switch to Cups">
+              <svg class="car-symbol arcana-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#arcana-icon-wands"></use></svg>
+              <span id="carSeasonLabel" class="car-button-kicker">Wands</span>
             </button>
           </div>
           <div class="car-transport-row">
@@ -144,10 +150,9 @@
               <span>Alchemy</span><strong>&gt;</strong>
             </button>
           </div>
-          <button id="desktopSeasonButton" class="season-control" type="button" aria-label="Summer. Switch to Autumn">
-            <svg class="season-icon season-summer-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M19 5l-2 2M7 17l-2 2"/></svg>
-            <svg class="season-icon season-autumn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 3C11 3 4 6 4 14c0 4 3 7 7 6 7-1 9-9 9-17ZM4 21c3-5 6-8 11-11"/></svg>
-            <span id="desktopSeasonLabel">Summer</span>
+          <button id="desktopSeasonButton" class="season-control" type="button" aria-label="Arcana suit: Wands. Switch to Cups">
+            <svg class="season-icon arcana-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#arcana-icon-wands"></use></svg>
+            <span id="desktopSeasonLabel">Wands</span>
           </button>
           <input id="shuffleToggle" type="checkbox" hidden aria-hidden="true" tabindex="-1">
         </section>
@@ -375,6 +380,7 @@
     <script src="spaced.js"></script>
     <script src="inner-space.js"></script>
     <script src="champagne-fountain.js"></script>
+    <script src="punting-with-ladies.js"></script>
     <script src="shy-smiles.js"></script>
     <script src="beowulf.js"></script>
     <script src="hansel-gretel.js"></script>

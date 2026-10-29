@@ -6,21 +6,21 @@
 
 ## Short Description
 
-Your music. Two seasons. 64 visualisations. Offline and alive.
+Your music. Four Arcana suits. 64 visualisations. Offline and alive.
 
 ## Full Description
 
 32 Visualisations is a boutique Android music player for people who own their music and want it to look as good as it sounds.
 
-Your music. Two seasons. 64 visualisations. Summer's original 32 and Autumn's 32 moving worlds are included in the same one-off purchase. Choose your own music folder and watch your files drive colour, motion and story. Once installed and pointed at music, the player works offline: no streaming account, subscription or rented library.
+Your music. Four Arcana suits. 64 visualisations. Cups, Swords, Pentacles and Wands each gather sixteen music-responsive worlds, from fluid dreamscapes to mechanical theatre. Choose your own music folder and watch your files drive colour, motion and story. Once installed and pointed at music, the player works offline: no streaming account, subscription or rented library.
 
-Summer brings the vivid original collection. Autumn adds paintings in motion, strange journeys, small dramas and playful machinery. Each visualisation has Alchemy variations to change its colour, mood or behaviour. Switch seasons without interrupting the song.
+Across Cups, Swords, Pentacles and Wands, paintings move, strange journeys unfold, small dramas play out and machines come alive. Each visualisation has Alchemy variations to change its colour, mood or behaviour. Switch suits without interrupting the song.
 
-The controls keep the music close: play or pause, skip track, change visualisation, switch season, adjust speed or choose an Alchemy. To find a favourite in a large library, touch the visualisation for an alphabet wheel, a song wheel and text search. The Garage keeps library and detailed visual settings behind a discreet `*`.
+The controls keep the music close: play or pause, skip track, change visualisation, switch suit, adjust speed or choose an Alchemy. To find a favourite in a large library, touch the visualisation for an alphabet wheel, a song wheel and text search. The Garage keeps library and detailed visual settings behind a discreet `*`.
 
 The app plays your local files. It does not bundle a music catalogue or upload your library. There are no ads, accounts, rating popups or social-sharing interruptions inside the player.
 
-Pay once, keep playing. Both collections are part of the same app, including for existing owners. Just your files, your speakers and a screen full of motion.
+Pay once, keep playing. All four suits are part of the same app, including for existing owners. Just your files, your speakers and a screen full of motion.
 
 You do not have to be entirely normal to enjoy it, and that is rather the point.
 
@@ -28,10 +28,10 @@ You do not have to be entirely normal to enjoy it, and that is rather the point.
 
 - Play local audio from folders on your Android device.
 - Works without internet access once installed.
-- Explore 64 music visualisations across Summer and Autumn.
+- Explore 64 music visualisations across Cups, Swords, Pentacles and Wands.
 - Simple car-friendly interface designed for quick, familiar control in portrait or landscape.
 - Bluetooth, headset and lock-screen Play/Pause and track-skip controls.
-- Season, track skip, Visual, Speed and Alchemy controls.
+- Arcana, track skip, Visual, Speed and Alchemy controls.
 - Dual tactile song flywheels and text search for large libraries.
 - Optional Garage catalogue for library, visual and expression settings.
 - Audio-reactive visuals built for colour, movement, and atmosphere.
@@ -40,11 +40,11 @@ You do not have to be entirely normal to enjoy it, and that is rather the point.
 
 ## Screenshot Order
 
-1. Actual Android player with the Season control visible.
-2. Autumn visualisation with the player controls visible.
-3. Summer visualisation, showing the contrast between collections.
+1. Actual Android player with the Arcana suit control visible.
+2. A scene from Cups with the player controls visible.
+3. A scene from Swords, showing the contrast between suits.
 4. Dual flywheel and track-search controls.
-5. Further Autumn scenes and Alchemy variations, captured in the app.
+5. Further scenes and Alchemy variations, captured in the app.
 6. Local folder selection and The Garage if room remains.
 
 ## Store Assets

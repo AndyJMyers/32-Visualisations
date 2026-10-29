@@ -2511,6 +2511,16 @@ body[data-season="autumn"] .car-deck { background: linear-gradient(160deg, #352a
 body[data-season="autumn"] .settings-catalogue { --season-accent: #d6a16b; }
 .season-control { display: inline-flex; align-items: center; gap: 8px; color: #f0dfc0; border: 1px solid #9b7a55; border-radius: 10px; padding: 10px 14px; background: #282b31; cursor: pointer; font: inherit; }
 .season-icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.arcana-icon-definitions { position: absolute; width: 0; height: 0; overflow: hidden; }
+.arcana-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.55; stroke-linecap: round; stroke-linejoin: round; }
+.arcana-icon use { fill: none; stroke: currentColor; }
+.season-control .arcana-icon { color: var(--arcana-accent, #e8d29b); }
+body[data-arcana="cups"] { --arcana-accent: #62d7d0; }
+body[data-arcana="swords"] { --arcana-accent: #a9d8ed; }
+body[data-arcana="pentacles"] { --arcana-accent: #e6c76e; }
+body[data-arcana="wands"] { --arcana-accent: #f0a064; }
+body[data-arcana] .car-season-button .arcana-icon { color: var(--arcana-accent); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--arcana-accent) 70%, transparent)); }
+body[data-arcana] .season-control { border-color: color-mix(in srgb, var(--arcana-accent) 52%, #404852); }
 .season-autumn-icon, body[data-season="autumn"] .season-summer-icon { display: none; }
 body[data-season="autumn"] .season-autumn-icon { display: block; }
 .season-control:focus-visible, .car-season-button:focus-visible { outline: 3px solid #e6c18a; outline-offset: 3px; }

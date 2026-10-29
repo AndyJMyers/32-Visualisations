@@ -31,6 +31,7 @@ Copy-Item -LiteralPath (Join-Path $repoRoot "old-school-games.js") -Destination 
 Copy-Item -LiteralPath (Join-Path $repoRoot "spaced.js") -Destination (Join-Path $assetRoot "spaced.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "inner-space.js") -Destination (Join-Path $assetRoot "inner-space.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "champagne-fountain.js") -Destination (Join-Path $assetRoot "champagne-fountain.js") -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot "punting-with-ladies.js") -Destination (Join-Path $assetRoot "punting-with-ladies.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "shy-smiles.js") -Destination (Join-Path $assetRoot "shy-smiles.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "beowulf.js") -Destination (Join-Path $assetRoot "beowulf.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "hansel-gretel.js") -Destination (Join-Path $assetRoot "hansel-gretel.js") -Force

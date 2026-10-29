@@ -58,6 +58,7 @@ run(read('old-school-games.js'));
 run(read('spaced.js'));
 run(read('inner-space.js'));
 run(read('champagne-fountain.js'));
+run(read('punting-with-ladies.js'));
 run(read('shy-smiles.js'));
 run(read('beowulf.js'));
 run(read('hansel-gretel.js'));
@@ -81,7 +82,7 @@ pressHideKey('x');
 assert.equal(w.document.querySelector('.player').classList.contains('desktop-controls-hidden'), false, 'Another key restores controls');
 const search = w.document.querySelector('#songWheelSearch');
 search.focus();
-run('visualizerSelect.value="asteroids"');
+run('visualizerSelect.value="eyevisions"');
 for (const [key, code] of [['f', 'KeyF'], ['t', 'KeyT'], ['w', 'KeyW'], [' ', 'Space']]) {
   const event = new w.KeyboardEvent('keydown', { key, code, bubbles: true, cancelable: true });
   search.dispatchEvent(event);
@@ -89,9 +90,15 @@ for (const [key, code] of [['f', 'KeyF'], ['t', 'KeyT'], ['w', 'KeyW'], [' ', 'S
   assert.equal(w.document.activeElement, search, `Track search retains focus on ${code}`);
 }
 search.blur();
-assert.equal(run('visualizerSelect.options.length'), 32, 'Summer retains all 32 visuals');
+assert.equal(run('visualizerSelect.options.length'), 16, 'The active Arcana suit exposes sixteen visuals');
 assert.equal(run('currentSeason'), 'summer');
-assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Summer');
+assert.equal(run('currentArcanaSuit'), 'wands');
+assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Wands');
+for (const suit of ['cups', 'swords', 'pentacles', 'wands']) {
+  w.document.querySelector('#desktopSeasonButton').click();
+  assert.equal(run('currentArcanaSuit'), suit, `Arcana selector advances to ${suit}`);
+  assert.equal(run('visualizerSelect.options.length'), suit === 'pentacles' ? 17 : 16, `${suit} shows its assigned visuals`);
+}
 // A saved shuffle preference must migrate to sequential playback.
 run('restoreControlPreferences({controls:{shuffle:true,visualizer:"fireworks",form:"woman",speed:"1.4",grasp:"0.75"}})');
 assert.equal(run('shuffleToggle.checked'), false);
@@ -100,13 +107,17 @@ audio.src = 'http://localhost/music.wav'; audio.currentTime = 37.5;
 let audioLoads = 0, plays = 0, pauses = 0;
 audio.load = () => { audioLoads++; }; audio.play = () => { plays++; return Promise.resolve(); }; audio.pause = () => { pauses++; };
 w.document.querySelector('#desktopSeasonButton').click();
+assert.equal(run('currentArcanaSuit'), 'cups');
+assert.equal(run('visualizerSelect.value'), 'swampbubbles');
+assert.equal(run('visualizerSelect.options.length'), 16, 'A suit displays its sixteen assigned visuals');
+assert.equal(audio.currentTime, 37.5); assert.equal(audioLoads + plays + pauses, 0, 'Suit switching must not touch transport');
+assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Cups');
+assert.equal(w.document.querySelectorAll('#desktopSeasonButton .arcana-icon').length, 1, 'The active suit icon remains visible');
+run('setSeason("autumn")');
 assert.equal(run('currentSeason'), 'autumn');
 assert.equal(run('visualizerSelect.value'), 'ralphwatch');
-assert.equal(run('visualizerSelect.options.length'), 32, 'Expose all thirty-two Autumn scenes');
-assert.equal(audio.currentTime, 37.5); assert.equal(audioLoads + plays + pauses, 0, 'Season switching must not touch transport');
+assert.equal(run('visualizerSelect.options.length'), 33, 'Internal Autumn rendering remains available');
 assert.equal(w.document.body.dataset.season, 'autumn');
-assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Autumn');
-assert.equal(w.document.querySelectorAll('#desktopSeasonButton .season-icon').length, 2, 'Season icons survive updates');
 assert.equal(run('activeAlchemyRecipes().length'), 7);
 assert.ok(w.document.querySelector('#fireworkFormSelect').closest('label').classList.contains('autumn-time-control'), 'GARAGE exposes the time-of-day selector');
 // The entire Garage flywheel and direct Alchemy action use the Autumn recipes.

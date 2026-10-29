@@ -1,8 +1,6 @@
 # 32 Visualisations
 
-> **Autumn is in production — creative development is underway, not yet released.**
-> The original 32 are now the **Summer** collection. One player, one music library, seasonal visuals and alchemies.
-> The creative cycle runs from **May 2026 to May 2027**. See [season status and development workflow](docs/SEASONS.md).
+> **Four Arcana suits. Sixty-four visualisations in the current Play build.**
 
 **Your music. Local. Offline. One fair price. Turned all the way up.**
 
@@ -10,15 +8,15 @@
 
 32 Visualisations is a boutique Android music player for people who still own their music and want it to look as good as it sounds.
 
-It plays local audio from your device, works without an internet connection once installed, and turns your files into 32 vivid audio-reactive visualisations. It began as a desktop local music player with a taste for **Mental. Saturation. Overstimulation.** It has grown into an Android road-trip music player built for big stereos, strange colour, and cockpit-simple controls.
+It plays local audio from your device, works without an internet connection once installed, and turns your files into 64 vivid audio-reactive visualisations across two collections. It began as a desktop local music player with a taste for **Mental. Saturation. Overstimulation.** It has grown into an Android road-trip music player built for big stereos, strange colour, and cockpit-simple controls.
 
-No streaming account. No subscription. No bundled catalogue pretending to know your taste. Just your files, your device, your speakers, and thirty-two vivid ways to make sound visible.
+No streaming account. No subscription. No bundled catalogue pretending to know your taste. Just your files, your device, your speakers, and sixty-four vivid ways to make sound visible.
 
-### Autumn is taking the stage
+### Four suits. Sixty-four strange little worlds.
 
 ![Autumn moving exhibition: Starry Night, The Scream, Old School Games and Beowulf](docs/images/autumn-gallery/autumn-exhibition.png)
 
-**32 new scenes in creative evaluation.** Paintings move. Myths misbehave. Arcades light up. [Walk through the Autumn exhibition](#autumn-collection).
+The full collection is grouped into **Cups, Swords, Pentacles and Wands**, sixteen visuals apiece. The groupings are moods, not rankings; each keeps its own mix of the original and newer visual lineages. Paintings move. Myths misbehave. Arcades light up. [Walk through the visual exhibition](#autumn-collection).
 
 ## No Cloud. No Account. No Alibi.
 
@@ -47,16 +45,16 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Plays local audio files from a folder on your Android device.
 - Works without internet connectivity once installed.
 - Supports `.wav`, `.mp3`, `.m4a`, `.aac`, `.flac`, `.ogg`, and `.opus`.
-- Preserves Summer’s **32** audio-reactive visualisations and adds an Autumn collection in development.
+- Includes **64** audio-reactive visualisations, grouped into Cups, Swords, Pentacles and Wands.
 - Runs as a desktop browser app or an offline-first Android WebView app.
-- Offers car-style Android controls for play/pause, previous/next track, next visualisation, `Season`, `Alchemy`, and `Speed`.
+- Offers car-style Android controls for play/pause, previous/next track, next visualisation, `Arcana`, `Alchemy`, and `Speed`.
 - Uses `Alchemy` to apply artistically chosen visual settings.
 - Uses `Speed` to cycle visual agitation through five colour-coded steps.
 - Lets Android and desktop listeners browse large libraries with a temporary dual flywheel: alphabet outside, songs inside.
 - Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
 - Keeps your music local.
 
-Each collection is planned for thirty-two visualisations. The original collection is Summer; Autumn is in development with 32 scenes currently available for creative evaluation. Thirty-two remains binary, balanced, mellow in its intonation and just faintly occult. The Season control selects the collection within the same player.
+Each Arcana suit has sixteen visualisations. Cups gathers fluid, intimate and dreamlike scenes; Swords holds conflict, tension and puzzles; Pentacles leans into craft, nature and material life; Wands brings spectacle, play and unruly energy. The original Summer and newer Autumn lineages remain in the art, but no longer determine how listeners browse it.
 
 ### Autumn Collection
 
@@ -121,7 +119,7 @@ Each scene has its own alchemies: different palettes, moods, viewpoints and degr
 
 **Plenty of Puff** / A beam engine breathes, belts drive a mill, a flat-capped climber scales the chimney, and iron sings under the forge hammer.
 
-Elsewhere in Autumn: a magpie takes flight, a squirrel hides a nut, a combine crosses the field, and a commute refuses to end. All 32 scenes are now in creative evaluation.
+Elsewhere among the Autumn-origin scenes: a magpie takes flight, a squirrel hides a nut, a combine crosses the field, and a commute refuses to end. All 32 remain in the four-suit catalogue.
 
 #### Rat Race v1.0
 
@@ -176,7 +174,7 @@ Click the visualisation to bring up the desktop orbital: a deliberately oversize
 |---|---|
 | ![Turtle River with Grievance, Hunger and Munchiness controls](docs/images/controls-turtle-river.png)<br>**Grievance. Hunger. Munchiness.** | ![Oyster Pearls with Tide, Shell size and Pearl making controls](docs/images/controls-oyster-pearls.png)<br>**Tide. Shell size. Pearl making.** |
 
-## Summer — the original 32
+## Original collection — 32
 
 | | | | |
 |---|---|---|---|
@@ -208,7 +206,7 @@ The app opens ready for your own local music. Use Android's folder picker to cho
 Desktop:
 
 - `Play/Pause`, `Prev`, and `Next` handle the library.
-- `Season` switches Summer and Autumn without changing the music.
+- `Arcana` cycles Cups, Swords, Pentacles and Wands without changing the music.
 - `Up` and `Down` move through visualisations.
 - `Left` and `Right` move through tracks.
 - `F` or `F4` toggles the visual stage.
@@ -220,7 +218,7 @@ Android car mode:
 - `Visual` advances to the next visualisation.
 - `Alchemy` applies alchemical adjustment.
 - `Speed` changes the visual agitation step.
-- Season switches between Summer and the Autumn preview.
+- Arcana switches between four suits of sixteen visuals each.
 - The transport row handles previous, play/pause, and next.
 
 ## Status

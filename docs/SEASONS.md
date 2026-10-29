@@ -1,13 +1,13 @@
-# Seasons: May 2026 – May 2027
+# Seasons: Design and Development Archive
 
-**Autumn is in production: creative development underway; not yet released.**
+**Current status:** Summer and Autumn are both included in the production Android release 1.0.18 (version code 18), published on 29 October 2026. This page preserves the original seasonal design brief and development notes; older per-scene testing comments below describe their state at the time they were written.
 
 ## Collections and player
 
 - Summer: the original 32 visualisations, renamed for their full-on spirit. The Season button identifies this collection as Summer.
-- Autumn: another 32 visualisations and their own alchemies, in development.
+- Autumn: 32 visualisations and their own alchemies, released alongside Summer.
 - One Google Play app and one local player, with the same music library and established playback mechanics.
-- Season replaces Shuffle in the existing control slot; it cycles Summer and the Autumn preview. No empty seasons presented as finished.
+- Season occupies the existing control slot and switches between Summer and Autumn.
 - Switching seasons must not interrupt the track. Remember each season's last visual and alchemy.
 - Background and interface tint reflect the selected season, maintaining control contrast.
 - Seasons are selected by the listener, not forced by the calendar.
@@ -19,7 +19,7 @@ The source snapshot before seasonal changes is commit `33157f6a87a7849cb712c3e5e
 
 Preserved baseline branch: `baseline/summer-1.0.17-2026-10-16`. Keep this branch at the snapshot; do not develop or merge Autumn into it. This is a branch, not a Git tag. It preserves the current repository state, not a verified match to the live Google Play binary.
 
-Ongoing development, including Autumn, takes place on `master`. Its presence in the repository does not mean the Autumn collection has been released on Google Play.
+The seasonal changes were developed on `master` and are now part of the released app. The preserved baseline above remains a historical source snapshot, not a verified match to the current Play binary.
 
 For a quick fix from the preserved snapshot:
 
@@ -40,7 +40,7 @@ Music supplies movement and atmosphere: bass weights pursuit, percussion accents
 
 Initial alchemies: First Snow; The Hungry Dark; Whiteout; Blood Moon; Red on White. Vary weather, light, palette and behavioural pressures. Proposed treatment: a wide view, strong animal silhouettes and crimson on snow.
 
-Status: first procedural scene draft implemented, with Season switching on desktop and Android assets. All 32 Autumn scenes are available for creative evaluation. This collection has not yet shipped on Google Play.
+Status: first procedural scene draft implemented; the full Autumn collection shipped with 1.0.18. The descriptive notes in this document preserve the original creative brief and iteration history.
 
 The full day takes four minutes at 1× visual speed: misty dawn, dark snowy mid-morning, low afternoon glare, a copper-violet sunset, then night. Dawn returns under a snow curtain. GARAGE can hold a particular time of day, adjust pace, snow depth, pack size and slaughter. There is no separate gore ceiling. Autumn Alchemy and the GARAGE Alchemy wheel share seven recipes: First Snow, The Hungry Dark, Whiteout, Blood Moon, Red on White, Woolly Pandemonium and Last Light. Some recipes hold a time of day; choose The whole day in GARAGE to resume the cycle.
 

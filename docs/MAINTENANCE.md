@@ -38,6 +38,6 @@ next structural cleanup should extract:
 Do that in staged commits so each extraction can be tested against desktop and
 Android behaviour.
 
-## Seasonal development
+## Collection model
 
-See [SEASONS.md](SEASONS.md) and root `seasons.json` for Summer baseline and Autumn status. Autumn is in creative production, not yet released. Develop on `master`; branch hotfixes from the verified release baseline. The Season-for-Shuffle control replacement is an explicitly agreed exception to the existing button-order rule: retain the same slot and button count, and verify both desktop and Android assets when it is implemented.
+See [ARCANA.md](ARCANA.md) for the live four-suit catalogue and [SEASONS.md](SEASONS.md) for the historical Summer/Autumn design record. The Arcana control occupies Shuffle's former slot: preserve the same slot and button count, and verify both desktop and Android assets when changing it. The internal source-family flag still chooses the correct renderer; it is not a listener-facing collection. Develop on `master`; branch hotfixes from the verified release baseline.

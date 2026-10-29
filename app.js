@@ -77,8 +77,64 @@ if (window.AndroidWaveDeck) {
 const desktopSeasonButton = document.querySelector('#desktopSeasonButton');
 const desktopSeasonLabel = document.querySelector('#desktopSeasonLabel');
 const summerVisualOptions = Array.from(visualizerSelect.options, o => [o.value, o.textContent]);
+const autumnVisualOptions = [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain'], ['shysmiles', '23 · Shy Smiles'], ['beowulf', '24 · Beowulf'], ['hanselgretel', '25 · Hansel & Gretel'], ['opiumeater', '26 · Confessions of an Opium Eater'], ['bones', '27 · There Will Be Bones'], ['churchill', '28 · The Life of Winston Churchill'], ['ironlady', '29 · The Iron Lady'], ['blair', '30 · Tony Blair: The Great Satan'], ['pnp', '31 · P = NP?'], ['plentyofpuff', '32 · Plenty of Puff'], ['puntingwithladies', '33 · Punting with Ladies']];
+const arcanaSuits = [
+  { id: 'cups', label: 'Cups', visuals: ['swampbubbles', 'lizardlouche', 'goddesskisses', 'turtleriver', 'oilslide', 'oysterpearls', 'waterlilies', 'innerspace', 'champagnefountain', 'shysmiles', 'ratrace', 'sunflowersmiles', 'opiumeater', 'lifestudies', 'dawncobweb', 'lingerie'] },
+  { id: 'swords', label: 'Swords', visuals: ['arrowstorm', 'knifethunk', 'lightning', 'asteroids', 'warofroses', 'thescream', 'yourcall', 'beowulf', 'churchill', 'ironlady', 'blair', 'pnp', 'bones', 'spaced', 'romans', 'oldschoolgames'] },
+  { id: 'pentacles', label: 'Pentacles', visuals: ['branchhands', 'tipustiger', 'climbinggarden', 'bobrossgarden', 'cathedralorganism', 'mondrian', 'pollocks', 'toadstools', 'lastmow', 'squirrel', 'autumndrive', 'harvest', 'birdseye', 'plentyofpuff', 'ralphwatch', 'hanselgretel', 'puntingwithladies'] },
+  { id: 'wands', label: 'Wands', visuals: ['fireworks', 'pacdance', 'cephalopod', 'discojive', 'glitterfall', 'butterflyhost', 'octopusocclusion', 'mandelbrot', 'eyevisions', 'interzoneoracles', 'hypnoticflight', 'kaleidoscope', 'snakeconga', 'starrynight', 'walkegyptian', 'equalizer'] },
+];
+const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, label.replace(/^\d+\s*[·.]\s*/, '')]));
+const visualSourceSeason = new Map([...summerVisualOptions.map(([value]) => [value, 'summer']), ...autumnVisualOptions.map(([value]) => [value, 'autumn'])]);
+const arcanaSuitByVisual = new Map(arcanaSuits.flatMap(suit => suit.visuals.map(value => [value, suit.id])));
+if (allVisualOptions.size !== 65 || arcanaSuitByVisual.size !== 65 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
+  throw new Error('Arcana catalogue must assign all 65 visuals exactly once, with at least sixteen per suit.');
+}
+let currentArcanaSuit = arcanaSuitByVisual.get(visualizerSelect.value) || 'cups';
 let currentSeason = 'summer';
 let seasonMemories = {};
+let arcanaMemories = {};
+
+function setArcanaSuit(next, { save = true, remember = true, restore = true } = {}) {
+  const suit = arcanaSuits.find(item => item.id === next) || arcanaSuits[0];
+  if (suit.id === currentArcanaSuit && Array.from(visualizerSelect.options).length === suit.visuals.length) return;
+  if (remember) arcanaMemories[currentArcanaSuit] = captureSeasonPreferences();
+  currentArcanaSuit = suit.id;
+  const memory = restore ? arcanaMemories[suit.id] : null;
+  const preferred = memory?.visualizer && suit.visuals.includes(memory.visualizer) ? memory.visualizer : null;
+  const current = suit.visuals.includes(visualizerSelect.value) ? visualizerSelect.value : null;
+  const selected = preferred || current || suit.visuals[0];
+  visualizerSelect.replaceChildren(...suit.visuals.map(value => new Option(allVisualOptions.get(value), value)));
+  visualizerSelect.value = selected;
+  currentSeason = visualSourceSeason.get(selected);
+  visualizerSelect.dispatchEvent(new Event('change', { bubbles: true }));
+  if (memory) {
+    setSelectValueIfPresent(fireworkFormSelect, memory.form);
+    setSelectValueIfPresent(themeSelect, memory.theme);
+    fireworkSpeed.value = memory.speed || fireworkSpeed.value;
+    handSize.value = memory.size || handSize.value;
+    handCount.value = memory.count || handCount.value;
+    handGrasp.value = memory.grasp || handGrasp.value;
+    if (memory.spectrumPad) Object.assign(spectrumPad, memory.spectrumPad);
+    carAgitationGear = clampNumber(Number(memory.carAgitationGear ?? carAgitationGear), 0, carAgitationGears.length - 1);
+    syncVisualizerControls();
+    updateFireworkSpeedLabel();
+    updateHandControlLabels();
+    updateSpectrumDials();
+  }
+  document.body.dataset.season = currentSeason;
+  updateSeasonLabels();
+  syncGarageFlywheels();
+  if (save) {
+    pulseStageLabel('visual', `${suit.label} · ${suit.visuals.length} visuals`);
+    scheduleSessionSave(120);
+  }
+}
+
+function toggleArcanaSuit() {
+  const index = arcanaSuits.findIndex(suit => suit.id === currentArcanaSuit);
+  setArcanaSuit(arcanaSuits[(index + 1) % arcanaSuits.length].id);
+}
 
 function captureSeasonPreferences() {
   return { visualizer: visualizerSelect.value, form: fireworkFormSelect.value, theme: themeSelect.value,
@@ -92,6 +148,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
   const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain'], ['shysmiles', '23 · Shy Smiles'], ['beowulf', '24 · Beowulf'], ['hanselgretel', '25 · Hansel & Gretel'], ['opiumeater', '26 · Confessions of an Opium Eater'], ['bones', '27 · There Will Be Bones'], ['churchill', '28 · The Life of Winston Churchill'], ['ironlady', '29 · The Iron Lady'], ['blair', '30 · Tony Blair: The Great Satan'], ['pnp', '31 · P = NP?'], ['plentyofpuff', '32 · Plenty of Puff']];
+  if (next === 'autumn') options.push(autumnVisualOptions[autumnVisualOptions.length - 1]);
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -110,6 +167,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
+  if (visualizerSelect.value === 'puntingwithladies') return window.PuntingWithLadies.recipes;
   if (currentSeason !== 'autumn') return alchemicalRecipes;
   if (visualizerSelect.value === 'plentyofpuff') return window.PlentyOfPuff.recipes;
   if (visualizerSelect.value === 'pnp') return window.PEqualsNP.recipes;
@@ -215,6 +273,12 @@ function drawAutumnFrame(c, buffer = null) {
   }
   if (visualizerSelect.value === 'champagnefountain') {
     window.ChampagneFountain.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
+  }
+  if (visualizerSelect.value === 'puntingwithladies') {
+    window.PuntingWithLadies.draw(c, visualizer.width, visualizer.height, performance.now(), {
       speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
     });
     return;
@@ -770,6 +834,13 @@ const visualizerConfigs = {
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
     labels: { form: 'Cocktail mood', speed: 'Carousel pace' },
     forms: [['gilded', 'Gilded Evening'], ['rose', 'Rose & Gin'], ['absinthe', 'Absinthe Dream'], ['midnight', 'After Midnight']],
+    defaults: { speed: '1' },
+  },
+  puntingwithladies: {
+    ariaLabel: 'Punting with Ladies: champagne corks, flirtatious river outings, winter willows and uncertain consequences',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Winter mood', speed: 'River pace' },
+    forms: [['firstfrost', 'First Frost'], ['champagnemischief', 'Champagne Mischief'], ['willowreverie', 'Willow Reverie'], ['morningafter', 'Morning After']],
     defaults: { speed: '1' },
   },
   innerspace: {
@@ -1746,12 +1817,16 @@ document.querySelectorAll(".car-deck button").forEach((button) => {
 });
 
 function updateSeasonLabels() {
-  const label = currentSeason === 'summer' ? 'Summer' : 'Autumn';
+  const index = arcanaSuits.findIndex(suit => suit.id === currentArcanaSuit);
+  const suit = arcanaSuits[index] || arcanaSuits[0];
+  const next = arcanaSuits[(index + 1) % arcanaSuits.length];
+  document.body.dataset.arcana = suit.id;
   document.body.dataset.season = currentSeason;
-  carSeasonButton.setAttribute('aria-label', `Season: ${label}. Switch to ${currentSeason === 'summer' ? 'Autumn' : 'Summer'}`);
-  carSeasonLabel.textContent = label;
-  desktopSeasonLabel.textContent = label;
+  carSeasonButton.setAttribute('aria-label', `Arcana suit: ${suit.label}. Switch to ${next.label}`);
+  carSeasonLabel.textContent = suit.label;
+  desktopSeasonLabel.textContent = suit.label;
   desktopSeasonButton.setAttribute('aria-label', carSeasonButton.getAttribute('aria-label'));
+  document.querySelectorAll('.arcana-icon use').forEach(icon => icon.setAttribute('href', `#arcana-icon-${suit.id}`));
 }
 
 function updateAlchemyProgress() {
@@ -1943,6 +2018,10 @@ function alchemyRecipeIndex() {
   }
   if (visualizerSelect.value === 'champagnefountain') {
     const selected = ['gilded', 'rose', 'absinthe', 'midnight'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
+  if (visualizerSelect.value === 'puntingwithladies') {
+    const selected = ['firstfrost', 'champagnemischief', 'willowreverie', 'morningafter'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
   }
   if (visualizerSelect.value === 'innerspace') {
@@ -2165,6 +2244,8 @@ function sessionSnapshot() {
       shuffle: false,
       season: currentSeason,
       seasonMemories: { ...seasonMemories, [currentSeason]: captureSeasonPreferences() },
+      arcanaSuit: currentArcanaSuit,
+      arcanaMemories: { ...arcanaMemories, [currentArcanaSuit]: captureSeasonPreferences() },
       alchemicalSteps: { ...alchemicalStepByVisual },
       visualizer: visualizerSelect.value,
       form: fireworkFormSelect.value,
@@ -2244,9 +2325,10 @@ function restoreControlPreferences(session) {
   setSelectValueIfPresent(sortSelect, controls.sort);
   shuffleToggle.checked = false; // Migrate saved shuffle sessions to manual/sequential playback.
   if (controls.seasonMemories) seasonMemories = controls.seasonMemories;
+  if (controls.arcanaMemories) arcanaMemories = controls.arcanaMemories;
   if (controls.alchemicalSteps) Object.assign(alchemicalStepByVisual, controls.alchemicalSteps);
-  if (controls.season) setSeason(controls.season, { save: false, remember: false, restore: false });
-  updateSeasonLabels();
+  const savedSuit = arcanaSuitByVisual.get(controls.visualizer) || controls.arcanaSuit || currentArcanaSuit;
+  setArcanaSuit(savedSuit, { save: false, remember: false, restore: false });
   peakToggle.checked = controls.peak !== false;
   fireworkSpeed.value = controls.speed || fireworkSpeed.value;
   carAgitationGear = clampNumber(Number(controls.carAgitationGear ?? carAgitationGear), 0, carAgitationGears.length - 1);
@@ -2259,6 +2341,9 @@ function restoreControlPreferences(session) {
   }
 
   setSelectValueIfPresent(visualizerSelect, controls.visualizer);
+  currentSeason = visualSourceSeason.get(visualizerSelect.value) || currentSeason;
+  document.body.dataset.season = currentSeason;
+  updateSeasonLabels();
   visualizer.setAttribute("aria-label", visualizerConfig().ariaLabel);
   syncVisualizerControls();
   setSelectValueIfPresent(fireworkFormSelect, controls.form);
@@ -2565,7 +2650,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" || visualizer === "plentyofpuff" ? alchemyRecipeIndex() + 1 : step;
+    : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "puntingwithladies" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" || visualizer === "plentyofpuff" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
 
@@ -2606,6 +2691,7 @@ function restartVisualizer() {
   if (window.Spaced) window.Spaced.reset();
   if (window.InnerSpace) window.InnerSpace.reset();
   if (window.ChampagneFountain) window.ChampagneFountain.reset();
+  if (window.PuntingWithLadies) window.PuntingWithLadies.reset();
   if (window.ShySmiles) window.ShySmiles.reset();
   if (window.Beowulf) window.Beowulf.reset();
   if (window.HanselGretel) window.HanselGretel.reset();
@@ -14229,6 +14315,8 @@ insanityDial.addEventListener("click", () => {
 });
 
 visualizerSelect.addEventListener("change", () => {
+  currentSeason = visualSourceSeason.get(visualizerSelect.value) || currentSeason;
+  document.body.dataset.season = currentSeason;
   const config = visualizerConfig();
 
   visualizer.setAttribute("aria-label", config.ariaLabel);
@@ -14394,8 +14482,8 @@ carNextButton.addEventListener("click", () => changeTrackByStep(1));
 carNextVisualButton.addEventListener("click", () => changeVisualizerByStep(1));
 carAlchemyButton.addEventListener("click", () => applyAlchemicalAdjustment());
 carAgitationButton.addEventListener("click", cycleCarAgitationGear);
-carSeasonButton.addEventListener('click', toggleSeason);
-desktopSeasonButton.addEventListener('click', toggleSeason);
+carSeasonButton.addEventListener('click', toggleArcanaSuit);
+desktopSeasonButton.addEventListener('click', toggleArcanaSuit);
 
 fireworkSpeed.addEventListener("input", () => {
   updateFireworkSpeedLabel();
@@ -14612,6 +14700,7 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
+setArcanaSuit(currentArcanaSuit, { save: false, remember: false, restore: false });
 restoredSession = loadSavedSession();
 restoreControlPreferences(restoredSession);
 resizeCanvas();
