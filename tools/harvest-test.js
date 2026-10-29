@@ -19,12 +19,18 @@ let movingLoadStart, movingLoadEnd, farEdge = false;
 let deliveryStart, deliveryTurn, deliveryEnd;
 let scrollStart, scrollMiddle, nextFieldStart, nextFieldCut, boardedAgain = false;
 let flappingBirds, earlyBirds, departingBirds, laterBirds;
+let firstRun, firstTurn, firstPause, dogsPlaying, secondPause;
 for (let i = 0; i <= 1460; i++) {
   frame = scene.draw(context, 900, 500, i * 100, { bass: .7, treble: .4 });
   if (i === 32) flappingBirds = frame.birds;
   if (i === 50) earlyBirds = frame.birds;
   if (i === 150) departingBirds = frame.birds;
   if (i === 250) laterBirds = frame.birds;
+  if (i === 30) firstRun = frame.dogs[0];
+  if (i === 50) firstTurn = frame.dogs[0];
+  if (i === 60) firstPause = frame.dogs[0];
+  if (i === 100) dogsPlaying = frame.dogs;
+  if (i === 150) secondPause = frame.dogs[1];
   stages.add(frame.stage);
   assert.equal(frame.dogs.length, 2, 'Two dogs run through the harvest');
   for (const dog of frame.dogs) {
@@ -53,6 +59,14 @@ for (let i = 0; i <= 1460; i++) {
     if (i === 695) deliveryEnd = frame;
   }
 }
+assert.ok(firstRun.y - firstTurn.y > 15, 'The first dog runs around in depth, not just side to side');
+assert.ok(firstPause.action === 'look' && !firstPause.moving,
+  'The first dog pauses to look around');
+assert.ok(Math.abs(dogsPlaying[0].x - dogsPlaying[1].x) < 40 &&
+  dogsPlaying.every(dog => dog.action === 'play' && dog.moving),
+  'The dogs converge for a moving play encounter');
+assert.equal(secondPause.action, 'look', 'The second dog has its own pause and re-evaluation');
+assert.equal(secondPause.moving, false);
 assert.deepEqual([...stages].sort(), ['boarding', 'cutting', 'delivery', 'reposition', 'unloading']);
 assert.deepEqual([...passes].sort(), [0,1,2], 'The combine cuts three passes');
 assert.ok(firstCut && loaded && reachedStore, 'Cut crop remains, the lorry loads and reaches storage');

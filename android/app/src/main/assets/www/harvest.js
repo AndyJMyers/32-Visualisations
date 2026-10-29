@@ -98,26 +98,52 @@ window.HarvestTime = (() => {
     }
     c.restore();
   }
+  const dogRoutes = [
+      [[0,145,462,'sniff'],[3,250,475,'run'],[5,355,455,'run'],[7,355,455,'look'],
+        [9,280,476,'play'],[11,340,461,'play'],[14,470,477,'run'],[16,470,477,'look'],
+        [19,585,456,'run'],[21,585,456,'sniff'],[24,475,478,'retreat'],
+        [27,320,458,'run'],[29,220,477,'play'],[32,145,462,'sniff']],
+      [[0,610,478,'sniff'],[3,535,455,'run'],[6,440,476,'run'],[8,375,460,'play'],
+        [10,325,476,'play'],[12,305,460,'retreat'],[14,415,477,'run'],
+        [16,415,477,'look'],[19,505,458,'run'],[22,655,476,'run'],
+        [24,655,476,'look'],[27,510,455,'retreat'],[30,590,477,'sniff'],
+        [32,610,478,'sniff']]
+  ];
   function dogsAt(t) {
-    return [0, 1].map(i => {
-      const run = (t * (.21 + i * .07) + i * .43) % 2;
-      return { x: 90 + (run < 1 ? run : 2 - run) * 705,
-        y: 452 + i * 25 + Math.sin(t * 2.1 + i * 3) * 3,
-        facing: run < 1 ? 1 : -1, gait: t * (10 + i * 3) };
+    const phase = t % 32;
+    return dogRoutes.map((route, i) => {
+      const index = route.findIndex((point, n) => n < route.length - 1 && phase < route[n + 1][0]);
+      const from = route[index], to = route[index + 1];
+      const progress = smooth((phase - from[0]) / (to[0] - from[0]));
+      const dx = to[1] - from[1], dy = to[2] - from[2];
+      const moving = Math.abs(dx) + Math.abs(dy) > 1;
+      const action = to[3];
+      return { x: from[1] + dx * progress, y: from[2] + dy * progress,
+        facing: dx ? Math.sign(dx) : (i ? -1 : 1), gait: t * (i ? 12 : 10),
+        moving, action, turn: clamp(dy / 35, -.35, .35) * Math.sin(progress * Math.PI) };
     });
   }
   function dog(c, state, colour) {
-    c.save(); c.translate(state.x, state.y); c.scale(state.facing, 1);
-    const stride = Math.sin(state.gait) * 5;
+    c.save(); c.translate(state.x, state.y);
+    if (state.action === 'play') c.translate(0, -Math.max(0, Math.sin(state.gait * .7)) * 5);
+    c.rotate(state.turn); c.scale(state.facing, 1);
+    const stride = state.moving ? Math.sin(state.gait) * 5 : 0;
+    const tailWag = Math.sin(state.gait * (state.action === 'play' ? 1.4 : .45)) * 5;
     oval(c, 0, 3, 29, 4, '#47382355');
     path(c, colour, 5, [-12,-12,-17 + stride,0]);
     path(c, colour, 5, [10,-12,15 - stride,0]);
-    path(c, colour, 4, [-20,-19,-31,-30 + Math.sin(state.gait * .5) * 5]);
+    path(c, colour, 4, [-20,-19,-31,-30 + tailWag]);
     oval(c, 0, -19, 22, 11, colour);
-    oval(c, 20, -24, 9, 8, colour);
-    shape(c, colour, [16,-29,15,-40,22,-33]);
-    oval(c, 28, -21, 4, 3, '#2d2b2a');
-    oval(c, 23, -26, 1.5, 1.5, '#f5e6c5');
+    const headTilt = state.action === 'look' ? Math.sin(time * 2) * 3 :
+      state.action === 'sniff' ? 4 : state.action === 'play' ? -2 : 0;
+    oval(c, 20, -24 + headTilt, 9, 8, colour);
+    shape(c, colour, [16,-29 + headTilt,15,-40 + headTilt,22,-33 + headTilt]);
+    oval(c, 28, -21 + headTilt, 4, 3, '#2d2b2a');
+    oval(c, 23, -26 + headTilt, 1.5, 1.5, '#f5e6c5');
+    if (state.action === 'play') {
+      path(c, '#3a2925', 1.5, [26,-17 + headTilt,31,-15 + headTilt]);
+      oval(c, 29, -16 + headTilt, 1, 1, '#f5e6c5');
+    }
     c.restore();
   }
   function wheat(c, x, y, scale, sway, colour) {
