@@ -6,35 +6,33 @@
 
 ## Short Description
 
-Your music. Local. Offline. Alive in motion.
+Your music. Two seasons. 64 visualisations. Offline and alive.
 
 ## Full Description
 
-32 Visualisations is a boutique Android music player and audio visualizer for people who still own their music and want it to look as good as it sounds.
+32 Visualisations is a boutique Android music player for people who own their music and want it to look as good as it sounds.
 
-Play local audio from your Android device, choose your own music folder, and watch your files come alive through 32 vivid, responsive music visualisations. Once installed and pointed at music, it is built to work offline: no streaming account, no subscription, no rented library.
+Your music. Two seasons. 64 visualisations. Summer's original 32 and Autumn's 32 moving worlds are included in the same one-off purchase. Choose your own music folder and watch your files drive colour, motion and story. Once installed and pointed at music, the player works offline: no streaming account, subscription or rented library.
 
-Built for road trips, big stereos, and locally owned music libraries, 32 Visualisations keeps the controls simple: play or pause, skip track, cycle visualisation, shuffle, and invoke a little alchemical adjustment when the moment calls for something stranger. When you want a particular track from a large library, touch the visualisation to reveal two tactile flywheels: an outer alphabetical dial for getting to the right part of the collection quickly, and an inner song dial for browsing within it. That same touch reveals a small `*` beside the flywheels for The Garage, where library, visual and expression settings live away from the driving controls.
+Summer brings the vivid original collection. Autumn adds paintings in motion, strange journeys, small dramas and playful machinery. Each visualisation has Alchemy variations to change its colour, mood or behaviour. Switch seasons without interrupting the song.
 
-The app is designed for atmosphere: glowing waveforms, kinetic motion, rich colour, and a cockpit-like interface that feels more like a custom instrument than a standard Android music player.
+The controls keep the music close: play or pause, skip track, change visualisation, switch season, adjust speed or choose an Alchemy. To find a favourite in a large library, touch the visualisation for an alphabet wheel, a song wheel and text search. The Garage keeps library and detailed visual settings behind a discreet `*`.
 
-The purpose is simple and old-fashioned in the best way: choose your own local music folder and let your files drive the visuals. The app does not bundle a music catalogue or upload your library.
+The app plays your local files. It does not bundle a music catalogue or upload your library. There are no ads, accounts, rating popups or social-sharing interruptions inside the player.
 
-Pay once, keep playing. No streaming account. No subscription. No algorithmic sermon. No disposable wallpaper pretending to be a music experience. Just your files, your speakers, and a screen full of motion.
+Pay once, keep playing. Both collections are part of the same app, including for existing owners. Just your files, your speakers and a screen full of motion.
 
-32 Visualisations also avoids the usual in-app nagging. There are no rating popups, feedback prompts, engagement traps, or social sharing interruptions inside the player. If you enjoy it, the recommendation mechanism is pleasingly ancient: tell someone.
-
-You do not have to be entirely normal to enjoy this player, and that is rather the point.
+You do not have to be entirely normal to enjoy it, and that is rather the point.
 
 ## Feature Bullets
 
 - Play local audio from folders on your Android device.
 - Works without internet access once installed.
-- Explore a fixed set of 32 vivid music visualisations.
+- Explore 64 music visualisations across Summer and Autumn.
 - Simple car-friendly interface designed for quick, familiar control in portrait or landscape.
 - Bluetooth, headset and lock-screen Play/Pause and track-skip controls.
-- Shuffle, track skip, forward-only Visual, Speed, and Alchemy controls.
-- Dual tactile song flywheels: alphabet outside, songs inside.
+- Season, track skip, Visual, Speed and Alchemy controls.
+- Dual tactile song flywheels and text search for large libraries.
 - Optional Garage catalogue for library, visual and expression settings.
 - Audio-reactive visuals built for colour, movement, and atmosphere.
 - No in-app rating nags, social prompts, ads, accounts, or subscription hooks.
@@ -42,18 +40,19 @@ You do not have to be entirely normal to enjoy this player, and that is rather t
 
 ## Screenshot Order
 
-1. Main player in action, with controls visible.
-2. Dual flywheel song selector in action.
-3. Visualisation contact sheet for immediate impact.
-4. Car-friendly cockpit controls.
-5. Local folder selection.
-6. Strong individual visualisation examples.
+1. Actual Android player with the Season control visible.
+2. Autumn visualisation with the player controls visible.
+3. Summer visualisation, showing the contrast between collections.
+4. Dual flywheel and track-search controls.
+5. Further Autumn scenes and Alchemy variations, captured in the app.
+6. Local folder selection and The Garage if room remains.
 
 ## Store Assets
 
 - App icon: `assets/icon-512.png`
 - Feature graphic: `assets/feature-graphic-wow-1024x500.png`
-- Phone screenshots: `pitch/panels/`
+- Phone screenshots: capture from the release candidate on an Android device.
+- Autumn preview video: upload the finished file to YouTube as public or unlisted, without ads, then supply its URL in Play Console.
 - Source image: `assets/source-32-visualisations.png`
 
 ## Privacy Policy
