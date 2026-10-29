@@ -20,6 +20,8 @@ let deliveryStart, deliveryTurn, deliveryEnd;
 let scrollStart, scrollMiddle, nextFieldStart, nextFieldCut, boardedAgain = false;
 let flappingBirds, earlyBirds, departingBirds, laterBirds;
 let firstRun, firstTurn, firstPause, dogsPlaying, secondPause;
+let combineMouseSeen, combineMouseCaught;
+const mouseIncidentPasses = new Set();
 for (let i = 0; i <= 1460; i++) {
   frame = scene.draw(context, 900, 500, i * 100, { bass: .7, treble: .4 });
   if (i === 32) flappingBirds = frame.birds;
@@ -32,6 +34,14 @@ for (let i = 0; i <= 1460; i++) {
   if (i === 100) dogsPlaying = frame.dogs;
   if (i === 150) secondPause = frame.dogs[1];
   stages.add(frame.stage);
+  if (frame.combineMouse.visible || frame.combineMouse.spurt > 0) {
+    mouseIncidentPasses.add(frame.combineMouse.passId);
+    assert.equal(frame.stage, 'cutting', 'The mouse incident occurs only while cutting');
+    assert.ok(!(frame.combineMouse.visible && frame.combineMouse.spurt > 0),
+      'The mouse disappears when the blades reach it');
+    if (frame.combineMouse.visible && !combineMouseSeen) combineMouseSeen = frame;
+    if (frame.combineMouse.spurt > 0 && !combineMouseCaught) combineMouseCaught = frame;
+  }
   assert.equal(frame.dogs.length, 2, 'Two dogs run through the harvest');
   for (const dog of frame.dogs) {
     assert.ok(dog.y - 40 > frame.combineY + 22 || Math.abs(dog.x - frame.combineX) > 180,
@@ -67,6 +77,9 @@ assert.ok(Math.abs(dogsPlaying[0].x - dogsPlaying[1].x) < 40 &&
   'The dogs converge for a moving play encounter');
 assert.equal(secondPause.action, 'look', 'The second dog has its own pause and re-evaluation');
 assert.equal(secondPause.moving, false);
+assert.deepEqual([...mouseIncidentPasses], [1], 'The mouse meets the combine on a rare cutting pass');
+assert.ok(combineMouseSeen.time < combineMouseCaught.time,
+  'The mouse is seen ahead of the blades before the brief red spurt');
 assert.deepEqual([...stages].sort(), ['boarding', 'cutting', 'delivery', 'reposition', 'unloading']);
 assert.deepEqual([...passes].sort(), [0,1,2], 'The combine cuts three passes');
 assert.ok(firstCut && loaded && reachedStore, 'Cut crop remains, the lorry loads and reaches storage');
@@ -106,11 +119,13 @@ const resumed = scene.draw(context, 400, 800, 110000);
 assert.equal(resumed.time, paused.time, 'Resuming does not skip the story');
 for (const mood of ['amber','blue','storm']) assert.equal(scene.draw(context, 800, 480, 110100, { form: mood }).mood, mood);
 scene.reset();
-const catches = new Set(), observedDives = new Set();
+const catches = new Set(), observedDives = new Set(), laterMouseIncidents = new Set();
 let firstCatch, laterMiss;
-for (let i = 0; i <= 870; i++) {
+for (let i = 0; i <= 1100; i++) {
   const sample = scene.draw(context, 900, 500, i * 100, { speed: 3 });
   const bird = sample.birds;
+  if (sample.combineMouse.visible || sample.combineMouse.spurt > 0)
+    laterMouseIncidents.add(sample.combineMouse.passId);
   if (Math.abs(sample.time % 27 - 17.7) > .11 || bird.diveIndex >= 10) continue;
   observedDives.add(bird.diveIndex);
   assert.ok(bird.kestrelY > 270, 'The kestrel dives low enough to reach the mouse');
@@ -124,4 +139,5 @@ assert.deepEqual([...catches], [0], 'Exactly one of ten dives catches the mouse'
 assert.ok(Math.abs(firstCatch.mouseX - firstCatch.kestrelX) < 1 &&
   Math.abs(firstCatch.mouseY - firstCatch.kestrelY - 17) < 1, 'The caught mouse rises in the talons');
 assert.equal(laterMiss.caught, false, 'The next mouse gets away');
+assert.deepEqual([...laterMouseIncidents], [1,9], 'The combine incident recurs every eight cutting passes');
 console.log('Harvest boarding, repeated fields, grain transfer, storage run, birds, music response and pause checks passed.');

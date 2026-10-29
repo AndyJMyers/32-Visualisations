@@ -80,6 +80,26 @@ window.HarvestTime = (() => {
     path(c, '#675844', 1, [3,3,5,5 - step]);
     c.restore();
   }
+  function combineMouseAt(story) {
+    if (story.stage !== 'cutting') return { visible: false, spurt: 0 };
+    const passId = story.fieldIndex * 2 + story.pass;
+    if (passId % 8 !== 1) return { visible: false, spurt: 0 };
+    const x = 420 + noise(passId * 73) * 60;
+    const y = story.combineY - 13;
+    const bladeX = story.combineX + story.facing * 115;
+    const gap = (x - bladeX) * story.facing;
+    return { passId, x, y, visible: gap > 3 && gap < 180,
+      spurt: gap <= 3 && gap > -60 ? 1 - smooth((3 - gap) / 63) : 0 };
+  }
+  function redSpurt(c, x, y, strength) {
+    for (let i = 0; i < 9; i++) {
+      const spread = (i - 4) * (2 + (1 - strength) * 4);
+      const rise = 8 + (i % 3) * 6 + (1 - strength) * (8 + (i % 4) * 5);
+      path(c, `rgba(166, 31, 28, ${strength * .6})`, 1.3, [x,y, x + spread,y - rise]);
+      oval(c, x + spread, y - rise,
+        1.5 + strength * 1.5, 1.5 + strength, `rgba(166, 31, 28, ${strength * .88})`);
+    }
+  }
   function robin(c, t) {
     if (t >= 18) return;
     const departing = t >= 12, flight = departing ? smooth((t - 12) / 6) : 0;
@@ -309,6 +329,7 @@ window.HarvestTime = (() => {
     const mood = ['amber', 'blue', 'storm'].includes(opts.form) ? opts.form : 'amber';
     const story = storyAt(time);
     const birds = birdsAt(time);
+    const combineMouse = combineMouseAt(story);
     const dogs = dogsAt(time);
     c.save(); c.scale(w / 900, h / 500);
     const sky = c.createLinearGradient(0, 0, 0, 300);
@@ -355,12 +376,14 @@ window.HarvestTime = (() => {
     }
     if (birds.mouseVisible) mouse(c, birds.mouseX, birds.mouseY,
       !birds.caught && time % 27 >= 17.5, birds.caught);
+    if (combineMouse.visible) mouse(c, combineMouse.x, combineMouse.y, true);
     kestrel(c, birds.kestrelX, birds.kestrelY, Math.sin(time * 12), birds.kestrelBank);
     robin(c, time);
     if (story.stage === 'unloading' || story.stage === 'delivery') lorry(c, story.lorryX, story.lorryY, story.lorrySize, story.load, story.lorryTurn || 0);
     combine(c, story.combineX, story.combineY, story.pass < 0 ? 1 : 1 + story.pass * .04,
       story.facing, story.stage === 'boarding' ? story.progress : 1,
       time * (3 + bass * 4), story.stage === 'unloading' && story.progress > .3);
+    if (combineMouse.spurt > 0) redSpurt(c, combineMouse.x, combineMouse.y, combineMouse.spurt);
     if (mood === 'blue') {
       const beam = c.createRadialGradient(story.combineX + story.facing * 85, story.combineY - 25, 2,
         story.combineX + story.facing * 85, story.combineY - 25, 115);
@@ -417,7 +440,7 @@ window.HarvestTime = (() => {
       c.restore();
     }
     c.restore();
-    return { time, mood, bass, treble, ...story, deliveredLoads, birds, dogs };
+    return { time, mood, bass, treble, ...story, deliveredLoads, birds, combineMouse, dogs };
   }
   return { recipes, draw, reset };
 })();
