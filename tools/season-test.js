@@ -68,6 +68,7 @@ run(read('churchill.js'));
 run(read('iron-lady.js'));
 run(read('blair.js'));
 run(read('p-np.js'));
+run(read('busy-as-a-bee.js'));
 run(read('app.js'));
 assert.equal(w.document.querySelector('#settingsCatalogue').open, false, 'Desktop Garage stays closed at startup');
 const pressHideKey = key => w.document.body.dispatchEvent(new w.KeyboardEvent('keydown', {
@@ -97,7 +98,7 @@ assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Wands
 for (const suit of ['cups', 'swords', 'pentacles', 'wands']) {
   w.document.querySelector('#desktopSeasonButton').click();
   assert.equal(run('currentArcanaSuit'), suit, `Arcana selector advances to ${suit}`);
-  assert.equal(run('visualizerSelect.options.length'), suit === 'pentacles' ? 17 : 16, `${suit} shows its assigned visuals`);
+  assert.equal(run('visualizerSelect.options.length'), suit === 'pentacles' ? 18 : 16, `${suit} shows its assigned visuals`);
 }
 // A saved shuffle preference must migrate to sequential playback.
 run('restoreControlPreferences({controls:{shuffle:true,visualizer:"fireworks",form:"woman",speed:"1.4",grasp:"0.75"}})');
@@ -116,7 +117,21 @@ assert.equal(w.document.querySelectorAll('#desktopSeasonButton .arcana-icon').le
 run('setSeason("autumn")');
 assert.equal(run('currentSeason'), 'autumn');
 assert.equal(run('visualizerSelect.value'), 'ralphwatch');
-assert.equal(run('visualizerSelect.options.length'), 33, 'Internal Autumn rendering remains available');
+assert.equal(run('visualizerSelect.options.length'), 34, 'Internal Autumn rendering remains available');
+run('visualizerSelect.value="busybee"; visualizerSelect.dispatchEvent(new Event("change"))');
+assert.equal(run('activeAlchemyRecipes().length'), 4, 'Busy as a bee offers four distinct colony moods');
+for (const [i, form] of ['meadow', 'bloom', 'hive', 'moonflower'].entries()) {
+  run(`applyAlchemicalAdjustment(${i})`);
+  assert.equal(run('fireworkFormSelect.value'), form, 'Bee Alchemy selects the intended treatment');
+}
+const beeCanvas = createCanvas(960, 540), beeContext = beeCanvas.getContext('2d');
+for (const form of ['meadow', 'bloom', 'hive', 'moonflower']) {
+  const state = w.BusyAsABee.draw(beeContext, 960, 540, 1000, { form, bass: .5, mid: .35, treble: .2, animate: false });
+  assert.equal(state.form, form);
+  assert.equal(state.chapter, 'MATING FLIGHT');
+  assert.ok(state.beat > 0);
+}
+run('visualizerSelect.value="ralphwatch"; visualizerSelect.dispatchEvent(new Event("change"))');
 assert.equal(w.document.body.dataset.season, 'autumn');
 assert.equal(run('activeAlchemyRecipes().length'), 7);
 assert.ok(w.document.querySelector('#fireworkFormSelect').closest('label').classList.contains('autumn-time-control'), 'GARAGE exposes the time-of-day selector');
@@ -412,7 +427,7 @@ for (const [i, form] of ['blueprint', 'chalk', 'clockwork', 'cosmos'].entries())
   run(`applyAlchemicalAdjustment(${i})`);
   assert.equal(run('fireworkFormSelect.value'), form, 'P = NP? Alchemy selects the intended treatment');
 }
-for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','mondrian.js','pollocks.js','your-call.js','birds-eye.js','walk-egyptian.js','romans.js','life-studies.js','old-school-games.js','spaced.js','inner-space.js','champagne-fountain.js','shy-smiles.js','beowulf.js','hansel-gretel.js','opium-eater.js','there-will-be-bones.js','churchill.js','iron-lady.js','blair.js','p-np.js','plenty-of-puff.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
+for (const name of ['app.js','autumn.js','toadstools.js','cobweb.js','last-mow.js','squirrel.js','driving.js','harvest.js','rat-race.js','starry-night.js','water-lilies.js','the-scream.js','mondrian.js','pollocks.js','your-call.js','birds-eye.js','walk-egyptian.js','romans.js','life-studies.js','old-school-games.js','spaced.js','inner-space.js','champagne-fountain.js','punting-with-ladies.js','shy-smiles.js','beowulf.js','hansel-gretel.js','opium-eater.js','there-will-be-bones.js','churchill.js','iron-lady.js','blair.js','p-np.js','plenty-of-puff.js','busy-as-a-bee.js','index.html','styles.css']) assert.equal(read(name), read(`android/app/src/main/assets/www/${name}`), `Offline Android asset is in sync: ${name}`);
 assert.deepEqual(failures, []);
 dom.window.close();
 console.log('Season integration and full-day Canvas simulation passed.');

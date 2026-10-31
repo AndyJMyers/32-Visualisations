@@ -77,18 +77,18 @@ if (window.AndroidWaveDeck) {
 const desktopSeasonButton = document.querySelector('#desktopSeasonButton');
 const desktopSeasonLabel = document.querySelector('#desktopSeasonLabel');
 const summerVisualOptions = Array.from(visualizerSelect.options, o => [o.value, o.textContent]);
-const autumnVisualOptions = [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain'], ['shysmiles', '23 · Shy Smiles'], ['beowulf', '24 · Beowulf'], ['hanselgretel', '25 · Hansel & Gretel'], ['opiumeater', '26 · Confessions of an Opium Eater'], ['bones', '27 · There Will Be Bones'], ['churchill', '28 · The Life of Winston Churchill'], ['ironlady', '29 · The Iron Lady'], ['blair', '30 · Tony Blair: The Great Satan'], ['pnp', '31 · P = NP?'], ['plentyofpuff', '32 · Plenty of Puff'], ['puntingwithladies', '33 · Punting with Ladies']];
+const autumnVisualOptions = [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain'], ['shysmiles', '23 · Shy Smiles'], ['beowulf', '24 · Beowulf'], ['hanselgretel', '25 · Hansel & Gretel'], ['opiumeater', '26 · Confessions of an Opium Eater'], ['bones', '27 · There Will Be Bones'], ['churchill', '28 · The Life of Winston Churchill'], ['ironlady', '29 · The Iron Lady'], ['blair', '30 · Tony Blair: The Great Satan'], ['pnp', '31 · P = NP?'], ['plentyofpuff', '32 · Plenty of Puff'], ['puntingwithladies', '33 · Punting with Ladies'], ['busybee', '34 · Busy as a bee']];
 const arcanaSuits = [
   { id: 'cups', label: 'Cups', visuals: ['swampbubbles', 'lizardlouche', 'goddesskisses', 'turtleriver', 'oilslide', 'oysterpearls', 'waterlilies', 'innerspace', 'champagnefountain', 'shysmiles', 'ratrace', 'sunflowersmiles', 'opiumeater', 'lifestudies', 'dawncobweb', 'lingerie'] },
   { id: 'swords', label: 'Swords', visuals: ['arrowstorm', 'knifethunk', 'lightning', 'asteroids', 'warofroses', 'thescream', 'yourcall', 'beowulf', 'churchill', 'ironlady', 'blair', 'pnp', 'bones', 'spaced', 'romans', 'oldschoolgames'] },
-  { id: 'pentacles', label: 'Pentacles', visuals: ['branchhands', 'tipustiger', 'climbinggarden', 'bobrossgarden', 'cathedralorganism', 'mondrian', 'pollocks', 'toadstools', 'lastmow', 'squirrel', 'autumndrive', 'harvest', 'birdseye', 'plentyofpuff', 'ralphwatch', 'hanselgretel', 'puntingwithladies'] },
+  { id: 'pentacles', label: 'Pentacles', visuals: ['branchhands', 'tipustiger', 'climbinggarden', 'bobrossgarden', 'cathedralorganism', 'mondrian', 'pollocks', 'toadstools', 'lastmow', 'squirrel', 'autumndrive', 'harvest', 'birdseye', 'plentyofpuff', 'ralphwatch', 'hanselgretel', 'puntingwithladies', 'busybee'] },
   { id: 'wands', label: 'Wands', visuals: ['fireworks', 'pacdance', 'cephalopod', 'discojive', 'glitterfall', 'butterflyhost', 'octopusocclusion', 'mandelbrot', 'eyevisions', 'interzoneoracles', 'hypnoticflight', 'kaleidoscope', 'snakeconga', 'starrynight', 'walkegyptian', 'equalizer'] },
 ];
 const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, label.replace(/^\d+\s*[·.]\s*/, '')]));
 const visualSourceSeason = new Map([...summerVisualOptions.map(([value]) => [value, 'summer']), ...autumnVisualOptions.map(([value]) => [value, 'autumn'])]);
 const arcanaSuitByVisual = new Map(arcanaSuits.flatMap(suit => suit.visuals.map(value => [value, suit.id])));
-if (allVisualOptions.size !== 65 || arcanaSuitByVisual.size !== 65 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
-  throw new Error('Arcana catalogue must assign all 65 visuals exactly once, with at least sixteen per suit.');
+if (allVisualOptions.size !== 66 || arcanaSuitByVisual.size !== 66 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
+  throw new Error('Arcana catalogue must assign all 66 visuals exactly once, with at least sixteen per suit.');
 }
 let currentArcanaSuit = arcanaSuitByVisual.get(visualizerSelect.value) || 'cups';
 let currentSeason = 'summer';
@@ -147,8 +147,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   if (next === currentSeason) { updateSeasonLabels(); return; }
   if (remember) seasonMemories[currentSeason] = captureSeasonPreferences();
   currentSeason = next;
-  const options = next === 'summer' ? summerVisualOptions : [['ralphwatch', "01 · Ralph’s Last Watch"], ['toadstools', '02 · Toadstools'], ['dawncobweb', '03 · Dawn Cobweb'], ['lastmow', '04 · Last Mow of the Year'], ['squirrel', '05 · Squirrel Sequestering'], ['autumndrive', '06 · Autumn Drive'], ['harvest', '07 · Harvest Time'], ['ratrace', '08 · Rat Race'], ['starrynight', '09 · Starry Night'], ['waterlilies', '10 · Water Lilies'], ['thescream', '11 · The Scream'], ['mondrian', '12 · Mondrian'], ['pollocks', '13 · A load of Pollocks'], ['yourcall', '14 · Your call is important to us'], ['birdseye', '15 · Birds Eye'], ['walkegyptian', '16 · Walk like an Egyptian'], ['romans', '17 · Romans'], ['lifestudies', '18 · Life Studies'], ['oldschoolgames', '19 · Old School Games'], ['spaced', '20 · Spaced'], ['innerspace', '21 · Inner Space'], ['champagnefountain', '22 · Champagne Fountain'], ['shysmiles', '23 · Shy Smiles'], ['beowulf', '24 · Beowulf'], ['hanselgretel', '25 · Hansel & Gretel'], ['opiumeater', '26 · Confessions of an Opium Eater'], ['bones', '27 · There Will Be Bones'], ['churchill', '28 · The Life of Winston Churchill'], ['ironlady', '29 · The Iron Lady'], ['blair', '30 · Tony Blair: The Great Satan'], ['pnp', '31 · P = NP?'], ['plentyofpuff', '32 · Plenty of Puff']];
-  if (next === 'autumn') options.push(autumnVisualOptions[autumnVisualOptions.length - 1]);
+  const options = next === 'summer' ? summerVisualOptions : autumnVisualOptions;
   visualizerSelect.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
   syncVisualizerControls();
   applyVisualizerDefaults(visualizerConfig());
@@ -162,12 +161,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
   updateSeasonLabels();
   syncGarageFlywheels();
   restartVisualizer();
-  if (save) { pulseStageLabel('visual', next === 'summer' ? 'Summer · 32 visuals' : 'Autumn · 32 scenes in evaluation'); scheduleSessionSave(120); }
+  if (save) { pulseStageLabel('visual', `${next === 'summer' ? 'Summer' : 'Autumn'} · ${options.length} visuals`); scheduleSessionSave(120); }
 }
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (visualizerSelect.value === 'puntingwithladies') return window.PuntingWithLadies.recipes;
+  if (visualizerSelect.value === 'busybee') return window.BusyAsABee.recipes;
   if (currentSeason !== 'autumn') return alchemicalRecipes;
   if (visualizerSelect.value === 'plentyofpuff') return window.PlentyOfPuff.recipes;
   if (visualizerSelect.value === 'pnp') return window.PEqualsNP.recipes;
@@ -210,6 +210,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'busybee') {
+    window.BusyAsABee.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'plentyofpuff') {
     window.PlentyOfPuff.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -759,6 +765,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  busybee: {
+    ariaLabel: 'Busy as a bee: courtship flights, a growing colony, nectar and pollen gathering, and music-led waggle dances',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Colony mood', speed: 'Flight pace' },
+    forms: [['meadow', 'Meadow Gold'], ['bloom', 'Orchard Bloom'], ['hive', 'Inside the Hive'], ['moonflower', 'Moonflower Nocturne']],
+    defaults: { speed: '1' },
+  },
   plentyofpuff: {
     ariaLabel: 'Plenty of Puff: a great steam engine drives mill machinery while a chimney climber ascends and a forge strikes iron',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
