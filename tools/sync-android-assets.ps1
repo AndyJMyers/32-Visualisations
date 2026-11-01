@@ -47,4 +47,6 @@ Copy-Item -LiteralPath (Join-Path $repoRoot "android-chicks.js") -Destination (J
 
 Copy-Item -LiteralPath (Join-Path $repoRoot "boiling-pot.js") -Destination (Join-Path $assetRoot "boiling-pot.js") -Force
 
+Copy-Item -LiteralPath (Join-Path $repoRoot "kola-superdeep.js") -Destination (Join-Path $assetRoot "kola-superdeep.js") -Force
+
 Write-Host "Synced web assets into android/app/src/main/assets/www"

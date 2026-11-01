@@ -71,6 +71,7 @@ run(read('p-np.js'));
 run(read('busy-as-a-bee.js'));
 run(read('android-chicks.js'));
 run(read('boiling-pot.js'));
+run(read('kola-superdeep.js'));
 run(read('app.js'));
 assert.equal(w.document.querySelector('#settingsCatalogue').open, false, 'Desktop Garage stays closed at startup');
 const pressHideKey = key => w.document.body.dispatchEvent(new w.KeyboardEvent('keydown', {
@@ -100,7 +101,7 @@ assert.equal(w.document.querySelector('#desktopSeasonLabel').textContent, 'Wands
 for (const suit of ['cups', 'swords', 'pentacles', 'wands']) {
   w.document.querySelector('#desktopSeasonButton').click();
   assert.equal(run('currentArcanaSuit'), suit, `Arcana selector advances to ${suit}`);
-  assert.equal(run('visualizerSelect.options.length'), suit === 'pentacles' || suit === 'cups' ? 18 : 16, `${suit} shows its assigned visuals`);
+  assert.equal(run('visualizerSelect.options.length'), suit === 'pentacles' ? 19 : suit === 'cups' ? 18 : 16, `${suit} shows its assigned visuals`);
 }
 // A saved shuffle preference must migrate to sequential playback.
 run('restoreControlPreferences({controls:{shuffle:true,visualizer:"fireworks",form:"woman",speed:"1.4",grasp:"0.75"}})');
@@ -119,7 +120,10 @@ assert.equal(w.document.querySelectorAll('#desktopSeasonButton .arcana-icon').le
 run('setSeason("autumn")');
 assert.equal(run('currentSeason'), 'autumn');
 assert.equal(run('visualizerSelect.value'), 'ralphwatch');
-assert.equal(run('visualizerSelect.options.length'), 36, 'Internal Autumn rendering remains available');
+assert.equal(run('visualizerSelect.options.length'), 37, 'Internal Autumn rendering remains available');
+run('visualizerSelect.value="kolasuperdeep"; visualizerSelect.dispatchEvent(new Event("change"))');
+assert.equal(run('activeAlchemyRecipes()'), w.KolaSuperdeep.recipes);
+assert.equal(read('kola-superdeep.js'), read('android/app/src/main/assets/www/kola-superdeep.js'));
 run('visualizerSelect.value="boilingpot"; visualizerSelect.dispatchEvent(new Event("change"))');
 assert.equal(run('activeAlchemyRecipes()'), w.BoilingPot.recipes, 'Boiling Pot exposes its own alchemies');
 let boilingDraws = 0;
