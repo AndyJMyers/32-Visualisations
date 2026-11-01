@@ -467,6 +467,10 @@ let loucheLizards = [];
 let lizardFrame = 0;
 let goddessKisses = [];
 let goddessFrame = 0;
+let goddessKissRain = [];
+let goddessKissRainSize = "";
+let goddessKissBassEnvelope = 0;
+let goddessKissBeatAccent = 0;
 let gardenVines = [];
 let gardenFrame = 0;
 let tigerFrame = 0;
@@ -2763,6 +2767,10 @@ function restartVisualizer() {
   lizardFrame = 0;
   goddessKisses = [];
   goddessFrame = 0;
+  goddessKissRain = [];
+  goddessKissRainSize = "";
+  goddessKissBassEnvelope = 0;
+  goddessKissBeatAccent = 0;
   gardenVines = [];
   gardenFrame = 0;
   tigerFrame = 0;
@@ -5716,6 +5724,7 @@ function spawnGoddessKiss(bandIndex, intensity, width, height) {
     spin: (Math.random() - 0.5) * (0.035 + pout * 0.08),
     angle: Math.random() * Math.PI * 2,
     pout,
+    trail: [],
   });
 }
 
@@ -5759,6 +5768,84 @@ function drawKissGlyph(canvasContext, kiss, bassEnergy, trebleEnergy) {
   canvasContext.restore();
 }
 
+function setupGoddessKissRain(width, height) {
+  const sizeKey = `${width}x${height}`;
+  if (goddessKissRainSize === sizeKey && goddessKissRain.length) return;
+
+  goddessKissRainSize = sizeKey;
+  const streamCount = Math.max(12, Math.min(30, Math.round(width / 58)));
+  goddessKissRain = Array.from({ length: streamCount }, (_, index) => ({
+    x: width * ((index + 0.5) / streamCount) + (Math.random() - 0.5) * width / streamCount * 0.5,
+    y: -Math.random() * height * 1.4,
+    speed: 0.7 + Math.random() * 1.25,
+    size: Math.min(width, height) * (0.006 + Math.random() * 0.003),
+    hue: goddessHue(index % goddessBands.length, 0.4 + Math.random() * 0.5),
+    phase: Math.random() * Math.PI * 2,
+    length: 3 + Math.floor(Math.random() * 3),
+  }));
+}
+
+function drawGoddessKissRain(canvasContext, width, height, bassEnergy, trebleEnergy) {
+  setupGoddessKissRain(width, height);
+  const energy = bassEnergy * 0.55 + trebleEnergy * 0.45;
+  const bassRise = bassEnergy - goddessKissBassEnvelope;
+  goddessKissBassEnvelope += bassRise * 0.18;
+  goddessKissBeatAccent = Math.max(goddessKissBeatAccent * 0.78, Math.max(0, bassRise - 0.018) * 4.2);
+  const beatAccent = Math.min(1, goddessKissBeatAccent);
+
+  goddessKissRain.forEach((stream, index) => {
+    const wavePhase = goddessFrame * 0.13 - index * 0.82;
+    const travellingWave = Math.sin(wavePhase);
+    const laneWidth = width / goddessKissRain.length;
+    const sway = travellingWave * laneWidth * (0.24 + energy * 0.12 + beatAccent * 0.34);
+    stream.y += stream.speed * (0.65 + energy * 1.45 + beatAccent * 1.8 + Math.max(0, travellingWave) * 0.5);
+    if (stream.y - stream.length * stream.size * 4 > height) {
+      stream.y = -stream.size * (8 + Math.random() * 40);
+      stream.x = width * ((index + 0.5) / goddessKissRain.length) + (Math.random() - 0.5) * width / goddessKissRain.length * 0.5;
+      stream.hue = goddessHue(index % goddessBands.length, energy);
+    }
+
+    for (let drop = stream.length - 1; drop >= 0; drop -= 1) {
+      const fade = 1 - drop / stream.length;
+      const kiss = {
+        x: stream.x + sway + Math.sin(goddessFrame * 0.045 + stream.phase + drop * 0.4) * stream.size * 0.3,
+        y: stream.y - drop * stream.size * 4,
+        z: 0.62,
+        angle: travellingWave * 0.22 + Math.sin(goddessFrame * 0.018 + stream.phase + drop * 0.24) * 0.1,
+        size: stream.size * (0.72 + fade * 0.28 + beatAccent * 0.32),
+        hue: stream.hue + drop * 3,
+        alpha: (0.16 + trebleEnergy * 0.24 + beatAccent * 0.2) * fade,
+        life: 1,
+        pout: 0.92,
+      };
+      drawKissGlyph(canvasContext, kiss, bassEnergy, trebleEnergy);
+    }
+  });
+}
+
+function drawGoddessKissTrail(canvasContext, kiss, bassEnergy, trebleEnergy) {
+  kiss.trail ||= [];
+  if (Math.floor(goddessFrame) % 3 === 0) {
+    kiss.trail.unshift({ x: kiss.x, y: kiss.y, z: kiss.z, angle: kiss.angle, life: 1 });
+    if (kiss.trail.length > 4) kiss.trail.length = 4;
+  }
+
+  kiss.trail.forEach((point) => {
+    point.life -= 0.055;
+  });
+  kiss.trail = kiss.trail.filter((point) => point.life > 0.04);
+  kiss.trail.forEach((point, index) => {
+    const fade = (1 - (index + 1) / (kiss.trail.length + 1)) * point.life;
+    drawKissGlyph(canvasContext, {
+      ...kiss,
+      ...point,
+      size: kiss.size * (0.58 + fade * 0.22),
+      alpha: kiss.alpha * fade * 0.38,
+      life: kiss.life,
+    }, bassEnergy, trebleEnergy);
+  });
+}
+
 function drawGoddessKissesFrame(canvasContext, buffer) {
   const width = visualizer.width;
   const height = visualizer.height;
@@ -5778,6 +5865,7 @@ function drawGoddessKissesFrame(canvasContext, buffer) {
   const midsEnergy = Math.max(rawMidsEnergy, 0.12 + flicker * 0.1);
   const trebleEnergy = Math.max(rawTrebleEnergy, 0.12 + (1 - pulse) * 0.12);
   drawGoddessChamber(canvasContext, width, height, bassEnergy, trebleEnergy);
+  drawGoddessKissRain(canvasContext, width, height, bassEnergy, trebleEnergy);
   drawGoddessFigure(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
 
   goddessBands.forEach((band, bandIndex) => {
@@ -5804,6 +5892,7 @@ function drawGoddessKissesFrame(canvasContext, buffer) {
     kiss.y += kiss.vy * (0.7 + kiss.z) + Math.sin(goddessFrame * 0.03 + kiss.angle) * bandEnergy * 1.4;
     kiss.angle += kiss.spin + bandEnergy * 0.018;
     kiss.life -= 0.003 + Math.max(0, kiss.z - 0.72) * 0.012;
+    drawGoddessKissTrail(canvasContext, kiss, bassEnergy, trebleEnergy);
     drawKissGlyph(canvasContext, kiss, bassEnergy, trebleEnergy);
   });
 
@@ -13595,6 +13684,7 @@ function drawIdleGoddessKisses() {
 
   goddessFrame += rate;
   drawGoddessChamber(canvasContext, width, height, 0.16 + pulse * 0.16, 0.18 + shimmer * 0.18);
+  drawGoddessKissRain(canvasContext, width, height, 0.16 + pulse * 0.16, 0.18 + shimmer * 0.18);
   drawGoddessFigure(canvasContext, width, height, 0.16 + pulse * 0.16, 0.16 + shimmer * 0.18, 0.18 + (1 - pulse) * 0.18);
 
   if (goddessKisses.length < 14 || Math.floor(goddessFrame) % Math.max(5, Math.round(18 / rate)) === 0) {
@@ -13608,6 +13698,7 @@ function drawIdleGoddessKisses() {
     kiss.y += kiss.vy * 0.55;
     kiss.angle += kiss.spin;
     kiss.life -= 0.0025;
+    drawGoddessKissTrail(canvasContext, kiss, 0.16 + pulse * 0.16, 0.18 + shimmer * 0.18);
     drawKissGlyph(canvasContext, kiss, 0.16 + pulse * 0.16, 0.18 + shimmer * 0.18);
   });
 
@@ -14082,6 +14173,10 @@ function resizeCanvas() {
   occlusionOctopi = [];
   loucheLizards = [];
   goddessKisses = [];
+  goddessKissRain = [];
+  goddessKissRainSize = "";
+  goddessKissBassEnvelope = 0;
+  goddessKissBeatAccent = 0;
   gardenVines = [];
   tigerSpurts = [];
   asteroidShip = null;
@@ -14399,6 +14494,10 @@ handCount.addEventListener("input", () => {
   occlusionOctopi = [];
   loucheLizards = [];
   goddessKisses = [];
+  goddessKissRain = [];
+  goddessKissRainSize = "";
+  goddessKissBassEnvelope = 0;
+  goddessKissBeatAccent = 0;
   gardenVines = [];
   tigerSpurts = [];
   lightningBolts = [];
