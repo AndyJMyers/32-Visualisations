@@ -201,6 +201,8 @@ The Android app is the mobile-first version of the same visualisation world. It 
 
 ### Compact Track Picker
 
+<img src="docs/images/android-compact-track-picker.png" alt="Android track picker showing horizontal Letter and Track dials above a scrollable song list" width="420">
+
 Tap the visualisation to open the picker. Use the horizontal Letter dial to jump to an initial, then use the Track dial or scroll the list. Tap a song to select it, or tap outside the picker to dismiss it. Android keeps the keyboard out of the way; the concentric flywheels and text search remain on desktop.
 
 The same tap reveals a small `*` for The Garage, alongside `◐` for Night Drive. The Garage holds library, visual and expression settings; Night Drive dims the controls and visual intensity.
