@@ -16,7 +16,7 @@ Your music. Four Arcana suits. 64 visualisations. Cups, Swords, Pentacles and Wa
 
 Across Cups, Swords, Pentacles and Wands, paintings move, strange journeys unfold, small dramas play out and machines come alive. Each visualisation has Alchemy variations to change its colour, mood or behaviour. Switch suits without interrupting the song.
 
-The controls keep the music close: play or pause, skip track, change visualisation, switch suit, adjust speed or choose an Alchemy. To find a favourite in a large library, touch the visualisation for an alphabet wheel, a song wheel and text search. The Garage keeps library and detailed visual settings behind a discreet `*`.
+The controls keep the music close: play or pause, skip track, change visualisation, switch suit, adjust speed or choose an Alchemy. Tap the visualisation to open a compact track picker: jump by letter, browse the scrollable song list and tap to select, without bringing up the keyboard. The Garage keeps library and detailed visual settings behind a discreet `*`.
 
 The app plays your local files. It does not bundle a music catalogue or upload your library. There are no ads, accounts, rating popups or social-sharing interruptions inside the player.
 
@@ -32,7 +32,7 @@ You do not have to be entirely normal to enjoy it, and that is rather the point.
 - Simple car-friendly interface designed for quick, familiar control in portrait or landscape.
 - Bluetooth, headset and lock-screen Play/Pause and track-skip controls.
 - Arcana, track skip, Visual, Speed and Alchemy controls.
-- Dual tactile song flywheels and text search for large libraries.
+- Compact letter and track dials with a scrollable song list, no keyboard needed.
 - Optional Garage catalogue for library, visual and expression settings.
 - Audio-reactive visuals built for colour, movement, and atmosphere.
 - No in-app rating nags, social prompts, ads, accounts, or subscription hooks.
@@ -43,7 +43,7 @@ You do not have to be entirely normal to enjoy it, and that is rather the point.
 1. Actual Android player with the Arcana suit control visible.
 2. A scene from Cups with the player controls visible.
 3. A scene from Swords, showing the contrast between suits.
-4. Dual flywheel and track-search controls.
+4. Compact Android track picker with both dials and the song list visible.
 5. Further scenes and Alchemy variations, captured in the app.
 6. Local folder selection and The Garage if room remains.
 

@@ -56,8 +56,8 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Offers car-style Android controls for play/pause, previous/next track, next visualisation, `Arcana`, `Alchemy`, and `Speed`.
 - Uses `Alchemy` to apply artistically chosen visual settings.
 - Uses `Speed` to cycle visual agitation through five colour-coded steps.
-- Lets Android and desktop listeners browse large libraries with a temporary dual flywheel: alphabet outside, songs inside.
-- Reveals The Garage's discreet `*` alongside the flywheels, keeping library, visual and detailed expression settings outside the driving controls.
+- Browses large libraries with a dual flywheel and text search on desktop, or compact letter and track dials with a scrollable list on Android.
+- Reveals The Garage's discreet `*` alongside the Android track picker, keeping detailed settings outside the driving controls.
 - Keeps your music local.
 
 Each Arcana suit has sixteen visualisations. Cups gathers fluid, intimate and dreamlike scenes; Swords holds conflict, tension and puzzles; Pentacles leans into craft, nature and material life; Wands brings spectacle, play and unruly energy. The original Summer and newer Autumn lineages remain in the art, but no longer determine how listeners browse it.
@@ -160,7 +160,7 @@ https://github.com/user-attachments/assets/b5d425aa-8f05-4c8e-b055-44b53dcfbd3a
 
 ![Desktop orbital song navigator over the visualiser](docs/images/desktop-orbital-flywheel.jpg)
 
-Click the visualisation to bring up the desktop orbital: a deliberately oversized, two-ring navigator for a large library. Rotate the outer ring to move between available initials and the inner ring to move through songs under the selected letter. It settles and fades away when you are done, or yields immediately to a click elsewhere.
+Click the visualisation to bring up the desktop orbital: a deliberately oversized, two-ring navigator for a large library. Rotate the outer ring to move between available initials and the inner ring to move through songs under the selected letter, or type a title into the track search and choose a match. The orbital settles and fades away when you are done, or yields immediately to a click elsewhere.
 
 ### Desktop Fullscreen Gallery
 
@@ -197,13 +197,13 @@ Some are contemplative. Some are playable. Some should possibly be discussed wit
 
 ## Android Road-Trip Player
 
-The Android app is the mobile-first version of the same visualisation world. It is designed for in-car use: a portrait-first layout that also works in landscape, large controls at the bottom, familiar transport actions, and a little visual theatre when buttons are pressed. Touch the visualisation to call up a temporary dual flywheel for finding music in a large folder: the outer ring moves through available initials, while the inner ring selects individual songs.
+The Android app is the mobile-first version of the same visualisation world. It is designed for in-car use: a portrait-first layout that also works in landscape, large controls at the bottom, familiar transport actions, and a little visual theatre when buttons are pressed.
 
-### Dual Flywheel Navigation
+### Compact Track Picker
 
-![Dual flywheel song navigator with Night Drive and The Garage controls on Android](docs/images/android-garage-flywheel.png)
+Tap the visualisation to open the picker. Use the horizontal Letter dial to jump to an initial, then use the Track dial or scroll the list. Tap a song to select it, or tap outside the picker to dismiss it. Android keeps the keyboard out of the way; the concentric flywheels and text search remain on desktop.
 
-For a big offline collection, the outer dial takes you rapidly through the available letters, while the inner dial traverses the songs under the selected initial. Flick either ring to build momentum; rest a finger on it to bring it gently to heel. The same touch reveals a small `*` beside the flywheels for The Garage: library, visual and expression settings without cluttering the normal car controls. Alongside it, `◐` toggles Night Drive, dimming the music controls and visual intensity for calmer after-dark use.
+The same tap reveals a small `*` for The Garage, alongside `◐` for Night Drive. The Garage holds library, visual and expression settings; Night Drive dims the controls and visual intensity.
 
 The app opens ready for your own local music. Use Android's folder picker to choose a music folder, then play offline from files already on the device. Bluetooth routing is handled by Android itself, with Play/Pause and track-skip controls exposed to compatible Bluetooth, headset and lock-screen media controls.
 
