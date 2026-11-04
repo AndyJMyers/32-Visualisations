@@ -72,6 +72,18 @@
     <div class="song-wheel-search">
       <label class="visually-hidden" for="songWheelSearch">Find a track</label>
       <input id="songWheelSearch" type="search" autocomplete="off" placeholder="Find a track..." enterkeyhint="go">
+      <div class="mobile-track-dials">
+        <label class="mobile-track-dial">
+          <span>Letter</span>
+          <input id="mobileLetterDial" type="range" min="0" max="0" value="0" aria-label="Browse by letter">
+          <output id="mobileLetterValue" for="mobileLetterDial"></output>
+        </label>
+        <label class="mobile-track-dial">
+          <span>Track</span>
+          <input id="mobileTrackDial" type="range" min="0" max="0" value="0" aria-label="Browse tracks in this letter">
+          <output id="mobileTrackValue" for="mobileTrackDial"></output>
+        </label>
+      </div>
       <div id="songWheelSearchResults" class="song-wheel-search-results" role="listbox" aria-label="Matching tracks"></div>
     </div>
     <div class="song-wheel-precision" role="group" aria-label="Precise track selection">

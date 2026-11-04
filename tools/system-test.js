@@ -191,7 +191,7 @@ async function run() {
     assert(appScript.includes("audio.addEventListener(\"pause\""), "Playback script is missing the pause-state handler.");
     assert(appScript.includes("continuousPlaybackRequested && isAtNaturalTrackEnd()"), "Playback script no longer advances when Android pauses at the natural end of a track.");
     assert(
-      /if \(currentIndex < 0 \|\| !audio\.src\) {\s*loadTrack\(0, false\);\s*}\s*continuousPlaybackRequested = true;\s*playlistAdvancePending = true;\s*playLoadedTrackWithRetry/.test(appScript),
+      /if \(currentIndex < 0 \|\| !audio\.src\) {\s*loadTrack\(0, false\);\s*}\s*continuousPlaybackRequested = true;\s*playlistAdvancePending = true;\s*playlistAdvanceFailures = 0;\s*setStatus\("starting"\);\s*playLoadedTrackWithRetry/.test(appScript),
       "Initial Play should select the first track before setting playback intent, then start from the Play-button action."
     );
 

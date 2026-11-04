@@ -14,6 +14,10 @@ const songWheelPrevious = document.querySelector("#songWheelPrevious");
 const songWheelNext = document.querySelector("#songWheelNext");
 const songWheelSearch = document.querySelector("#songWheelSearch");
 const songWheelSearchResults = document.querySelector("#songWheelSearchResults");
+const mobileLetterDial = document.querySelector("#mobileLetterDial");
+const mobileLetterValue = document.querySelector("#mobileLetterValue");
+const mobileTrackDial = document.querySelector("#mobileTrackDial");
+const mobileTrackValue = document.querySelector("#mobileTrackValue");
 const player = document.querySelector(".player");
 const audio = document.querySelector("#audio");
 const settingsCatalogue = document.querySelector("#settingsCatalogue");
@@ -1649,9 +1653,9 @@ function drawFullscreenInfo(canvasContext) {
 function setStatus(status) {
   statusLight.className = "status-light";
 
-  if (status === "playing") {
+  if (status === "playing" || status === "starting") {
     statusLight.classList.add("playing");
-    statusText.textContent = "Playing";
+    statusText.textContent = status === "starting" ? "Starting track..." : "Playing";
     playButton.classList.add("is-playing");
     playButton.setAttribute("aria-pressed", "true");
     carPlayButton.querySelector(".car-button-main").textContent = "‖";
@@ -1975,6 +1979,8 @@ let playbackTransitioning = false;
 let playbackGeneration = 0;
 let playlistAdvancePending = false;
 let playlistAdvanceRetryTimer = 0;
+let playbackAttemptGeneration = -1;
+let playlistAdvanceFailures = 0;
 let songWheelIndex = -1;
 let songWheelPointerId = null;
 let songWheelLastY = 0;
@@ -2895,12 +2901,15 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
   if (window.OldSchoolGames) window.OldSchoolGames.reset();
 
   const shouldAutoplay = autoplay || continuousPlaybackRequested;
+  clearPlaylistAdvanceRetry();
+  playlistAdvanceFailures = 0;
   playbackGeneration += 1;
   const generation = playbackGeneration;
   if (shouldAutoplay) {
     playbackTransitioning = true;
     continuousPlaybackRequested = true;
     playlistAdvancePending = true;
+    setStatus("starting");
   }
 
   if (
@@ -2917,12 +2926,9 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
   const track = tracks[currentIndex];
   const trackUrl = track.audioUrl || URL.createObjectURL(track.file);
   track.url = trackUrl;
-  audio.autoplay = shouldAutoplay;
-  audio.preload = "auto";
-  audio.src = trackUrl;
-  audio.load();
   if (Number.isFinite(resumeAt) && resumeAt > 0) {
     const applyResumeTime = () => {
+      if (generation !== playbackGeneration) return;
       const safeDuration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : resumeAt + 1;
       audio.currentTime = Math.min(resumeAt, Math.max(0, safeDuration - 0.8));
       timeReadout.textContent = `${formatDuration(audio.currentTime)} / ${formatDuration(audio.duration)}`;
@@ -2930,6 +2936,9 @@ function loadTrack(index, autoplay = true, resumeAt = null) {
     };
     audio.addEventListener("loadedmetadata", applyResumeTime, { once: true });
   }
+  audio.preload = isAndroidCarMode && !shouldAutoplay ? "metadata" : "auto";
+  audio.src = trackUrl;
+  audio.load();
   const displayTitle = trackDisplayTitle(track);
   currentTrack.textContent = displayTitle;
   currentTrack.title = displayTitle;
@@ -2950,18 +2959,33 @@ async function playCurrent() {
     loadTrack(0, false);
   }
 
-  continuousPlaybackRequested = true;
   const generation = playbackGeneration;
   setupAudioGraph();
-  await audioContext.resume();
-  if (isAndroidCarMode) {
-    await waitForAudioReady(1800, generation);
+  if (audioContext.state !== "running") {
+    // A suspended Web Audio context must not hold up the media element's play request.
+    audioContext.resume().catch((error) => console.warn("Audio context resume deferred", error));
   }
-  await audio.play();
-  if (generation !== playbackGeneration) {
+  let startTimer;
+  try {
+    await Promise.race([
+      audio.play(),
+      new Promise((resolve, reject) => {
+        startTimer = window.setTimeout(() => {
+          if (generation === playbackGeneration) audio.pause();
+          const error = new Error("Track did not start in time");
+          error.name = "PlaybackStartTimeout";
+          reject(error);
+        }, isAndroidCarMode ? 3000 : 5000);
+      }),
+    ]);
+  } finally {
+    window.clearTimeout(startTimer);
+  }
+  if (generation !== playbackGeneration || !continuousPlaybackRequested) {
     return;
   }
   clearPlaylistAdvanceRetry();
+  playlistAdvanceFailures = 0;
   playlistAdvancePending = false;
   playbackTransitioning = false;
   setStatus("playing");
@@ -2969,7 +2993,7 @@ async function playCurrent() {
   drawVisualizer();
 }
 
-function waitForAudioReady(timeoutMs = 2400, generation = playbackGeneration) {
+function waitForAudioReady(timeoutMs = 2400) {
   if (audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
     return Promise.resolve();
   }
@@ -2998,23 +3022,36 @@ function waitForAudioReady(timeoutMs = 2400, generation = playbackGeneration) {
 }
 
 async function playLoadedTrackWithRetry(generation = playbackGeneration, options = {}) {
+  if (generation !== playbackGeneration || !continuousPlaybackRequested || playbackAttemptGeneration === generation) {
+    return;
+  }
+  playbackAttemptGeneration = generation;
   const preservePlaybackIntent = Boolean(options.preservePlaybackIntent);
   try {
-    if (generation !== playbackGeneration) {
-      return;
-    }
     await playCurrent();
   } catch (error) {
+    if (generation !== playbackGeneration || !continuousPlaybackRequested) return;
     console.warn("Playback start deferred", error);
-    await waitForAudioReady(2600, generation);
+    if (isAndroidCarMode && error.name === "PlaybackStartTimeout") {
+      // A wedged WebView load cannot recover by playing the same resource state again.
+      const position = audio.currentTime;
+      if (position > 0 && !isAtNaturalTrackEnd()) {
+        audio.addEventListener("loadedmetadata", () => {
+          if (generation === playbackGeneration) audio.currentTime = position;
+        }, { once: true });
+      }
+      audio.load();
+    }
+    await waitForAudioReady(2600);
     try {
-      if (generation !== playbackGeneration) {
+      if (generation !== playbackGeneration || !continuousPlaybackRequested) {
         return;
       }
       await playCurrent();
     } catch (retryError) {
+      if (generation !== playbackGeneration || !continuousPlaybackRequested) return;
       console.warn("Playback start failed", retryError);
-      if (preservePlaybackIntent) {
+      if (preservePlaybackIntent && ++playlistAdvanceFailures <= 3) {
         playlistAdvancePending = true;
         playbackTransitioning = true;
         continuousPlaybackRequested = true;
@@ -3024,10 +3061,13 @@ async function playLoadedTrackWithRetry(generation = playbackGeneration, options
         playlistAdvancePending = false;
         continuousPlaybackRequested = false;
         playbackTransitioning = false;
+        updateAndroidMediaSession(false);
         setStatus("paused");
         setAndroidStatus("Android: tap play to continue");
       }
     }
+  } finally {
+    if (playbackAttemptGeneration === generation) playbackAttemptGeneration = -1;
   }
 }
 
@@ -3055,7 +3095,7 @@ function isAtNaturalTrackEnd() {
 }
 
 function handleTrackEnded() {
-  if (playbackTransitioning) {
+  if (!continuousPlaybackRequested || playbackTransitioning || !audio.paused || !isAtNaturalTrackEnd()) {
     return;
   }
 
@@ -3063,7 +3103,16 @@ function handleTrackEnded() {
 }
 
 function recoverContinuousPlayback() {
-  if (!continuousPlaybackRequested || playbackTransitioning || tracks.length === 0) {
+  if (!continuousPlaybackRequested || tracks.length === 0) {
+    return;
+  }
+  if (audioContext && audioContext.state !== "running") {
+    audioContext.resume().catch((error) => console.warn("Audio context resume deferred", error));
+  }
+  if (playbackTransitioning) {
+    if (playlistAdvancePending && audio.paused) {
+      playLoadedTrackWithRetry(playbackGeneration, { preservePlaybackIntent: true });
+    }
     return;
   }
 
@@ -3080,6 +3129,7 @@ function recoverContinuousPlayback() {
 }
 
 function pauseCurrent() {
+  playbackGeneration += 1;
   clearPlaylistAdvanceRetry();
   playlistAdvancePending = false;
   continuousPlaybackRequested = false;
@@ -3091,6 +3141,7 @@ function pauseCurrent() {
 }
 
 function stopCurrent() {
+  playbackGeneration += 1;
   clearPlaylistAdvanceRetry();
   playlistAdvancePending = false;
   continuousPlaybackRequested = false;
@@ -3104,8 +3155,11 @@ function stopCurrent() {
 }
 
 function resetLibraryState() {
+  playbackGeneration += 1;
   clearPlaylistAdvanceRetry();
   playlistAdvancePending = false;
+  continuousPlaybackRequested = false;
+  playbackTransitioning = false;
   tracks.forEach((track) => {
     if (track.url && track.source !== "default-server") {
       URL.revokeObjectURL(track.url);
@@ -3422,6 +3476,10 @@ function normaliseSongWheelSearch(value) {
 }
 
 function songWheelSearchMatches() {
+  if (isAndroidCarMode) {
+    return songWheelTrackIndexesForLetter(songWheelLetters()[songWheelAlphabetIndex])
+      .map((index) => ({ index, title: trackDisplayTitle(tracks[index]) }));
+  }
   const query = normaliseSongWheelSearch(songWheelSearch.value.trim());
   if (!query) {
     return [];
@@ -3449,7 +3507,7 @@ function updateSongWheelSearchResults() {
   const matches = songWheelSearchMatches();
   songWheelSearchResults.replaceChildren();
 
-  if (!songWheelSearch.value.trim()) {
+  if (!isAndroidCarMode && !songWheelSearch.value.trim()) {
     songWheelSearchResults.hidden = true;
     return matches;
   }
@@ -3466,6 +3524,7 @@ function updateSongWheelSearchResults() {
       result.className = "song-wheel-search-result";
       result.dataset.trackIndex = String(index);
       result.setAttribute("role", "option");
+      result.setAttribute("aria-selected", String(index === songWheelIndex));
       result.textContent = title;
       songWheelSearchResults.append(result);
     });
@@ -3475,8 +3534,39 @@ function updateSongWheelSearchResults() {
   return matches;
 }
 
+function updateMobileTrackDials() {
+  const letters = songWheelLetters();
+  const letter = letters[songWheelAlphabetIndex] || "#";
+  const indexes = songWheelTrackIndexesForLetter(letter);
+  const title = tracks[songWheelIndex] ? trackDisplayTitle(tracks[songWheelIndex]) : "";
+  mobileLetterDial.max = String(Math.max(0, letters.length - 1));
+  mobileLetterDial.value = String(songWheelAlphabetIndex);
+  mobileLetterDial.setAttribute("aria-valuetext", letter);
+  mobileLetterValue.textContent = letter;
+  mobileTrackDial.max = String(Math.max(0, indexes.length - 1));
+  mobileTrackDial.value = String(Math.max(0, indexes.indexOf(songWheelIndex)));
+  mobileTrackDial.setAttribute("aria-valuetext", title);
+  mobileTrackValue.textContent = title;
+}
+
+function revealMobileDialTrack() {
+  const selected = songWheelSearchResults.querySelector('[aria-selected="true"]');
+  if (!selected) return;
+  const list = songWheelSearchResults;
+  const row = selected.getBoundingClientRect();
+  const bounds = list.getBoundingClientRect();
+  if (row.top < bounds.top) list.scrollTop += row.top - bounds.top;
+  if (row.bottom > bounds.bottom) list.scrollTop += row.bottom - bounds.bottom;
+}
+
 function selectSongWheelSearchResult(index) {
   if (!Number.isInteger(index) || !tracks[index]) {
+    return;
+  }
+
+  if (isAndroidCarMode) {
+    hideSongWheel();
+    if (index !== currentIndex) loadTrack(index, continuousPlaybackRequested || !audio.paused);
     return;
   }
 
@@ -3558,6 +3648,7 @@ function songWheelIsAvailable() {
 }
 
 function hideSongWheel() {
+  songWheel.classList.remove("mobile-picker");
   songWheel.classList.remove("active");
   songWheel.setAttribute("aria-hidden", "true");
   songWheelSearch.blur();
@@ -3596,6 +3687,17 @@ function openSongWheel() {
   }
 
   clearSongWheelTimers();
+  if (isAndroidCarMode) {
+    songWheelIndex = currentIndex >= 0 ? currentIndex : 0;
+    const letter = songWheelLetterForTrack(tracks[songWheelIndex]);
+    songWheelAlphabetIndex = Math.max(0, songWheelLetters().indexOf(letter));
+    updateMobileTrackDials();
+    updateSongWheelSearchResults();
+    songWheel.classList.add("active", "mobile-picker");
+    songWheel.setAttribute("aria-hidden", "false");
+    revealMobileDialTrack();
+    return true;
+  }
   songWheelIndex = currentIndex >= 0 ? currentIndex : 0;
   songWheelVelocity = 0;
   songWheelRemainder = 0;
@@ -3793,6 +3895,7 @@ function runSongWheelFlywheel() {
 }
 
 function startSongWheel(event) {
+  if (isAndroidCarMode) return;
   if (event.target instanceof Element && event.target.closest(".song-wheel-search")) {
     return;
   }
@@ -14339,6 +14442,16 @@ window.addEventListener("pointerleave", () => {
 });
 
 visualizer.addEventListener("click", (event) => {
+  if (isAndroidCarMode && tracks.length > 0) {
+    if (songWheel.classList.contains("active")) {
+      clearSongWheelTimers();
+      hideSongWheel();
+    } else {
+      openSongWheel();
+    }
+    return;
+  }
+
   if (performance.now() < songWheelSuppressClickUntil) {
     return;
   }
@@ -14358,6 +14471,8 @@ visualizer.addEventListener("click", (event) => {
 });
 
 function handleVisualizerSongWheelTouch(event) {
+  if (isAndroidCarMode) return;
+
   if (songWheelIsAvailable() && songWheel.classList.contains("active")) {
     clearSongWheelTimers();
     stopSongWheelBrake();
@@ -14394,6 +14509,24 @@ songWheelNext.addEventListener("click", () => nudgeSongWheel(1));
 
 songWheelSearch.addEventListener("pointerdown", (event) => {
   event.stopPropagation();
+});
+
+mobileLetterDial.addEventListener("input", () => {
+  songWheelAlphabetIndex = Number(mobileLetterDial.value);
+  songWheelIndex = songWheelTrackIndexesForLetter(songWheelLetters()[songWheelAlphabetIndex])[0];
+  updateMobileTrackDials();
+  updateSongWheelSearchResults();
+  songWheelSearchResults.scrollTop = 0;
+});
+
+mobileTrackDial.addEventListener("input", () => {
+  const indexes = songWheelTrackIndexesForLetter(songWheelLetters()[songWheelAlphabetIndex]);
+  songWheelIndex = indexes[Number(mobileTrackDial.value)];
+  updateMobileTrackDials();
+  for (const row of songWheelSearchResults.querySelectorAll("[data-track-index]")) {
+    row.setAttribute("aria-selected", String(Number(row.dataset.trackIndex) === songWheelIndex));
+  }
+  revealMobileDialTrack();
 });
 
 songWheelSearch.addEventListener("input", () => {
@@ -14601,7 +14734,7 @@ trackList.addEventListener("keydown", (event) => {
 });
 
 function togglePlayPause() {
-  if (!audio.paused) {
+  if (!audio.paused || (continuousPlaybackRequested && playlistAdvancePending)) {
     pauseCurrent();
   } else {
     if (currentIndex < 0 || !audio.src) {
@@ -14610,6 +14743,8 @@ function togglePlayPause() {
 
     continuousPlaybackRequested = true;
     playlistAdvancePending = true;
+    playlistAdvanceFailures = 0;
+    setStatus("starting");
     playLoadedTrackWithRetry(playbackGeneration, { preservePlaybackIntent: true });
   }
 }
@@ -14649,21 +14784,17 @@ fireworkSpeed.addEventListener("input", () => {
 });
 
 audio.addEventListener("ended", handleTrackEnded);
-audio.addEventListener("canplay", () => {
-  if (playlistAdvancePending && continuousPlaybackRequested) {
-    playLoadedTrackWithRetry(playbackGeneration, { preservePlaybackIntent: true });
-  }
-});
 audio.addEventListener("playing", () => {
+  if (!continuousPlaybackRequested || audio.paused) return;
   clearPlaylistAdvanceRetry();
   playlistAdvancePending = false;
   playbackTransitioning = false;
-  continuousPlaybackRequested = true;
   updateAndroidMediaSession(true);
   setStatus("playing");
   scheduleSessionSave(120);
 });
 audio.addEventListener("pause", () => {
+  if (!audio.paused) return;
   if (continuousPlaybackRequested && isAtNaturalTrackEnd()) {
     handleTrackEnded();
     return;
@@ -14705,9 +14836,9 @@ audio.addEventListener("error", () => {
 });
 
 window.waveDeckAndroidMediaCommand = (command) => {
-  if (command === "play" && audio.paused) {
+  if (command === "play" && audio.paused && !continuousPlaybackRequested) {
     togglePlayPause();
-  } else if (command === "pause" && !audio.paused) {
+  } else if (command === "pause" && (!audio.paused || continuousPlaybackRequested)) {
     pauseCurrent();
   } else if (command === "next") {
     changeTrackByStep(1);
