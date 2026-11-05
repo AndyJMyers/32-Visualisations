@@ -172,6 +172,13 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
+  if (visualizerSelect.value === 'lightning') return [...alchemicalRecipes.map(recipe => ({
+    ...recipe, form: recipe.form % 2,
+  })), {
+    name: 'Churchyard Storm', form: 'churchyard', theme: 1, speed: 1, size: 1, count: 6, grasp: .4, smiles: 0, insanity: 0,
+  }, {
+    name: 'Pastoral Resistance', form: 'farmstorm', theme: 1, speed: 1, size: 1, count: 6, grasp: .4, smiles: 1, insanity: .55,
+  }];
   if (visualizerSelect.value === 'kolasuperdeep') return window.KolaSuperdeep.recipes;
   if (visualizerSelect.value === 'boilingpot') return window.BoilingPot.recipes;
   if (visualizerSelect.value === 'androidchicks') return window.AndroidChicks.recipes;
@@ -503,6 +510,7 @@ let eyePointer = { x: 0, y: 0, active: false };
 let lightningFrame = 0;
 let lightningBolts = [];
 let lightningImpacts = [];
+let churchyardStorm = null;
 let asteroidFrame = 0;
 let asteroidShip = null;
 let asteroidRocks = [];
@@ -1178,6 +1186,8 @@ const visualizerConfigs = {
     forms: [
       ["storm", "Storm"],
       ["missilecommand", "Missile Command"],
+      ["churchyard", "Churchyard Storm"],
+      ["farmstorm", "Pastoral Resistance"],
     ],
   },
   asteroids: {
@@ -2819,6 +2829,8 @@ function restartVisualizer() {
   lightningFrame = 0;
   lightningBolts = [];
   lightningImpacts = [];
+  churchyardStorm = null;
+  window.LightningFarm?.reset();
   asteroidFrame = 0;
   asteroidShip = null;
   asteroidRocks = [];
@@ -7379,6 +7391,90 @@ function drawLightningImpacts(canvasContext, width, height, bassEnergy, trebleEn
   canvasContext.restore();
 }
 
+function drawChurchyardStorm(c, width, height, bass, mid, treble) {
+  const now = performance.now();
+  if (!churchyardStorm) churchyardStorm = { last: now, time: 0, next: 1.8, hits: [0, 0], fires: [0, 0] };
+  const state = churchyardStorm;
+  const dt = Math.min(.1, Math.max(0, (now - state.last) / 1000));
+  state.last = now;
+  state.time += dt;
+  const targets = [{ x: width * .32, y: height * .29 }, { x: width * .76, y: height * .46 }];
+  if (state.time >= state.next) {
+    const index = Math.random() < .5 ? 0 : 1;
+    const target = Math.random() < .72 ? targets[index] : { x: width * (.08 + Math.random() * .84), y: height * .84 };
+    const bolt = createLightningBolt(width, height, .55 + bass * .35, 1, bass, mid, treble, target);
+    bolt.maxLife = 46;
+    bolt.branches = bolt.branches.slice(0, 2);
+    lightningBolts.push(bolt);
+    if (target === targets[index]) {
+      state.hits[index]++;
+      if (index === 1 || state.hits[index] > 1) state.fires[index] = 12 + Math.random() * 10;
+    }
+    state.next = state.time + 3.5 + Math.random() * 3 - Math.min(1, bass);
+  }
+  const ground = height * .84;
+  c.save();
+  c.fillStyle = "#101b20";
+  c.beginPath(); c.moveTo(0, height);
+  for (let i = 0; i <= 30; i++) c.lineTo(width * i / 30, ground + Math.sin(i * .5) * height * .018);
+  c.lineTo(width, height); c.closePath(); c.fill();
+  // The spire and tree crown share the exact coordinates used by targeted bolts.
+  const unit = Math.min(width / 900, height / 560);
+  c.save(); c.translate(targets[0].x, ground); c.scale(unit, unit);
+  const spireTop = (targets[0].y - ground) / unit;
+  c.fillStyle = "#39444c"; c.fillRect(-40, -142, 80, 142); c.fillRect(20, -94, 155, 94);
+  c.fillStyle = "#18272d";
+  c.beginPath(); c.moveTo(-47, -142); c.lineTo(0, spireTop); c.lineTo(47, -142); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(10, -94); c.lineTo(94, -144); c.lineTo(187, -94); c.closePath(); c.fill();
+  c.fillStyle = "#e6ba70";
+  for (const x of [-17, 59, 103, 147]) {
+    c.beginPath(); c.arc(x, -58, 9, Math.PI, 0); c.lineTo(x + 9, -32); c.lineTo(x - 9, -32); c.closePath(); c.fill();
+  }
+  c.fillStyle = "#10181e"; c.beginPath(); c.arc(0, -32, 16, Math.PI, 0); c.lineTo(16, 0); c.lineTo(-16, 0); c.closePath(); c.fill();
+  if (state.hits[0]) {
+    c.strokeStyle = "#090b0e"; c.lineWidth = 4;
+    c.beginPath(); c.moveTo(0, spireTop); c.lineTo(7, spireTop + 44); c.lineTo(-9, spireTop + 69); c.lineTo(8, spireTop + 93); c.stroke();
+    c.fillStyle = "#070b0e";
+    c.beginPath(); c.moveTo(-9, spireTop + 25); c.lineTo(0, spireTop); c.lineTo(8, spireTop + 40); c.closePath(); c.fill();
+  }
+  c.restore();
+  const tree = targets[1];
+  c.save(); c.translate(tree.x, ground);
+  const trunk = ground - tree.y;
+  c.strokeStyle = state.hits[1] ? "#171315" : "#25332c";
+  c.lineWidth = 13 * unit; c.lineCap = "round";
+  c.beginPath(); c.moveTo(0, 0); c.lineTo(-8 * unit, -trunk * .6); c.lineTo(0, -trunk); c.stroke();
+  for (let i = 0; i < 13; i++) {
+    const side = i % 2 ? -1 : 1;
+    const y = -trunk * (.35 + i * .042);
+    c.lineWidth = (6 - i * .25) * unit;
+    c.beginPath(); c.moveTo(-4 * unit, y); c.lineTo(side * (35 + i * 3) * unit, y - 35 * unit); c.lineTo(side * (51 + i * 3) * unit, y - 62 * unit); c.stroke();
+    if (!state.hits[1] || i % 3) {
+      c.fillStyle = state.hits[1] ? "#212b26" : "#34483b";
+      c.beginPath(); c.ellipse(side * (50 + i * 3) * unit, y - 55 * unit, 28 * unit, 19 * unit, -.3, 0, Math.PI * 2); c.fill();
+    }
+  }
+  c.restore();
+  state.fires.forEach((fire, index) => {
+    state.fires[index] = Math.max(0, fire - dt);
+    if (fire <= 0) return;
+    const x = targets[index].x, y = targets[index].y + height * .06;
+    const strength = Math.min(1, fire / 3);
+    for (let i = 0; i < 9; i++) {
+      const phase = (state.time * (.65 + i * .025) + i * .137) % 1;
+      c.fillStyle = `rgba(80,85,93,${(1 - phase) * .25 * strength})`;
+      c.beginPath(); c.arc(x + Math.sin(i + phase * 4) * 16 * unit + phase * 45 * unit, y - phase * 135 * unit, (5 + phase * 20) * unit, 0, Math.PI * 2); c.fill();
+      const sway = Math.sin(state.time * 9 + i) * 5;
+      c.fillStyle = i % 2 ? "#ffc952" : "#e75c25";
+      c.globalAlpha = strength * .85;
+      c.beginPath(); c.moveTo(x + (i - 4) * 5 * unit, y);
+      c.quadraticCurveTo(x + sway * unit, y - 35 * unit, x + ((i - 4) * 3 + sway) * unit, y - (20 + Math.sin(state.time * 12 + i) * 8 + bass * 9) * unit);
+      c.lineTo(x + (i - 2) * 5 * unit, y); c.fill(); c.globalAlpha = 1;
+    }
+  });
+  c.restore();
+}
+
 function drawLightningScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, bandIntensities) {
   const rate = fireworkSpeedMultiplier();
   const missileMode = fireworkFormSelect.value === "missilecommand";
@@ -7386,6 +7482,24 @@ function drawLightningScene(canvasContext, width, height, bassEnergy, midsEnergy
     ? lightningImpacts.slice().reverse().find((impact) => impact.age < 86)
     : null;
   drawLightningSky(canvasContext, width, height, bassEnergy, trebleEnergy);
+  if (fireworkFormSelect.value === "farmstorm") {
+    window.LightningFarm.draw(canvasContext, width, height, performance.now(), {
+      bass: bassEnergy, mid: midsEnergy, treble: trebleEnergy,
+      strike: target => {
+        const bolt = createLightningBolt(width, height, .7, 1, bassEnergy, midsEnergy, trebleEnergy, target);
+        bolt.maxLife = 44;
+        bolt.branches = bolt.branches.slice(0, 2);
+        lightningBolts.push(bolt);
+      },
+    });
+    drawLightningBolts(canvasContext, width, height, bassEnergy, trebleEnergy);
+    return;
+  }
+  if (fireworkFormSelect.value === "churchyard") {
+    drawChurchyardStorm(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy);
+    drawLightningBolts(canvasContext, width, height, bassEnergy, trebleEnergy);
+    return;
+  }
 
   bandIntensities.forEach((intensity, bandIndex) => {
     const threshold = 0.18 + bandIndex * 0.035;
@@ -7681,6 +7795,27 @@ function drawAsteroidHud(canvasContext, width, height, bassEnergy) {
   canvasContext.restore();
 }
 
+function steerAsteroidAutopilot(width, height, tempo, bass, treble) {
+  const ship = asteroidShip;
+  if (asteroidKeys.size) ship.manualUntil = asteroidFrame + 180;
+  if (asteroidFrame < (ship.manualUntil || 0)) return;
+  const target = asteroidRocks.reduce((best, rock) => {
+    const distance = Math.hypot(rock.x - ship.x, rock.y - ship.y);
+    return !best || distance < best.distance ? { rock, distance } : best;
+  }, null);
+  const desired = target
+    ? Math.atan2(target.rock.y + target.rock.vy * target.distance / 11 - ship.y, target.rock.x + target.rock.vx * target.distance / 11 - ship.x)
+    : Math.atan2(height * .5 - ship.y, width * .5 - ship.x) + Math.sin(asteroidFrame * .009);
+  const error = Math.atan2(Math.sin(desired - ship.angle), Math.cos(desired - ship.angle));
+  ship.angle += Math.max(-.045 * tempo, Math.min(.045 * tempo, error));
+  if (Math.abs(error) < .55 && Math.hypot(ship.vx, ship.vy) < 3.4) {
+    ship.vx += Math.cos(ship.angle) * .065 * tempo;
+    ship.vy += Math.sin(ship.angle) * .065 * tempo;
+    ship.thrust = .55 + bass * .4;
+  }
+  if (target && Math.abs(error) < .16 && asteroidFrame - asteroidLastShot > 24 - treble * 8) fireShipMissile();
+}
+
 function updateAsteroidsScene(canvasContext, width, height, bassEnergy, midsEnergy, trebleEnergy, bandIntensities) {
   setupAsteroidShip(width, height);
   const tempo = fireworkSpeedMultiplier();
@@ -7691,6 +7826,7 @@ function updateAsteroidsScene(canvasContext, width, height, bassEnergy, midsEner
   if (asteroidKeys.has("KeyA")) asteroidShip.angle -= 0.065 * tempo;
   if (asteroidKeys.has("KeyD")) asteroidShip.angle += 0.065 * tempo;
   asteroidShip.thrust *= 0.82;
+  steerAsteroidAutopilot(width, height, tempo, bassEnergy, trebleEnergy);
   if (asteroidKeys.has("KeyW")) {
     asteroidShip.vx += Math.cos(asteroidShip.angle) * 0.18 * tempo;
     asteroidShip.vy += Math.sin(asteroidShip.angle) * 0.18 * tempo;

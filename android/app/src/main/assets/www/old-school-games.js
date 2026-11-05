@@ -229,9 +229,29 @@ window.OldSchoolGames = (() => {
     c.fillStyle = p.gold; c.beginPath(); c.moveTo(0, 0);
     c.arc(0, 0, 17 + bass * 3, mouth, TAU - mouth); c.closePath(); c.fill(); c.restore();
     const ghosts = [p.a, p.pink, p.b];
+    let eaten = 0;
     ghosts.forEach((color, i) => {
-      const point = pointAt((travel - 3 - i * 4 + length) % length);
+      const powerTravel = vulnerable ? travel - lastPower : 0;
+      const lead = .75 + i * .85;
+      const caughtAt = (lead - .35) / .85;
+      const caught = vulnerable && powerTravel >= caughtAt;
+      if (caught) eaten++;
+      const distance = vulnerable
+        ? caught
+          ? lastPower + lead + caughtAt * .15 - (powerTravel - caughtAt) * 3.5
+          : lastPower + lead + powerTravel * .15
+        : (travel - 3 - i * 4 + length) % length;
+      const point = pointAt(distance);
       const gx = point.x, gy = point.y + Math.sin(time * 3 + i * 2) * 3;
+      if (caught) {
+        ellipse(c, gx - 5, gy - 2, 4, 5, '#fff'); ellipse(c, gx + 5, gy - 2, 4, 5, '#fff');
+        ellipse(c, gx - 6, gy - 2, 2, 2, p.b); ellipse(c, gx + 4, gy - 2, 2, 2, p.b);
+        if (powerTravel - caughtAt < .65) {
+          const bite = pointAt(lastPower + caughtAt);
+          label(c, String(200 * 2 ** i), bite.x, bite.y - 28 - (powerTravel - caughtAt) * 24, 16, p.gold);
+        }
+        return;
+      }
       c.fillStyle = vulnerable ? '#315cc8' : color;
       c.beginPath(); c.arc(gx, gy, 16, Math.PI, 0); c.lineTo(gx + 16, gy + 17);
       for (let j = 2; j >= -2; j--) c.lineTo(gx + j * 7, gy + 12 + (j % 2 ? 5 : 0));
@@ -245,7 +265,7 @@ window.OldSchoolGames = (() => {
     });
     if (vulnerable) label(c, 'POWER!', 450, 445, 16, p.gold);
     c.strokeStyle = p.b; c.lineWidth = 5; c.strokeRect(left - 16, top - 19, 15 * cell + 32, 6 * cell + 38);
-    return vulnerable;
+    return { vulnerable, eaten };
   }
   function invaders(c, p, local) {
     const alien = ['00111100', '01111110', '11111111', '11011011', '11111111', '00100100', '01011010'];
@@ -534,10 +554,14 @@ window.OldSchoolGames = (() => {
     const local = time % 16, p = palettes[form];
     c.save(); c.scale(w / 900, h / 500);
     background(c, p, scene);
-    let ghostsVulnerable = false, invadersDestroyed = 0;
+    let ghostsVulnerable = false, ghostsEaten = 0, invadersDestroyed = 0;
     if (scene === 'robots') robots(c, p, local);
     else if (scene === 'kerplunk') kerplunk(c, p, local);
-    else if (scene === 'maze') ghostsVulnerable = maze(c, p, local);
+    else if (scene === 'maze') {
+      const chase = maze(c, p, local);
+      ghostsVulnerable = chase.vulnerable;
+      ghostsEaten = chase.eaten;
+    }
     else if (scene === 'invaders') invadersDestroyed = invaders(c, p, local);
     else if (scene === 'pong') pong(c, p, local);
     else if (scene === 'hover') hover(c, p, local);
@@ -547,7 +571,7 @@ window.OldSchoolGames = (() => {
     const turn = Math.max(0, (local - 15.5) / .5);
     if (turn) { c.fillStyle = p.glass; c.globalAlpha = turn * .68; c.fillRect(0, 0, 900, 500); c.globalAlpha = 1; }
     c.restore();
-    return { time, phase: scene, form, beats, ghostsVulnerable, invadersDestroyed };
+    return { time, phase: scene, form, beats, ghostsVulnerable, ghostsEaten, invadersDestroyed };
   }
   return { recipes, draw, reset };
 })();
