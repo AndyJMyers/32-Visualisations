@@ -12,6 +12,12 @@
 
 **Three minutes. Six original songs. Twenty-one visualisations. All four Arcana.** [Watch or download the film](https://github.com/AndyJMyers/32-Visualisations/raw/refs/heads/master/docs/marketing/32v-premiere.mp4). Your music, an extraordinary view. Includes glimpses of the development collection. [Film, soundtrack and credits](docs/marketing/32V-PREMIERE.md).
 
+## Coming Soon...
+
+[![Space Time Non Binary: coming soon, Space-Time Warp and Wormhole with Seattle Woman](docs/marketing/space-time-non-binary-poster.jpg)](https://github.com/AndyJMyers/32-Visualisations/raw/refs/heads/master/docs/marketing/space-time-non-binary-coming-soon.mp4)
+
+**Space Time Non Binary. Two new worlds. Sixty seconds.** Space-Time Warp and Wormhole fold space, perspective and colour around **Seattle Woman**, with eight contrasting alchemies. These visuals are in development for a future update, not the current Google Play build. [Watch the coming-soon trailer](https://github.com/AndyJMyers/32-Visualisations/raw/refs/heads/master/docs/marketing/space-time-non-binary-coming-soon.mp4). [Film and credits](docs/marketing/SPACE-TIME-NON-BINARY.md).
+
 32 Visualisations is a boutique Android music player for people who still own their music and want it to look as good as it sounds.
 
 It plays local audio from your device, works without an internet connection once installed, and turns your files into 64 vivid audio-reactive visualisations across two collections. It began as a desktop local music player with a taste for **Mental. Saturation. Overstimulation.** It has grown into an Android road-trip music player built for big stereos, strange colour, and cockpit-simple controls.
