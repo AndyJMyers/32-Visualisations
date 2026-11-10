@@ -1,6 +1,6 @@
 /* A virtual camera sampled through a narrow aperture into a chronological strip buffer. */
 window.SlitScan=(()=>{
-  const TAU=Math.PI*2,W=640,H=360,STEP=1/30;
+  const TAU=Math.PI*2,W=640,H=360;
   const forms=['platform','velvet','stargate','negative'];
   const names=['Midnight Platform','Velvet Time','Infinity Aperture','Negative Exposure'];
   const recipes=names.map((name,form)=>({name,form,theme:0,speed:1,size:1,count:8,grasp:.4,smiles:1,insanity:form===2?1:.55}));
@@ -8,10 +8,11 @@ window.SlitScan=(()=>{
   const noise=n=>{const v=Math.sin(n*71.31+11)*43758.5;return v-Math.floor(v);};
   const wrap=(v,n)=>(v%n+n)%n;
   let camera,history,ordered,cc,hc,oc,time=0,last=null,sampled=0,cursor=0,active=null,bass=0,mid=0,treble=0,samples=0;
+  let quality=1,samplingHz=30;
   function reset(){camera=history=ordered=cc=hc=oc=null;time=0;last=null;sampled=0;cursor=0;active=null;bass=mid=treble=0;samples=0;}
   function canvas(c){
     const result=c.canvas.ownerDocument?c.canvas.ownerDocument.createElement('canvas'):new OffscreenCanvas(W,H);
-    result.width=W;result.height=H;return result;
+    result.width=W*quality;result.height=H*quality;return result;
   }
   const hue=(h,s,l,a=1)=>`hsla(${h},${s}%,${l}%,${a})`;
   function disc(c,x,y,rx,ry,fill){c.fillStyle=fill;c.beginPath();c.ellipse(x,y,rx,ry,0,0,TAU);c.fill();}
@@ -105,48 +106,58 @@ window.SlitScan=(()=>{
   const aperture=t=>active==='platform'?
     clamp(320+Math.sin(t*.89)*200+Math.sin(t*1.7)*60,12,W-12):
     clamp(320+Math.sin(t*.51)*145+Math.sin(t*.17)*60,12,W-12);
-  function expose(t,width){source(t,active);const x=aperture(t),slit=2+treble*6;hc.drawImage(camera,x-slit/2,0,slit,H,cursor,0,width,H);cursor=(cursor+width)%W;samples++;}
-  function init(c,form){
+  function expose(t,width){source(t,active);const x=aperture(t),slit=2+treble*6;hc.drawImage(camera,(x-slit/2)*quality,0,slit*quality,H*quality,cursor*quality,0,width*quality,H*quality);cursor=(cursor+width)%W;samples++;}
+  function init(c,form,detail,rate){
+    quality=detail;samplingHz=rate;
     active=form;camera=canvas(c);history=canvas(c);ordered=canvas(c);cc=camera.getContext('2d');hc=history.getContext('2d');oc=ordered.getContext('2d');
+    cc.setTransform(quality,0,0,quality,0,0);
     for(let i=0;i<80;i++)expose(-W/60+(i+1)/80*W/60,8);
     source(0,form);
   }
   function draw(c,width,height,now,opts={}){
     const form=typeof opts.form==='number'?forms[opts.form%4]:forms.includes(opts.form)?opts.form:'platform';
-    if(form!==active||!camera){reset();init(c,form);}
+    const displayWidth=c.canvas.clientWidth||width;
+    const detail=opts.quality===1?1:opts.quality===2||displayWidth>=1400?2:1;
+    const rate=opts.sampleRate===60?60:30;
+    if(form!==active||!camera||quality!==detail||samplingHz!==rate){reset();init(c,form,detail,rate);}
     const animate=opts.animate!==false,dt=!animate||last===null?0:clamp((now-last)/1000,0,.1);last=animate?now:null;
     const ease=1-Math.exp(-dt*5);
     bass+=(clamp(Number(opts.bass)||0,0,1)-bass)*ease;mid+=(clamp(Number(opts.mid)||0,0,1)-mid)*ease;treble+=(clamp(Number(opts.treble)||0,0,1)-treble)*ease;
     time+=dt*clamp(Number(opts.speed)||1,.2,3);
-    while(sampled+STEP<=time){sampled+=STEP;expose(sampled,2);}
-    oc.clearRect(0,0,W,H);
-    oc.drawImage(history,cursor,0,W-cursor,H,0,0,W-cursor,H);
-    if(cursor)oc.drawImage(history,0,0,cursor,H,W-cursor,0,cursor,H);
-    c.save();c.scale(width/960,height/600);c.fillStyle='#030512';c.fillRect(0,0,960,600);
+    const step=1/samplingHz;
+    while(sampled+step<=time){sampled+=step;expose(sampled,60/samplingHz);}
+    oc.clearRect(0,0,W*quality,H*quality);
+    oc.drawImage(history,cursor*quality,0,(W-cursor)*quality,H*quality,0,0,(W-cursor)*quality,H*quality);
+    if(cursor)oc.drawImage(history,0,0,cursor*quality,H*quality,(W-cursor)*quality,0,cursor*quality,H*quality);
+    c.save();c.scale(width/960,height/600);c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.fillStyle='#030512';c.fillRect(0,0,960,600);
     if(form==='stargate'){
       const cx=480+Math.sin(time*.25)*24,cy=300+Math.cos(time*.21)*20;
       for(let wall=0;wall<4;wall++){
         c.save();c.translate(cx,cy);c.rotate(wall*Math.PI/2+Math.sin(time*.12)*.07);
-        for(let i=119;i>=0;i--){
-          const a=i/120,b=(i+1)/120,x=8+a*a*660,xx=8+b*b*660,h=16+a*870;
-          c.drawImage(ordered,i/120*(W-3),0,3,H,x,-h/2,xx-x+1,h);
+        const slices=120*quality;
+        for(let i=slices-1;i>=0;i--){
+          const a=i/slices,b=(i+1)/slices,x=8+a*a*660,xx=8+b*b*660,h=16+a*870;
+          c.drawImage(ordered,i/slices*(W*quality-3),0,3,H*quality,x,-h/2,xx-x+1/quality,h);
         }c.restore();
       }
+    }else if(form==='platform'){
+      c.drawImage(ordered,0,0,960,600);
     }else{
-      for(let y=0;y<H;y+=3){
+      const band=quality===2?1:3;
+      for(let y=0;y<H;y+=band){
         const displacement=form==='velvet'?Math.sin(y*.025+time*.65)*(12+bass*24):form==='negative'?Math.sin(y*.04-time*.5)*7:0;
-        c.drawImage(ordered,0,y,W,3,displacement,y/H*600,960,3/H*600+1);
+        c.drawImage(ordered,0,y*quality,W*quality,band*quality,displacement,y/H*600,960,band/H*600+1/quality);
       }
     }
     const shade=c.createRadialGradient(480,300,170,480,300,640);shade.addColorStop(0,'#00000000');shade.addColorStop(1,'#030511aa');c.fillStyle=shade;c.fillRect(0,0,960,600);
-    c.save();c.globalAlpha=.035;c.fillStyle='#d5f5ff';for(let y=0;y<600;y+=4)c.fillRect(0,y,960,1);c.restore();
+    c.save();c.globalAlpha=.035/quality;c.fillStyle='#d5f5ff';for(let y=0;y<600;y+=4)c.fillRect(0,y,960,1);c.restore();
     // The live view makes the time separation legible without asking for a real camera.
     c.save();c.globalAlpha=.82;c.fillStyle='#020713';c.fillRect(747,463,195,122);c.drawImage(camera,753,469,183,103);
     const slitX=753+aperture(sampled)/W*183;line(c,slitX,469,slitX,572,'#b1f5ff',1.4);
     c.font='10px Arial';c.fillStyle='#d5eff1';c.fillText('VIRTUAL CAMERA / NOW',758,582);c.restore();
     c.font='11px Arial';c.fillStyle='#d3e9e9aa';c.fillText('SLIT-SCAN / '+names[forms.indexOf(form)].toUpperCase(),22,578);
     c.restore();
-    return {time,form,samples,cursor,historySeconds:W/60,aperture:aperture(sampled)};
+    return {time,form,samples,cursor,historySeconds:W/60,aperture:aperture(sampled),sourceWidth:W*quality,sourceHeight:H*quality,samplingHz};
   }
   return {recipes,draw,reset};
 })();
