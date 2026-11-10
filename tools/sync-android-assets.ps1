@@ -56,5 +56,6 @@ Copy-Item -LiteralPath (Join-Path $repoRoot "orbital.js") -Destination (Join-Pat
 Copy-Item -LiteralPath (Join-Path $repoRoot "slit-scan.js") -Destination (Join-Path $assetRoot "slit-scan.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "schlieren.js") -Destination (Join-Path $assetRoot "schlieren.js") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "anamorphic.js") -Destination (Join-Path $assetRoot "anamorphic.js") -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot "bipack.js") -Destination (Join-Path $assetRoot "bipack.js") -Force
 
 Write-Host "Synced web assets into android/app/src/main/assets/www"
