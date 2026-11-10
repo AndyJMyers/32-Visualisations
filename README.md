@@ -12,6 +12,18 @@
 
 **Three minutes. Six original songs. Twenty-one visualisations. All four Arcana.** [Watch or download the film](https://github.com/AndyJMyers/32-Visualisations/raw/refs/heads/master/docs/marketing/32v-premiere.mp4). Your music, an extraordinary view. Includes glimpses of the development collection. [Film, soundtrack and credits](docs/marketing/32V-PREMIERE.md).
 
+## Mission To Mars 1.0
+
+**Ninety seconds. Three photographic worlds. Twelve alchemies.** Schlieren Photography makes the air visible; Anamorphic Squeeze brings widescreen spy-cinema glamour; Bipack Processing lets a neon cabaret and a cathedral at High Mass share the same exposure. All move to **Mission to Mars**, with original music by Andy J Myers.
+
+<p align="center">
+  <a href="https://github.com/AndyJMyers/32-Visualisations/raw/refs/heads/master/docs/marketing/mission-to-mars-1.0-portrait.mp4">
+    <img src="docs/marketing/mission-to-mars-1.0-poster.jpg" alt="Watch Mission To Mars 1.0: the ninety-second portrait film featuring Schlieren Photography, Anamorphic Squeeze and Bipack Processing" width="360">
+  </a>
+</p>
+
+[**Watch or download the portrait film**](https://github.com/AndyJMyers/32-Visualisations/raw/refs/heads/master/docs/marketing/mission-to-mars-1.0-portrait.mp4) - full 1080 x 1920, 60 fps, with sound. [Origins, inspiration and credits](docs/marketing/MISSION-TO-MARS-1.0.md). These are approved v1.0 development visualisations, not a claim of availability in the current Google Play build.
+
 ## Coming Soon...
 
 [![Space Time Non Binary: coming soon, Space-Time Warp and Wormhole with Seattle Woman](docs/marketing/space-time-non-binary-poster.jpg)](https://github.com/AndyJMyers/32-Visualisations/raw/refs/heads/master/docs/marketing/space-time-non-binary-coming-soon.mp4)
