@@ -89,6 +89,7 @@ autumnVisualOptions.push(['wormhole', '40 · Wormhole']);
 autumnVisualOptions.push(['orbital', '41 · Orbital']);
 autumnVisualOptions.push(['slitscan', '42 · Slit-Scan Photography']);
 autumnVisualOptions.push(['schlieren', '43 · Schlieren Photography']);
+autumnVisualOptions.push(['anamorphic', '44 · Anamorphic Squeeze']);
 const arcanaSuits = [
   { id: 'cups', label: 'Cups', visuals: ['swampbubbles', 'lizardlouche', 'goddesskisses', 'turtleriver', 'oilslide', 'oysterpearls', 'waterlilies', 'innerspace', 'champagnefountain', 'shysmiles', 'ratrace', 'sunflowersmiles', 'opiumeater', 'lifestudies', 'dawncobweb', 'lingerie', 'androidchicks', 'boilingpot'] },
   { id: 'swords', label: 'Swords', visuals: ['arrowstorm', 'knifethunk', 'lightning', 'asteroids', 'warofroses', 'thescream', 'yourcall', 'beowulf', 'churchill', 'ironlady', 'blair', 'pnp', 'bones', 'spaced', 'romans', 'oldschoolgames'] },
@@ -102,11 +103,12 @@ arcanaSuits.find(suit => suit.id === 'wands').visuals.push('wormhole');
 arcanaSuits.find(suit => suit.id === 'pentacles').visuals.push('orbital');
 arcanaSuits.find(suit => suit.id === 'wands').visuals.push('slitscan');
 arcanaSuits.find(suit => suit.id === 'wands').visuals.push('schlieren');
+arcanaSuits.find(suit => suit.id === 'wands').visuals.push('anamorphic');
 const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, label.replace(/^\d+\s*[·.]\s*/, '')]));
 const visualSourceSeason = new Map([...summerVisualOptions.map(([value]) => [value, 'summer']), ...autumnVisualOptions.map(([value]) => [value, 'autumn'])]);
 const arcanaSuitByVisual = new Map(arcanaSuits.flatMap(suit => suit.visuals.map(value => [value, suit.id])));
-if (allVisualOptions.size !== 75 || arcanaSuitByVisual.size !== 75 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
-  throw new Error('Arcana catalogue must assign all 75 visuals exactly once, with at least sixteen per suit.');
+if (allVisualOptions.size !== 76 || arcanaSuitByVisual.size !== 76 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
+  throw new Error('Arcana catalogue must assign all 76 visuals exactly once, with at least sixteen per suit.');
 }
 let currentArcanaSuit = arcanaSuitByVisual.get(visualizerSelect.value) || 'cups';
 let currentSeason = 'summer';
@@ -184,6 +186,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
+  if (visualizerSelect.value === 'anamorphic') return window.AnamorphicSqueeze.recipes;
   if (visualizerSelect.value === 'schlieren') return window.Schlieren.recipes;
   if (visualizerSelect.value === 'slitscan') return window.SlitScan.recipes;
   if (visualizerSelect.value === 'orbital') return window.Orbital.recipes;
@@ -244,6 +247,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'anamorphic') {
+    window.AnamorphicSqueeze.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'schlieren') {
     window.Schlieren.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -858,6 +867,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  anamorphic: {
+    ariaLabel: 'Anamorphic Squeeze: original spy-cinema scenes, a gun-barrel opening, casino glamour, an Alpine chase and an underwater escape through a breathing widescreen lens',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Assignment', speed: 'Screen pace' },
+    forms: [['barrel', 'Licence to Illuminate'], ['casino', 'Velvet, Gold & Dangerous Company'], ['alpine', 'The Alpine Arrangement'], ['abyss', 'Deep Cover']],
+    defaults: { speed: '1' },
+  },
   schlieren: {
     ariaLabel: 'Schlieren Photography: pressure fronts, body heat, galloping horses and racing cars revealed through imagined density gradients',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -2149,6 +2165,10 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'anamorphic') {
+    const selected = ['barrel', 'casino', 'alpine', 'abyss'].indexOf(fireworkFormSelect.value);
+    if (selected >= 0) return selected;
+  }
   if (visualizerSelect.value === 'schlieren') {
     const selected = ['ballistics', 'velvet', 'equine', 'velocity'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
@@ -2831,7 +2851,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : visualizer === 'slitscan' || visualizer === 'schlieren' ? alchemyRecipeIndex() + 1
+    : visualizer === 'slitscan' || visualizer === 'schlieren' || visualizer === 'anamorphic' ? alchemyRecipeIndex() + 1
     : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "puntingwithladies" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" || visualizer === "plentyofpuff" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
@@ -2879,6 +2899,7 @@ function restartVisualizer() {
   if (window.Orbital) window.Orbital.reset();
   if (window.SlitScan) window.SlitScan.reset();
   if (window.Schlieren) window.Schlieren.reset();
+  if (window.AnamorphicSqueeze) window.AnamorphicSqueeze.reset();
   if (window.InnerSpace) window.InnerSpace.reset();
   if (window.ChampagneFountain) window.ChampagneFountain.reset();
   if (window.PuntingWithLadies) window.PuntingWithLadies.reset();
