@@ -1,0 +1,37 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const {createCanvas} = require('@napi-rs/canvas');
+
+const context = {window: {}};
+vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../game-of-life.js'), 'utf8'), context);
+const life = context.window.GameOfLife;
+const grid = (...live) => Uint8Array.from({length: 25}, (_, i) => Number(live.includes(i)));
+const evolve = b => Array.from(life.next(b, 5, 5));
+assert.deepEqual(evolve(grid(6, 7, 11, 12)), Array.from(grid(6, 7, 11, 12)));
+assert.deepEqual(evolve(grid(11, 12, 13)), Array.from(grid(7, 12, 17)));
+assert.deepEqual(evolve(grid(12)), Array.from(grid()));
+assert.deepEqual(evolve(grid(0, 4, 20)), Array.from(grid()), 'edges do not wrap');
+
+const canvas = createCanvas(800, 450);
+const c = canvas.getContext('2d');
+const draw = (now, opts) => life.draw(c, canvas.width, canvas.height, now, opts);
+life.reset();
+assert.equal(draw(0).generation, 0);
+assert.equal(draw(16, {kick: .65}).cue, 'BEAT');
+assert.equal(draw(32, {kick: .95}).generation, 1, 'refractory period suppresses a double step');
+const paused = draw(2000, {animate: false});
+assert.deepEqual(draw(60000, {animate: false}), paused);
+assert.deepEqual(draw(60016), paused, 'resume does not catch up elapsed wall time');
+assert.equal(draw(60032, {form: 'moon'}).generation, 0);
+life.reset();
+draw(0);
+let state;
+for (let i = 1; i <= 180; i++) state = draw(i * 16, {mid: .2});
+assert.equal(state.cue, 'PULSE');
+assert.ok(state.generation > 0);
+canvas.width = 390;
+canvas.height = 844;
+for (const [form] of life.forms) assert.ok(draw(0, {form, animate: false}).population > 0);
+console.log('Passed: Conway still life, oscillator, isolation, boundaries, beat, fallback, pause, alchemy and portrait rendering.');

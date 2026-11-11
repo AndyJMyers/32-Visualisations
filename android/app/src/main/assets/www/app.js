@@ -91,6 +91,7 @@ autumnVisualOptions.push(['slitscan', '42 · Slit-Scan Photography']);
 autumnVisualOptions.push(['schlieren', '43 · Schlieren Photography']);
 autumnVisualOptions.push(['anamorphic', '44 · Anamorphic Squeeze']);
 autumnVisualOptions.push(['bipack', '45 · Bipack Processing']);
+autumnVisualOptions.push(['gameoflife', '46 · Game of Life']);
 const arcanaSuits = [
   { id: 'cups', label: 'Cups', visuals: ['swampbubbles', 'lizardlouche', 'goddesskisses', 'turtleriver', 'oilslide', 'oysterpearls', 'waterlilies', 'innerspace', 'champagnefountain', 'shysmiles', 'ratrace', 'sunflowersmiles', 'opiumeater', 'lifestudies', 'dawncobweb', 'lingerie', 'androidchicks', 'boilingpot'] },
   { id: 'swords', label: 'Swords', visuals: ['arrowstorm', 'knifethunk', 'lightning', 'asteroids', 'warofroses', 'thescream', 'yourcall', 'beowulf', 'churchill', 'ironlady', 'blair', 'pnp', 'bones', 'spaced', 'romans', 'oldschoolgames'] },
@@ -106,11 +107,12 @@ arcanaSuits.find(suit => suit.id === 'wands').visuals.push('slitscan');
 arcanaSuits.find(suit => suit.id === 'wands').visuals.push('schlieren');
 arcanaSuits.find(suit => suit.id === 'wands').visuals.push('anamorphic');
 arcanaSuits.find(suit => suit.id === 'wands').visuals.push('bipack');
+arcanaSuits.find(suit => suit.id === 'swords').visuals.push('gameoflife');
 const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, label.replace(/^\d+\s*[·.]\s*/, '')]));
 const visualSourceSeason = new Map([...summerVisualOptions.map(([value]) => [value, 'summer']), ...autumnVisualOptions.map(([value]) => [value, 'autumn'])]);
 const arcanaSuitByVisual = new Map(arcanaSuits.flatMap(suit => suit.visuals.map(value => [value, suit.id])));
-if (allVisualOptions.size !== 77 || arcanaSuitByVisual.size !== 77 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
-  throw new Error('Arcana catalogue must assign all 77 visuals exactly once, with at least sixteen per suit.');
+if (allVisualOptions.size !== 78 || arcanaSuitByVisual.size !== 78 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
+  throw new Error('Arcana catalogue must assign all 78 visuals exactly once, with at least sixteen per suit.');
 }
 let currentArcanaSuit = arcanaSuitByVisual.get(visualizerSelect.value) || 'cups';
 let currentSeason = 'summer';
@@ -188,6 +190,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
+  if (visualizerSelect.value === 'gameoflife') return window.GameOfLife.recipes;
   if (visualizerSelect.value === 'bipack') return window.Bipack.recipes;
   if (visualizerSelect.value === 'anamorphic') return window.AnamorphicSqueeze.recipes;
   if (visualizerSelect.value === 'schlieren') return window.Schlieren.recipes;
@@ -250,6 +253,13 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'gameoflife') {
+    const kick = buffer ? (buffer[1] + buffer[2] + buffer[3] + buffer[4]) / (4 * 255) : 0;
+    window.GameOfLife.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, kick, mid, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'bipack') {
     window.Bipack.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -876,6 +886,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  gameoflife: {
+    ariaLabel: 'Game of Life: a fantasy battlefield evolves by Conway rules on detected musical beats',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Muster', speed: 'Generation pace' },
+    forms: window.GameOfLife.forms,
+    defaults: { speed: '1' },
+  },
   bipack: {
     ariaLabel: 'Bipack Processing: two independently animated film plates combine a neon cabaret with adult pole dancers and a candlelit cathedral at High Mass',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -2181,6 +2198,9 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'gameoflife') {
+    return Math.max(0, window.GameOfLife.forms.findIndex(([id]) => id === fireworkFormSelect.value));
+  }
   if (visualizerSelect.value === 'bipack') {
     const selected = ['contact', 'glass', 'velvet', 'silver'].indexOf(fireworkFormSelect.value);
     if (selected >= 0) return selected;
@@ -2871,7 +2891,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : visualizer === 'slitscan' || visualizer === 'schlieren' || visualizer === 'anamorphic' || visualizer === 'bipack' ? alchemyRecipeIndex() + 1
+    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife'].includes(visualizer) ? alchemyRecipeIndex() + 1
     : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "puntingwithladies" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" || visualizer === "plentyofpuff" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
@@ -2921,6 +2941,7 @@ function restartVisualizer() {
   if (window.Schlieren) window.Schlieren.reset();
   if (window.AnamorphicSqueeze) window.AnamorphicSqueeze.reset();
   if (window.Bipack) window.Bipack.reset();
+  if (window.GameOfLife) window.GameOfLife.reset();
   if (window.InnerSpace) window.InnerSpace.reset();
   if (window.ChampagneFountain) window.ChampagneFountain.reset();
   if (window.PuntingWithLadies) window.PuntingWithLadies.reset();
