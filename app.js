@@ -94,6 +94,8 @@ autumnVisualOptions.push(['bipack', '45 · Bipack Processing']);
 autumnVisualOptions.push(['gameoflife', '46 · Game of Life']);
 autumnVisualOptions.push(['hearts', '47 · Hearts']);
 autumnVisualOptions.push(['clubs', '48 · Clubs']);
+autumnVisualOptions.push(['spades', '49 · Spades']);
+autumnVisualOptions.push(['hellstromhive', "50 · Hellstrom's Hive"]);
 const arcanaSuits = [
   { id: 'cups', label: 'Cups', visuals: ['swampbubbles', 'lizardlouche', 'goddesskisses', 'turtleriver', 'oilslide', 'oysterpearls', 'waterlilies', 'innerspace', 'champagnefountain', 'shysmiles', 'ratrace', 'sunflowersmiles', 'opiumeater', 'lifestudies', 'dawncobweb', 'lingerie', 'androidchicks', 'boilingpot'] },
   { id: 'swords', label: 'Swords', visuals: ['arrowstorm', 'knifethunk', 'lightning', 'asteroids', 'warofroses', 'thescream', 'yourcall', 'beowulf', 'churchill', 'ironlady', 'blair', 'pnp', 'bones', 'spaced', 'romans', 'oldschoolgames'] },
@@ -112,11 +114,13 @@ arcanaSuits.find(suit => suit.id === 'wands').visuals.push('bipack');
 arcanaSuits.find(suit => suit.id === 'swords').visuals.push('gameoflife');
 arcanaSuits.find(suit => suit.id === 'cups').visuals.push('hearts');
 arcanaSuits.find(suit => suit.id === 'swords').visuals.push('clubs');
+arcanaSuits.find(suit => suit.id === 'pentacles').visuals.push('spades');
+arcanaSuits.find(suit => suit.id === 'pentacles').visuals.push('hellstromhive');
 const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, label.replace(/^\d+\s*[·.]\s*/, '')]));
 const visualSourceSeason = new Map([...summerVisualOptions.map(([value]) => [value, 'summer']), ...autumnVisualOptions.map(([value]) => [value, 'autumn'])]);
 const arcanaSuitByVisual = new Map(arcanaSuits.flatMap(suit => suit.visuals.map(value => [value, suit.id])));
-if (allVisualOptions.size !== 80 || arcanaSuitByVisual.size !== 80 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
-  throw new Error('Arcana catalogue must assign all 80 visuals exactly once, with at least sixteen per suit.');
+if (allVisualOptions.size !== 82 || arcanaSuitByVisual.size !== 82 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
+  throw new Error('Arcana catalogue must assign all 82 visuals exactly once, with at least sixteen per suit.');
 }
 let currentArcanaSuit = arcanaSuitByVisual.get(visualizerSelect.value) || 'cups';
 let currentSeason = 'summer';
@@ -194,6 +198,8 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
+  if (visualizerSelect.value === 'hellstromhive') return window.HellstromHive.recipes;
+  if (visualizerSelect.value === 'spades') return window.Spades.recipes;
   if (visualizerSelect.value === 'clubs') return window.Clubs.recipes;
   if (visualizerSelect.value === 'hearts') return window.Hearts.recipes;
   if (visualizerSelect.value === 'gameoflife') return window.GameOfLife.recipes;
@@ -259,6 +265,18 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'hellstromhive') {
+    window.HellstromHive.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble, animate: Boolean(buffer),
+    });
+    return;
+  }
+  if (visualizerSelect.value === 'spades') {
+    window.Spades.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, animate: Boolean(buffer),
+    });
+    return;
   }
   if (visualizerSelect.value === 'clubs') {
     window.Clubs.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -904,6 +922,20 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  hellstromhive: {
+    ariaLabel: 'Hellstrom\'s Hive: underground human-bee specialists pass a lantern through three chambers while musical swarms surround them',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Alchemy', speed: 'Hive pace' },
+    forms: window.HellstromHive.forms,
+    defaults: { speed: '1' },
+  },
+  spades: {
+    ariaLabel: 'Spades: thirteen playing-card gardeners parade with different spades under animated history banners',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Alchemy', speed: 'Parade pace' },
+    forms: window.Spades.forms,
+    defaults: { speed: '1' },
+  },
   clubs: {
     ariaLabel: 'Clubs: a theatrical procession of all thirteen ranks, each with a cartoon prop and a solo act',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -2230,6 +2262,12 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'hellstromhive') {
+    return Math.max(0, window.HellstromHive.forms.findIndex(([id]) => id === fireworkFormSelect.value));
+  }
+  if (visualizerSelect.value === 'spades') {
+    return Math.max(0, window.Spades.forms.findIndex(([id]) => id === fireworkFormSelect.value));
+  }
   if (visualizerSelect.value === 'clubs') {
     return Math.max(0, window.Clubs.forms.findIndex(([id]) => id === fireworkFormSelect.value));
   }
@@ -2929,7 +2967,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife', 'hearts', 'clubs'].includes(visualizer) ? alchemyRecipeIndex() + 1
+    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife', 'hearts', 'clubs', 'spades', 'hellstromhive'].includes(visualizer) ? alchemyRecipeIndex() + 1
     : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "puntingwithladies" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" || visualizer === "plentyofpuff" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
@@ -2982,6 +3020,8 @@ function restartVisualizer() {
   if (window.GameOfLife) window.GameOfLife.reset();
   if (window.Hearts) window.Hearts.reset();
   if (window.Clubs) window.Clubs.reset();
+  if (window.Spades) window.Spades.reset();
+  if (window.HellstromHive) window.HellstromHive.reset();
   if (window.InnerSpace) window.InnerSpace.reset();
   if (window.ChampagneFountain) window.ChampagneFountain.reset();
   if (window.PuntingWithLadies) window.PuntingWithLadies.reset();
