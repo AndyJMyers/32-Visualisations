@@ -96,6 +96,7 @@ autumnVisualOptions.push(['hearts', '47 · Hearts']);
 autumnVisualOptions.push(['clubs', '48 · Clubs']);
 autumnVisualOptions.push(['spades', '49 · Spades']);
 autumnVisualOptions.push(['hellstromhive', "50 · Hellstrom's Hive"]);
+autumnVisualOptions.push(['berzerk', '51 · Berzerk']);
 const arcanaSuits = [
   { id: 'cups', label: 'Cups', visuals: ['swampbubbles', 'lizardlouche', 'goddesskisses', 'turtleriver', 'oilslide', 'oysterpearls', 'waterlilies', 'innerspace', 'champagnefountain', 'shysmiles', 'ratrace', 'sunflowersmiles', 'opiumeater', 'lifestudies', 'dawncobweb', 'lingerie', 'androidchicks', 'boilingpot'] },
   { id: 'swords', label: 'Swords', visuals: ['arrowstorm', 'knifethunk', 'lightning', 'asteroids', 'warofroses', 'thescream', 'yourcall', 'beowulf', 'churchill', 'ironlady', 'blair', 'pnp', 'bones', 'spaced', 'romans', 'oldschoolgames'] },
@@ -116,11 +117,12 @@ arcanaSuits.find(suit => suit.id === 'cups').visuals.push('hearts');
 arcanaSuits.find(suit => suit.id === 'swords').visuals.push('clubs');
 arcanaSuits.find(suit => suit.id === 'pentacles').visuals.push('spades');
 arcanaSuits.find(suit => suit.id === 'pentacles').visuals.push('hellstromhive');
+arcanaSuits.find(suit => suit.id === 'swords').visuals.push('berzerk');
 const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, label.replace(/^\d+\s*[·.]\s*/, '')]));
 const visualSourceSeason = new Map([...summerVisualOptions.map(([value]) => [value, 'summer']), ...autumnVisualOptions.map(([value]) => [value, 'autumn'])]);
 const arcanaSuitByVisual = new Map(arcanaSuits.flatMap(suit => suit.visuals.map(value => [value, suit.id])));
-if (allVisualOptions.size !== 82 || arcanaSuitByVisual.size !== 82 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
-  throw new Error('Arcana catalogue must assign all 82 visuals exactly once, with at least sixteen per suit.');
+if (allVisualOptions.size !== 83 || arcanaSuitByVisual.size !== 83 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
+  throw new Error('Arcana catalogue must assign all 83 visuals exactly once, with at least sixteen per suit.');
 }
 let currentArcanaSuit = arcanaSuitByVisual.get(visualizerSelect.value) || 'cups';
 let currentSeason = 'summer';
@@ -199,6 +201,7 @@ function setSeason(next, { save = true, remember = true, restore = true } = {}) 
 function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'summer'); }
 function activeAlchemyRecipes() {
   if (visualizerSelect.value === 'hellstromhive') return window.HellstromHive.recipes;
+  if (visualizerSelect.value === 'berzerk') return window.Berzerk.recipes;
   if (visualizerSelect.value === 'spades') return window.Spades.recipes;
   if (visualizerSelect.value === 'clubs') return window.Clubs.recipes;
   if (visualizerSelect.value === 'hearts') return window.Hearts.recipes;
@@ -265,6 +268,13 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'berzerk') {
+    window.Berzerk.draw(c, visualizer.width, visualizer.height, performance.now(), {
+      speed: fireworkSpeedMultiplier(), form: fireworkFormSelect.value, bass, mid, treble,
+      desktop: isBerzerkDesktop(),
+    });
+    return;
   }
   if (visualizerSelect.value === 'hellstromhive') {
     window.HellstromHive.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -922,6 +932,13 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  berzerk: {
+    ariaLabel: 'Berzerk: a neon robot maze with a risky rendezvous that earns a shield',
+    controls: { size: false, count: false, grasp: false, speed: true, theme: false },
+    labels: { form: 'Alchemy', speed: 'Arcade pace' },
+    forms: window.Berzerk.forms,
+    defaults: { speed: '1' },
+  },
   hellstromhive: {
     ariaLabel: 'Hellstrom\'s Hive: underground human-bee specialists pass a lantern through three chambers while musical swarms surround them',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -2262,6 +2279,9 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'berzerk') {
+    return Math.max(0, window.Berzerk.forms.findIndex(([id]) => id === fireworkFormSelect.value));
+  }
   if (visualizerSelect.value === 'hellstromhive') {
     return Math.max(0, window.HellstromHive.forms.findIndex(([id]) => id === fireworkFormSelect.value));
   }
@@ -2967,7 +2987,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife', 'hearts', 'clubs', 'spades', 'hellstromhive'].includes(visualizer) ? alchemyRecipeIndex() + 1
+    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife', 'hearts', 'clubs', 'spades', 'hellstromhive', 'berzerk'].includes(visualizer) ? alchemyRecipeIndex() + 1
     : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "puntingwithladies" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" || visualizer === "plentyofpuff" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
@@ -3022,6 +3042,7 @@ function restartVisualizer() {
   if (window.Clubs) window.Clubs.reset();
   if (window.Spades) window.Spades.reset();
   if (window.HellstromHive) window.HellstromHive.reset();
+  window.Berzerk.reset();
   if (window.InnerSpace) window.InnerSpace.reset();
   if (window.ChampagneFountain) window.ChampagneFountain.reset();
   if (window.PuntingWithLadies) window.PuntingWithLadies.reset();
@@ -13885,6 +13906,12 @@ function drawIdleVisualizer() {
 
   if (currentSeason === 'autumn') {
     drawAutumnFrame(canvasContext);
+    if (visualizerSelect.value === 'berzerk' && audio.paused && !animationId) {
+      animationId = requestAnimationFrame(() => {
+        animationId = 0;
+        if (audio.paused && visualizerSelect.value === 'berzerk') drawIdleVisualizer();
+      });
+    }
   } else if (visualizerSelect.value === "snakeconga") {
     drawIdleSnakeConga();
   } else if (visualizerSelect.value === "lingerie") {
@@ -15248,6 +15275,10 @@ document.addEventListener("fullscreenchange", () => {
   scheduleCanvasResize();
 });
 
+function isBerzerkDesktop() {
+  return !isAndroidCarMode && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
 function handleGlobalKey(event) {
   const player = document.querySelector(".player");
   const key = event.key || "";
@@ -15268,6 +15299,15 @@ function handleGlobalKey(event) {
   if (player.classList.contains("desktop-controls-hidden")) showDesktopControls();
 
   if (isEditingTarget) {
+    return;
+  }
+
+  if (visualizerSelect.value === 'berzerk' && isBerzerkDesktop() && !songWheel.classList.contains("active")
+    && !settingsCatalogue.open && !event.target.isContentEditable
+    && !event.altKey && !event.ctrlKey && !event.metaKey
+    && window.Berzerk.key(code, true, event.repeat)) {
+    event.preventDefault();
+    event.stopPropagation();
     return;
   }
 
@@ -15366,11 +15406,15 @@ for (const eventName of ["pointermove", "pointerdown", "wheel", "touchstart"]) {
 }
 document.addEventListener("keyup", (event) => {
   asteroidKeys.delete(event.code);
+  if (visualizerSelect.value === 'berzerk') window.Berzerk.key(event.code, false);
   if (event.key === "F4" || event.code === "F4" || event.keyCode === 115) {
     handleGlobalKey(event);
   }
 }, true);
-window.addEventListener("blur", () => asteroidKeys.clear());
+window.addEventListener("blur", () => {
+  asteroidKeys.clear();
+  window.Berzerk.clearKeys();
+});
 window.addEventListener("pagehide", saveSessionNow);
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") {
