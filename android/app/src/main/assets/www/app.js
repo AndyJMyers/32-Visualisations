@@ -119,13 +119,20 @@ arcanaSuits.find(suit => suit.id === 'swords').visuals.push('clubs');
 arcanaSuits.find(suit => suit.id === 'pentacles').visuals.push('spades');
 arcanaSuits.find(suit => suit.id === 'pentacles').visuals.push('hellstromhive');
 arcanaSuits.find(suit => suit.id === 'swords').visuals.push('berzerk');
+const minorSuitSize = 14;
+// Keep the default visual in Wands and let each suit's ordered list define its core deck.
+const wands = arcanaSuits.find(suit => suit.id === 'wands').visuals;
+wands.unshift(...wands.splice(wands.indexOf('equalizer'), 1));
+const damnedVisuals = arcanaSuits.flatMap(suit => suit.visuals.splice(minorSuitSize));
 arcanaSuits.push({ id: 'major', label: 'Major Arcana', visuals: ['thefool'] });
+arcanaSuits.push({ id: 'damned', label: 'The Damned', visuals: damnedVisuals });
 const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, value === 'thefool' ? label : label.replace(/^\d+\s*[·.]\s*/, '')]));
 const visualSourceSeason = new Map([...summerVisualOptions.map(([value]) => [value, 'summer']), ...autumnVisualOptions.map(([value]) => [value, 'autumn'])]);
 const arcanaSuitByVisual = new Map(arcanaSuits.flatMap(suit => suit.visuals.map(value => [value, suit.id])));
 if (arcanaSuitByVisual.size !== allVisualOptions.size
   || arcanaSuits.reduce((total, suit) => total + suit.visuals.length, 0) !== allVisualOptions.size
-  || arcanaSuits.some(suit => suit.visuals.length < (suit.id === 'major' ? 1 : 16) || suit.visuals.some(value => !allVisualOptions.has(value)))) {
+  || arcanaSuits.slice(0, 4).some(suit => suit.visuals.length !== minorSuitSize)
+  || arcanaSuits.some(suit => !suit.visuals.length || suit.visuals.some(value => !allVisualOptions.has(value)))) {
   throw new Error('Arcana catalogue must assign every visual exactly once.');
 }
 let currentArcanaSuit = arcanaSuitByVisual.get(visualizerSelect.value) || 'cups';
@@ -15039,7 +15046,48 @@ insanityDial.addEventListener("click", () => {
   setSpectrumDial("insanity", nextLevel);
 });
 
+let lastVisualSelection = visualizerSelect.value;
+let visualTransitionFrame;
+
+function sweepOutgoingVisual() {
+  visualTransitionFrame?.remove();
+  visualTransitionFrame = null;
+  if (!visualizer.animate || window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    || document.visibilityState === "hidden") return;
+  const { left, top, width, height } = visualizer.getBoundingClientRect();
+  if (width < 1 || height < 1 || !visualizer.width || !visualizer.height) return;
+  const frame = document.createElement("canvas");
+  const scale = Math.min(1, 640 / Math.max(visualizer.width, visualizer.height));
+  frame.width = Math.max(1, Math.round(visualizer.width * scale));
+  frame.height = Math.max(1, Math.round(visualizer.height * scale));
+  const context = frame.getContext("2d");
+  context.drawImage(visualizer, 0, 0, frame.width, frame.height);
+  const edgeWidth = Math.max(3, frame.width * .065);
+  const edge = context.createLinearGradient(frame.width - edgeWidth, 0, frame.width, 0);
+  edge.addColorStop(0, "rgba(132, 77, 255, 0)");
+  edge.addColorStop(.72, "rgba(147, 98, 255, .78)");
+  edge.addColorStop(.94, "#80edff");
+  edge.addColorStop(1, "#e5ffff");
+  context.fillStyle = edge;
+  context.fillRect(frame.width - edgeWidth, 0, edgeWidth, frame.height);
+  frame.className = "visual-transition-frame";
+  frame.setAttribute("aria-hidden", "true");
+  Object.assign(frame.style, { left: `${left}px`, top: `${top}px`, width: `${width}px`, height: `${height}px` });
+  visualizer.after(frame);
+  visualTransitionFrame = frame;
+  const animation = frame.animate([
+    { transform: "translateX(0)", clipPath: "inset(0 0 0 0)" },
+    { transform: "translateX(-100%)", clipPath: "inset(0 0 0 100%)" },
+  ], { duration: 440, easing: "cubic-bezier(.45,.05,.35,1)" });
+  animation.finished.catch(() => {}).finally(() => {
+    frame.remove();
+    if (visualTransitionFrame === frame) visualTransitionFrame = null;
+  });
+}
+
 visualizerSelect.addEventListener("change", () => {
+  if (lastVisualSelection && lastVisualSelection !== visualizerSelect.value) sweepOutgoingVisual();
+  lastVisualSelection = visualizerSelect.value;
   currentSeason = visualSourceSeason.get(visualizerSelect.value) || currentSeason;
   document.body.dataset.season = currentSeason;
   const config = visualizerConfig();
@@ -15448,6 +15496,7 @@ setArcanaSuit(currentArcanaSuit, { save: false, remember: false, restore: false 
 restoredSession = loadSavedSession();
 restoreControlPreferences(restoredSession);
 resizeCanvas();
+lastVisualSelection = visualizerSelect.value;
 updateFireworkSpeedLabel();
 updateCarAgitationLabel();
 updateSeasonLabels();

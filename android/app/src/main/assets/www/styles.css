@@ -270,6 +270,16 @@ h1 {
   cursor: crosshair;
 }
 
+.visual-transition-frame {
+  position: fixed;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.player.night-drive .visual-transition-frame {
+  filter: brightness(0.46) saturate(0.72);
+}
+
 .controls {
   flex-wrap: wrap;
   border-top: 1px solid var(--line);
@@ -2641,6 +2651,7 @@ body[data-arcana="swords"] { --arcana-accent: #a9d8ed; }
 body[data-arcana="pentacles"] { --arcana-accent: #e6c76e; }
 body[data-arcana="wands"] { --arcana-accent: #f0a064; }
 body[data-arcana="major"] { --arcana-accent: #d9b3ff; }
+body[data-arcana="damned"] { --arcana-accent: #ff806e; }
 body[data-arcana] .car-season-button .arcana-icon { color: var(--arcana-accent); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--arcana-accent) 70%, transparent)); }
 body[data-arcana] .season-control { border-color: color-mix(in srgb, var(--arcana-accent) 52%, #404852); }
 .season-autumn-icon, body[data-season="autumn"] .season-summer-icon { display: none; }
