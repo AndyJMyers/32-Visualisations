@@ -97,6 +97,7 @@ autumnVisualOptions.push(['clubs', '48 · Clubs']);
 autumnVisualOptions.push(['spades', '49 · Spades']);
 autumnVisualOptions.push(['hellstromhive', "50 · Hellstrom's Hive"]);
 autumnVisualOptions.push(['berzerk', '51 · Berzerk']);
+autumnVisualOptions.push(['thefool', '0 · The Fool']);
 const arcanaSuits = [
   { id: 'cups', label: 'Cups', visuals: ['swampbubbles', 'lizardlouche', 'goddesskisses', 'turtleriver', 'oilslide', 'oysterpearls', 'waterlilies', 'innerspace', 'champagnefountain', 'shysmiles', 'ratrace', 'sunflowersmiles', 'opiumeater', 'lifestudies', 'dawncobweb', 'lingerie', 'androidchicks', 'boilingpot'] },
   { id: 'swords', label: 'Swords', visuals: ['arrowstorm', 'knifethunk', 'lightning', 'asteroids', 'warofroses', 'thescream', 'yourcall', 'beowulf', 'churchill', 'ironlady', 'blair', 'pnp', 'bones', 'spaced', 'romans', 'oldschoolgames'] },
@@ -118,11 +119,14 @@ arcanaSuits.find(suit => suit.id === 'swords').visuals.push('clubs');
 arcanaSuits.find(suit => suit.id === 'pentacles').visuals.push('spades');
 arcanaSuits.find(suit => suit.id === 'pentacles').visuals.push('hellstromhive');
 arcanaSuits.find(suit => suit.id === 'swords').visuals.push('berzerk');
-const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, label.replace(/^\d+\s*[·.]\s*/, '')]));
+arcanaSuits.push({ id: 'major', label: 'Major Arcana', visuals: ['thefool'] });
+const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, value === 'thefool' ? label : label.replace(/^\d+\s*[·.]\s*/, '')]));
 const visualSourceSeason = new Map([...summerVisualOptions.map(([value]) => [value, 'summer']), ...autumnVisualOptions.map(([value]) => [value, 'autumn'])]);
 const arcanaSuitByVisual = new Map(arcanaSuits.flatMap(suit => suit.visuals.map(value => [value, suit.id])));
-if (allVisualOptions.size !== 83 || arcanaSuitByVisual.size !== 83 || arcanaSuits.some(suit => suit.visuals.length < 16 || suit.visuals.some(value => !allVisualOptions.has(value)))) {
-  throw new Error('Arcana catalogue must assign all 83 visuals exactly once, with at least sixteen per suit.');
+if (arcanaSuitByVisual.size !== allVisualOptions.size
+  || arcanaSuits.reduce((total, suit) => total + suit.visuals.length, 0) !== allVisualOptions.size
+  || arcanaSuits.some(suit => suit.visuals.length < (suit.id === 'major' ? 1 : 16) || suit.visuals.some(value => !allVisualOptions.has(value)))) {
+  throw new Error('Arcana catalogue must assign every visual exactly once.');
 }
 let currentArcanaSuit = arcanaSuitByVisual.get(visualizerSelect.value) || 'cups';
 let currentSeason = 'summer';
@@ -202,6 +206,7 @@ function toggleSeason() { setSeason(currentSeason === 'summer' ? 'autumn' : 'sum
 function activeAlchemyRecipes() {
   if (visualizerSelect.value === 'hellstromhive') return window.HellstromHive.recipes;
   if (visualizerSelect.value === 'berzerk') return window.Berzerk.recipes;
+  if (visualizerSelect.value === 'thefool') return window.TheFool.recipes;
   if (visualizerSelect.value === 'spades') return window.Spades.recipes;
   if (visualizerSelect.value === 'clubs') return window.Clubs.recipes;
   if (visualizerSelect.value === 'hearts') return window.Hearts.recipes;
@@ -268,6 +273,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'thefool') {
+    window.TheFool.draw(c, visualizer.width, visualizer.height, buffer ? performance.now() : 6000, {
+      form: fireworkFormSelect.value, bass, mid, treble,
+    });
+    return;
   }
   if (visualizerSelect.value === 'berzerk') {
     window.Berzerk.draw(c, visualizer.width, visualizer.height, performance.now(), {
@@ -932,6 +943,12 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  thefool: {
+    ariaLabel: 'The Fool: a traveller takes a Leap of Faith over a music-reactive landscape',
+    controls: { size: false, count: false, grasp: false, speed: false, theme: false },
+    labels: { form: 'Alchemy' },
+    forms: window.TheFool.forms,
+  },
   berzerk: {
     ariaLabel: 'Berzerk: a neon robot maze with a risky rendezvous that earns a shield',
     controls: { size: false, count: false, grasp: false, speed: true, theme: false },
@@ -2123,7 +2140,7 @@ function updateSeasonLabels() {
   const next = arcanaSuits[(index + 1) % arcanaSuits.length];
   document.body.dataset.arcana = suit.id;
   document.body.dataset.season = currentSeason;
-  carSeasonButton.setAttribute('aria-label', `Arcana suit: ${suit.label}. Switch to ${next.label}`);
+  carSeasonButton.setAttribute('aria-label', `Arcana collection: ${suit.label}. Switch to ${next.label}`);
   carSeasonLabel.textContent = suit.label;
   desktopSeasonLabel.textContent = suit.label;
   desktopSeasonButton.setAttribute('aria-label', carSeasonButton.getAttribute('aria-label'));
@@ -2279,6 +2296,9 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'thefool') {
+    return Math.max(0, window.TheFool.forms.findIndex(([id]) => id === fireworkFormSelect.value));
+  }
   if (visualizerSelect.value === 'berzerk') {
     return Math.max(0, window.Berzerk.forms.findIndex(([id]) => id === fireworkFormSelect.value));
   }
@@ -2987,7 +3007,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife', 'hearts', 'clubs', 'spades', 'hellstromhive', 'berzerk'].includes(visualizer) ? alchemyRecipeIndex() + 1
+    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife', 'hearts', 'clubs', 'spades', 'hellstromhive', 'berzerk', 'thefool'].includes(visualizer) ? alchemyRecipeIndex() + 1
     : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "puntingwithladies" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" || visualizer === "plentyofpuff" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
