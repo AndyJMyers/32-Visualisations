@@ -1,6 +1,6 @@
 # 32 Visualisations
 
-> **Four Arcana suits. Sixty-four visualisations in the current Play build.**
+> **84 visualisations in the GitHub build: four suits, Major Arcana, and The Damned.**
 
 **Your music. Local. Offline. One fair price. Turned all the way up.**
 
@@ -32,15 +32,15 @@
 
 32 Visualisations is a boutique Android music player for people who still own their music and want it to look as good as it sounds.
 
-It plays local audio from your device, works without an internet connection once installed, and turns your files into 64 vivid audio-reactive visualisations across two collections. It began as a desktop local music player with a taste for **Mental. Saturation. Overstimulation.** It has grown into an Android road-trip music player built for big stereos, strange colour, and cockpit-simple controls.
+It plays local audio from your device and works offline once installed. It began as a desktop local music player with a taste for **Mental. Saturation. Overstimulation.** It has grown into an Android road-trip music player built for big stereos, strange colour, and cockpit-simple controls.
 
-No streaming account. No subscription. No bundled catalogue pretending to know your taste. Just your files, your device, your speakers, and sixty-four vivid ways to make sound visible.
+No streaming account. No subscription. No bundled catalogue pretending to know your taste. Just your files, your device, your speakers, and a screen full of ways to make sound visible.
 
-### Four suits. Sixty-four strange little worlds.
+### Six Collections
 
 ![Autumn moving exhibition: Starry Night, The Scream, Old School Games and Beowulf](docs/images/autumn-gallery/autumn-exhibition.png)
 
-The full collection is grouped into **Cups, Swords, Pentacles and Wands**, sixteen visuals apiece. The groupings are moods, not rankings; each keeps its own mix of the original and newer visual lineages. Paintings move. Myths misbehave. Arcades light up. [Walk through the visual exhibition](#autumn-collection).
+The four suits now sit alongside **Major Arcana** and **The Damned**. The groupings are moods, not rankings. Paintings move. Myths misbehave. Arcades light up. [Walk through the visual exhibition](#autumn-collection).
 
 ## No Cloud. No Account. No Alibi.
 
@@ -69,7 +69,7 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Plays local audio files from a folder on your Android device.
 - Works without internet connectivity once installed.
 - Supports `.wav`, `.mp3`, `.m4a`, `.aac`, `.flac`, `.ogg`, and `.opus`.
-- Includes **64** audio-reactive visualisations, grouped into Cups, Swords, Pentacles and Wands.
+- Includes **84** audio-reactive visualisations in the GitHub build, across six collections.
 - Runs as a desktop browser app or an offline-first Android WebView app.
 - Offers car-style Android controls for play/pause, previous/next track, next visualisation, `Arcana`, `Alchemy`, and `Speed`.
 - Uses `Alchemy` to apply artistically chosen visual settings.
@@ -78,7 +78,7 @@ That means few controls, large targets, no account ceremony, no fiddly in-car se
 - Reveals The Garage's discreet `*` alongside the Android track picker, keeping detailed settings outside the driving controls.
 - Keeps your music local.
 
-Each Arcana suit has sixteen visualisations. Cups gathers fluid, intimate and dreamlike scenes; Swords holds conflict, tension and puzzles; Pentacles leans into craft, nature and material life; Wands brings spectacle, play and unruly energy. The original Summer and newer Autumn lineages remain in the art, but no longer determine how listeners browse it.
+The four Minor Arcana suits have 14 visualisations each. Cups gathers fluid, intimate and dreamlike scenes; Swords holds conflict, tension and puzzles; Pentacles leans into craft, nature and material life; Wands brings spectacle, play and unruly energy. **Major Arcana** opens with **0 · The Fool**, the first of 22 planned cards. **The Damned** is home to the other 27 visualisations, from Berzerk to Wormhole. See the [full collection guide](docs/ARCANA.md).
 
 ### Autumn Collection
 
@@ -232,7 +232,7 @@ The app opens ready for your own local music. Use Android's folder picker to cho
 Desktop:
 
 - `Play/Pause`, `Prev`, and `Next` handle the library.
-- `Arcana` cycles Cups, Swords, Pentacles and Wands without changing the music.
+- `Arcana` cycles Cups, Swords, Pentacles, Wands, Major Arcana and The Damned without changing the music.
 - `Up` and `Down` move through visualisations.
 - `Left` and `Right` move through tracks.
 - `F` or `F4` toggles the visual stage.
@@ -244,14 +244,14 @@ Android car mode:
 - `Visual` advances to the next visualisation.
 - `Alchemy` applies alchemical adjustment.
 - `Speed` changes the visual agitation step.
-- Arcana switches between four suits of sixteen visuals each.
+- `Arcana` switches collections. The six-collection layout is in the GitHub build.
 - The transport row handles previous, play/pause, and next.
 
-## Status
+When you change visuals in the GitHub build, the outgoing scene sweeps left behind a violet-to-cyan edge in under half a second. Playback carries on. Night Drive dims the sweep, and the system's reduced-motion setting skips it.
 
-This project is still under active development, so any hallucinations you experience may not be entirely your own fault this time.
+## Available Now
 
-The Android app is live on Google Play. The preserved source baseline is version `1.0.17` / build `17`, targeting Android API 36. This records the repository version; the currently published Play version must be checked in Play Console before a hotfix release. Autumn is in creative production and is not yet a released collection.
+The Android app is live on Google Play as a one-off purchase. The 84-visual catalogue, six-collection layout and scene sweep described here are from GitHub, not a claim about what is already live on Play.
 
 If you enjoyed this, why not gain merit in this life by [buying this holy man a pint of mead or ale](https://buy.stripe.com/5kQ5kDcX8cwc52J70rds400), according to your purse?
 

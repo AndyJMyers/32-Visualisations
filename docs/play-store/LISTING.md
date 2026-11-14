@@ -1,26 +1,28 @@
 # 32 Visualisations Play Store Listing Draft
 
+**For the next Android release.** This copy describes the 84-visual GitHub catalogue. Confirm the release candidate includes it before submitting the copy or screenshots to Play Console.
+
 ## App Name
 
 32 Visualisations
 
 ## Short Description
 
-Your music. Four Arcana suits. 64 visualisations. Offline and alive.
+Your music. 84 visualisations. Six collections. No extra charge.
 
 ## Full Description
 
-32 Visualisations is a boutique Android music player for people who own their music and want it to look as good as it sounds.
+32 Visualisations is a boutique Android music player for people who own their music and want it to look as good as it sounds. The collection has grown to more than twice its original 32 visualisations, with the expanded set included at no extra charge.
 
-Your music. Four Arcana suits. 64 visualisations. Cups, Swords, Pentacles and Wands each gather sixteen music-responsive worlds, from fluid dreamscapes to mechanical theatre. Choose your own music folder and watch your files drive colour, motion and story. Once installed and pointed at music, the player works offline: no streaming account, subscription or rented library.
+Explore 84 music-responsive worlds across six collections. Cups, Swords, Pentacles and Wands each hold 14 visualisations. Major Arcana begins with The Fool, and The Damned gathers 27 more, from the neon robot maze of Berzerk to the shifting colours of Wormhole. Choose your own music folder and watch your files drive colour, motion and story. Once installed and pointed at music, the player works offline: no streaming account, subscription or rented library.
 
-Across Cups, Swords, Pentacles and Wands, paintings move, strange journeys unfold, small dramas play out and machines come alive. Each visualisation has Alchemy variations to change its colour, mood or behaviour. Switch suits without interrupting the song.
+Paintings move, strange journeys unfold, and machines come alive. Alchemy variations change the colour, mood or behaviour of a scene. A quick sweep reveals the next visualisation without interrupting the song, and the player skips the effect when reduced motion is enabled.
 
-The controls keep the music close: play or pause, skip track, change visualisation, switch suit, adjust speed or choose an Alchemy. Tap the visualisation to open a compact track picker: jump by letter, browse the scrollable song list and tap to select, without bringing up the keyboard. The Garage keeps library and detailed visual settings behind a discreet `*`.
+The controls keep the music close: play or pause, skip track, change visualisation, switch collection, adjust speed or choose an Alchemy. Tap the visualisation to open a compact track picker: jump by letter, browse the scrollable song list and tap to select, without bringing up the keyboard. The Garage keeps library and detailed visual settings behind a discreet `*`.
 
 The app plays your local files. It does not bundle a music catalogue or upload your library. There are no ads, accounts, rating popups or social-sharing interruptions inside the player.
 
-Pay once, keep playing. All four suits are part of the same app, including for existing owners. Just your files, your speakers and a screen full of motion.
+Pay once, keep playing. The expanded collection is included for existing owners and new buyers alike: more than twice the original visualisations for no extra charge. We expect to add more visualisations over the coming months, while keeping the focus on original, music-responsive work. Just your files, your speakers and a screen full of motion.
 
 You do not have to be entirely normal to enjoy it, and that is rather the point.
 
@@ -28,7 +30,7 @@ You do not have to be entirely normal to enjoy it, and that is rather the point.
 
 - Play local audio from folders on your Android device.
 - Works without internet access once installed.
-- Explore 64 music visualisations across Cups, Swords, Pentacles and Wands.
+- Explore 84 music visualisations across six collections, all included at no extra charge.
 - Simple car-friendly interface designed for quick, familiar control in portrait or landscape.
 - Bluetooth, headset and lock-screen Play/Pause and track-skip controls.
 - Arcana, track skip, Visual, Speed and Alchemy controls.
@@ -40,11 +42,11 @@ You do not have to be entirely normal to enjoy it, and that is rather the point.
 
 ## Screenshot Order
 
-1. Actual Android player with the Arcana suit control visible.
-2. A scene from Cups with the player controls visible.
-3. A scene from Swords, showing the contrast between suits.
+1. Actual Android player with the Arcana collection control visible.
+2. The Fool with **Major Arcana** visible on the collection control.
+3. Berzerk or Wormhole with **The Damned** visible on the collection control.
 4. Compact Android track picker with both dials and the song list visible.
-5. Further scenes and Alchemy variations, captured in the app.
+5. Contrasting scenes from the Minor Arcana and their Alchemy variations, captured in the app.
 6. Local folder selection and The Garage if room remains.
 
 ## Store Assets
@@ -52,7 +54,7 @@ You do not have to be entirely normal to enjoy it, and that is rather the point.
 - App icon: `assets/icon-512.png`
 - Feature graphic: `assets/feature-graphic-wow-1024x500.png`
 - Phone screenshots: capture from the release candidate on an Android device.
-- Autumn preview video: upload the finished file to YouTube as public or unlisted, without ads, then supply its URL in Play Console.
+- Preview video: retain the existing trailer unless a replacement is approved. Show the scene sweep in any new motion preview rather than trying to illustrate it with a still.
 - Source image: `assets/source-32-visualisations.png`
 
 ## Privacy Policy
