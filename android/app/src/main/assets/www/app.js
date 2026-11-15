@@ -99,6 +99,7 @@ autumnVisualOptions.push(['hellstromhive', "50 · Hellstrom's Hive"]);
 autumnVisualOptions.push(['berzerk', '51 · Berzerk']);
 autumnVisualOptions.push(['thefool', '0 · The Fool']);
 autumnVisualOptions.push(['themagician', 'I · The Magician']);
+autumnVisualOptions.push(['thepriestess', 'II · The High Priestess']);
 const arcanaSuits = [
   { id: 'cups', label: 'Cups', visuals: ['swampbubbles', 'lizardlouche', 'goddesskisses', 'turtleriver', 'oilslide', 'oysterpearls', 'waterlilies', 'innerspace', 'champagnefountain', 'shysmiles', 'ratrace', 'sunflowersmiles', 'opiumeater', 'lifestudies', 'dawncobweb', 'lingerie', 'androidchicks', 'boilingpot'] },
   { id: 'swords', label: 'Swords', visuals: ['arrowstorm', 'knifethunk', 'lightning', 'asteroids', 'warofroses', 'thescream', 'yourcall', 'beowulf', 'churchill', 'ironlady', 'blair', 'pnp', 'bones', 'spaced', 'romans', 'oldschoolgames'] },
@@ -125,7 +126,7 @@ const minorSuitSize = 14;
 const wands = arcanaSuits.find(suit => suit.id === 'wands').visuals;
 wands.unshift(...wands.splice(wands.indexOf('equalizer'), 1));
 const damnedVisuals = arcanaSuits.flatMap(suit => suit.visuals.splice(minorSuitSize));
-arcanaSuits.push({ id: 'major', label: 'Major Arcana', visuals: ['thefool', 'themagician'] });
+arcanaSuits.push({ id: 'major', label: 'Major Arcana', visuals: ['thefool', 'themagician', 'thepriestess'] });
 arcanaSuits.push({ id: 'damned', label: 'The Damned', visuals: damnedVisuals });
 const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, value === 'thefool' ? label : label.replace(/^\d+\s*[·.]\s*/, '')]));
 const visualSourceSeason = new Map([...summerVisualOptions.map(([value]) => [value, 'summer']), ...autumnVisualOptions.map(([value]) => [value, 'autumn'])]);
@@ -216,6 +217,7 @@ function activeAlchemyRecipes() {
   if (visualizerSelect.value === 'berzerk') return window.Berzerk.recipes;
   if (visualizerSelect.value === 'thefool') return window.TheFool.recipes;
   if (visualizerSelect.value === 'themagician') return window.TheMagician.recipes;
+  if (visualizerSelect.value === 'thepriestess') return window.ThePriestess.recipes;
   if (visualizerSelect.value === 'spades') return window.Spades.recipes;
   if (visualizerSelect.value === 'clubs') return window.Clubs.recipes;
   if (visualizerSelect.value === 'hearts') return window.Hearts.recipes;
@@ -282,6 +284,12 @@ function drawAutumnFrame(c, buffer = null) {
     const high = Math.floor(buffer.length * .5);
     for (let i = low; i < high; i++) mid += buffer[i] / (255 * Math.max(1, high - low));
     for (let i = high; i < buffer.length; i++) treble += buffer[i] / (255 * (buffer.length - high));
+  }
+  if (visualizerSelect.value === 'thepriestess') {
+    window.ThePriestess.draw(c, visualizer.width, visualizer.height, buffer ? performance.now() : 6000, {
+      form: fireworkFormSelect.value, bass, mid, treble,
+    });
+    return;
   }
   if (visualizerSelect.value === 'themagician') {
     window.TheMagician.draw(c, visualizer.width, visualizer.height, buffer ? performance.now() : 6000, {
@@ -958,6 +966,12 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  thepriestess: {
+    ariaLabel: 'The High Priestess: a cybernetic cat oracle in three music-reactive rituals',
+    controls: { size: false, count: false, grasp: false, speed: false, theme: false },
+    labels: { form: 'Alchemy' },
+    forms: window.ThePriestess.forms,
+  },
   themagician: {
     ariaLabel: 'The Magician: a music-reactive portrait amid cards, mirrors and pipe smoke',
     controls: { size: false, count: false, grasp: false, speed: false, theme: false },
@@ -2317,6 +2331,9 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'thepriestess') {
+    return Math.max(0, window.ThePriestess.forms.findIndex(([id]) => id === fireworkFormSelect.value));
+  }
   if (visualizerSelect.value === 'themagician') {
     return Math.max(0, window.TheMagician.forms.findIndex(([id]) => id === fireworkFormSelect.value));
   }
@@ -3031,7 +3048,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife', 'hearts', 'clubs', 'spades', 'hellstromhive', 'berzerk', 'thefool', 'themagician'].includes(visualizer) ? alchemyRecipeIndex() + 1
+    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife', 'hearts', 'clubs', 'spades', 'hellstromhive', 'berzerk', 'thefool', 'themagician', 'thepriestess'].includes(visualizer) ? alchemyRecipeIndex() + 1
     : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "puntingwithladies" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" || visualizer === "plentyofpuff" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
