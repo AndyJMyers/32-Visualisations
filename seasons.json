@@ -3,8 +3,8 @@
     "from": "2026-05",
     "to": "2027-05"
   },
-  "currentDevelopment": "autumn",
-  "status": "in-creative-production-not-released",
+  "scope": "historical Summer and Autumn collections, not the current Arcana catalogue",
+  "status": "released",
   "collections": [
     {
       "id": "summer",
@@ -15,8 +15,8 @@
     {
       "id": "autumn",
       "label": "Autumn",
-      "plannedVisualCount": 32,
-      "status": "in-development",
+      "visualCount": 32,
+      "status": "released",
       "firstVisual": "Ralph's Last Watch",
       "implementedVisualCount": 32,
       "firstVisualStatus": "first-procedural-draft",
@@ -35,5 +35,5 @@
     "playReleaseVerified": false
   },
   "developmentBranch": "master",
-  "runtimeSeasonSwitchImplemented": true
+  "historicalSeasonSwitchImplemented": true
 }
