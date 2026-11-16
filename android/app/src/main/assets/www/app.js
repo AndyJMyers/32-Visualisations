@@ -101,6 +101,7 @@ autumnVisualOptions.push(['thefool', '0 · The Fool']);
 autumnVisualOptions.push(['themagician', 'I · The Magician']);
 autumnVisualOptions.push(['thepriestess', 'II · The High Priestess']);
 autumnVisualOptions.push(['theempress', 'III · The Empress']);
+autumnVisualOptions.push(['theemperor', 'IV · The Emperor']);
 autumnVisualOptions.push(['dmtvisions', 'DMT Visions']);
 const arcanaSuits = [
   { id: 'cups', label: 'Cups', visuals: ['swampbubbles', 'lizardlouche', 'goddesskisses', 'turtleriver', 'oilslide', 'oysterpearls', 'waterlilies', 'innerspace', 'champagnefountain', 'shysmiles', 'ratrace', 'sunflowersmiles', 'opiumeater', 'lifestudies', 'dawncobweb', 'lingerie', 'androidchicks', 'boilingpot'] },
@@ -129,7 +130,7 @@ const wands = arcanaSuits.find(suit => suit.id === 'wands').visuals;
 wands.unshift(...wands.splice(wands.indexOf('equalizer'), 1));
 const damnedVisuals = arcanaSuits.flatMap(suit => suit.visuals.splice(minorSuitSize));
 damnedVisuals.push('dmtvisions');
-arcanaSuits.push({ id: 'major', label: 'Major Arcana', visuals: ['thefool', 'themagician', 'thepriestess', 'theempress'] });
+arcanaSuits.push({ id: 'major', label: 'Major Arcana', visuals: ['thefool', 'themagician', 'thepriestess', 'theempress', 'theemperor'] });
 arcanaSuits.push({ id: 'damned', label: 'The Damned', visuals: damnedVisuals });
 const allVisualOptions = new Map([...summerVisualOptions, ...autumnVisualOptions].map(([value, label]) => [value, value === 'thefool' ? label : label.replace(/^\d+\s*[·.]\s*/, '')]));
 const visualSourceSeason = new Map([...summerVisualOptions.map(([value]) => [value, 'summer']), ...autumnVisualOptions.map(([value]) => [value, 'autumn'])]);
@@ -222,6 +223,7 @@ function activeAlchemyRecipes() {
   if (visualizerSelect.value === 'themagician') return window.TheMagician.recipes;
   if (visualizerSelect.value === 'thepriestess') return window.ThePriestess.recipes;
   if (visualizerSelect.value === 'theempress') return window.TheEmpress.recipes;
+  if (visualizerSelect.value === 'theemperor') return window.TheEmperor.recipes;
   if (visualizerSelect.value === 'dmtvisions') return window.DmtVisions.recipes;
   if (visualizerSelect.value === 'spades') return window.Spades.recipes;
   if (visualizerSelect.value === 'clubs') return window.Clubs.recipes;
@@ -292,6 +294,12 @@ function drawAutumnFrame(c, buffer = null) {
   }
   if (visualizerSelect.value === 'dmtvisions') {
     window.DmtVisions.draw(c, visualizer.width, visualizer.height, buffer ? performance.now() : 1600, {
+      form: fireworkFormSelect.value, bass, mid, treble,
+    });
+    return;
+  }
+  if (visualizerSelect.value === 'theemperor') {
+    window.TheEmperor.draw(c, visualizer.width, visualizer.height, buffer ? performance.now() : 8400, {
       form: fireworkFormSelect.value, bass, mid, treble,
     });
     return;
@@ -983,6 +991,12 @@ const defaultVisualizerLabels = {
 };
 
 const visualizerConfigs = {
+  theemperor: {
+    ariaLabel: 'The Emperor: a builder, a court of rival emperors and a final empty audience',
+    controls: { size: false, count: false, grasp: false, speed: false, theme: false },
+    labels: { form: 'Alchemy' },
+    forms: window.TheEmperor.forms,
+  },
   dmtvisions: {
     ariaLabel: 'DMT Visions: a machine elf morphs into an eight-legged spider deity inside a kaleidoscopic temple',
     controls: { size: false, count: false, grasp: false, speed: false, theme: false },
@@ -2360,6 +2374,9 @@ function garageFlywheelValues(wheel, select) {
 }
 
 function alchemyRecipeIndex() {
+  if (visualizerSelect.value === 'theemperor') {
+    return Math.max(0, window.TheEmperor.forms.findIndex(([id]) => id === fireworkFormSelect.value));
+  }
   if (visualizerSelect.value === 'dmtvisions') {
     return Math.max(0, window.DmtVisions.forms.findIndex(([id]) => id === fireworkFormSelect.value));
   }
@@ -3083,7 +3100,7 @@ function applyAlchemicalAdjustment(recipeIndex = null) {
   const visualizer = visualizerSelect.value;
   const step = alchemicalStepByVisual[visualizer] || 0;
   const selectedIndex = Number.isInteger(recipeIndex) ? recipeIndex
-    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife', 'hearts', 'clubs', 'spades', 'hellstromhive', 'berzerk', 'thefool', 'themagician', 'thepriestess', 'theempress', 'dmtvisions'].includes(visualizer) ? alchemyRecipeIndex() + 1
+    : ['slitscan', 'schlieren', 'anamorphic', 'bipack', 'gameoflife', 'hearts', 'clubs', 'spades', 'hellstromhive', 'berzerk', 'thefool', 'themagician', 'thepriestess', 'theempress', 'theemperor', 'dmtvisions'].includes(visualizer) ? alchemyRecipeIndex() + 1
     : visualizer === "starrynight" || visualizer === "waterlilies" || visualizer === "thescream" || visualizer === "mondrian" || visualizer === "pollocks" || visualizer === "yourcall" || visualizer === "birdseye" || visualizer === "walkegyptian" || visualizer === "romans" || visualizer === "lifestudies" || visualizer === "oldschoolgames" || visualizer === "spaced" || visualizer === "innerspace" || visualizer === "champagnefountain" || visualizer === "puntingwithladies" || visualizer === "shysmiles" || visualizer === "beowulf" || visualizer === "hanselgretel" || visualizer === "opiumeater" || visualizer === "bones" || visualizer === "churchill" || visualizer === "ironlady" || visualizer === "blair" || visualizer === "pnp" || visualizer === "plentyofpuff" ? alchemyRecipeIndex() + 1 : step;
   const recipe = activeAlchemyRecipes()[selectedIndex % activeAlchemyRecipes().length];
   alchemicalStepByVisual[visualizer] = selectedIndex + 1;
