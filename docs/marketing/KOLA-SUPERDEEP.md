@@ -4,12 +4,12 @@ A fictional continuous descent in Pentacles: strata scroll upwards past a suspen
 
 ## Portrait Teaser
 
-[Watch the 40-second teaser](kola-superdeep-chedd-teaser.mp4)
+[Watch the 40-second teaser](kola-superdeep-paraguay-teaser.mp4)
 
-![Kola teaser](kola-superdeep-chedd-teaser-poster.jpg)
+![Kola teaser](kola-superdeep-paraguay-teaser-poster.jpg)
 
 - 1080 x 1920, 24 fps, H.264 / AAC, fast-start MP4.
-- Music: Andy's original **Quit While You're a Chedd**, local `#1` WAV, 00:30-01:10.
+- Music: Andy's original **Paraguay Isn't For Me, Pet**, local WAV, 00:30-01:10.
 - Ten seconds each of Survey Amber, Abyssal Life, The Lost Archive and Thermal Inversion.
 - Unbroken descent at 2.5x render speed, driven by measured soundtrack bands.
 - The discoveries and telemetry are fictional; the real borehole limit of 12,262 m is marked before the speculative extension.

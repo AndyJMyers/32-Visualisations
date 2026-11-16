@@ -8,7 +8,7 @@ const { createCanvas } = require('@napi-rs/canvas');
 const root = path.join(__dirname, '..');
 const ffmpeg = process.env.FFMPEG_PATH || 'C:\\Program Files\\CEWE Creator\\CEWE Creator\\ffmpeg.exe';
 const music = process.env.KOLA_MUSIC;
-const output = path.join(root, 'docs', 'marketing', 'kola-superdeep-chedd-teaser.mp4');
+const output = path.join(root, 'docs', 'marketing', 'kola-superdeep-paraguay-teaser.mp4');
 if (!music || !fs.existsSync(music)) throw new Error('Set KOLA_MUSIC to the original track.');
 const sandbox = { window: {}, Math };
 vm.runInNewContext(fs.readFileSync(path.join(root, 'kola-superdeep.js'), 'utf8'), sandbox);
@@ -64,7 +64,7 @@ async function capture() {
     text(`${state.depth.toFixed(0).padStart(5, '0')} m`, 33, 1023, 29, colour, 'monospace');
     text(`${Math.round(state.temperature)} C / ${Math.round(state.pressure)} MPa`, 320, 1023, 23, '#e4e8df', 'monospace');
     text(state.speculative ? 'BEYOND THE LIMIT OF THE KNOWN' : 'THE EARTH KEEPS ITS OWN ARCHIVE', 34, 1057, 17, '#c9d3d5');
-    text('QUIT WHILE YOU\u2019RE A CHEDD', 33, 1125, 27, '#eee0be', 'Georgia');
+    text('PARAGUAY ISN\u2019T FOR ME, PET', 33, 1125, 27, '#eee0be', 'Georgia');
     text('Original music. Impossible archaeology.', 34, 1157, 18, '#bdc8cb');
     text('MUSIC MADE VISIBLE', 34, 1220, 18, '#d4dcd5');
     c.fillStyle = colour; c.fillRect(34, 1239, 652 * t / seconds, 2);
